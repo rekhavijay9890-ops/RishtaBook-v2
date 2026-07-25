@@ -1,0 +1,53 @@
+rules_version = '2';
+
+// Draft security rules for RishtaBook's new features (interests, matches,
+// chat messages) plus the existing users collection. Copy this into the
+// Firebase Console -> Firestore Database -> Rules tab and Publish.
+// Review before going live - these are a reasonable starting point, not
+// a guarantee of correctness for your exact setup.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Any signed-in user can browse profiles (needed for the Home tab)
+    // but can only edit their own document.
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
+      // Verification decisions are written from the Admin screen using
+      // the *same* per-user update rule above - since there's no custom
+      // admin role in Auth yet, restrict who can reach that screen at
+      // the app layer (AppConfig.adminEmails). Consider adding Firebase
+      // custom claims for a stronger server-side guarantee later.
+    }
+
+    // An interest can be created by its sender, and read/updated by
+    // either the sender or the receiver (so the receiver can accept or
+    // reject it).
+    match /interests/{interestId} {
+      allow read: if request.auth != null &&
+        (request.auth.uid == resource.data.fromUid || request.auth.uid == resource.data.toUid);
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.fromUid;
+      allow update: if request.auth != null &&
+        (request.auth.uid == resource.data.fromUid || request.auth.uid == resource.data.toUid);
+    }
+
+    // A match (and its chat messages) is only visible to its two
+    // participants.
+    match /matches/{matchId} {
+      allow read, update: if request.auth != null &&
+        request.auth.uid in resource.data.participants;
+      allow create: if request.auth != null &&
+        request.auth.uid in request.resource.data.participants;
+
+      match /messages/{messageId} {
+        allow read: if request.auth != null &&
+          request.auth.uid in get(/databases/$(database)/documents/matches/$(matchId)).data.participants;
+        allow create: if request.auth != null &&
+          request.auth.uid == request.resource.data.senderId &&
+          request.auth.uid in get(/databases/$(database)/documents/matches/$(matchId)).data.participants;
+      }
+    }
+  }
+}
