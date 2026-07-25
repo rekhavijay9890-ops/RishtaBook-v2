@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../models/interest.dart';
+import '../../../models/user_profile.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/interest_service.dart';
+import '../../../services/profile_service.dart';
+import '../../profile/view_profile_screen.dart';
 
 const Color kBrandColor = Color(0xFF0F766E);
 
@@ -73,31 +76,67 @@ class _ReceivedInterests extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 12),
               child: Padding(
                 padding: const EdgeInsets.all(14),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const CircleAvatar(backgroundColor: Colors.pink, child: Icon(Icons.favorite, color: Colors.white)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text("${interest.fromName} ne aapko interest bheja hai",
-                          style: const TextStyle(fontWeight: FontWeight.w600)),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.check_circle, color: Colors.green, size: 28),
-                      onPressed: () => interestService.respondToInterest(
-                        interestId: interest.id,
-                        fromUid: interest.fromUid,
-                        toUid: interest.toUid,
-                        accept: true,
+                    InkWell(
+                      onTap: () async {
+                        final doc = await ProfileService().getUserProfile(interest.fromUid);
+                        if (!context.mounted) return;
+                        if (!doc.exists) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                              content: Text("Profile load nahi ho payi.")));
+                          return;
+                        }
+                        final profile = UserProfile.fromMap(doc.id, doc.data()!);
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (context) => ViewProfileScreen(profile: profile)));
+                      },
+                      child: Row(
+                        children: [
+                          const CircleAvatar(
+                              backgroundColor: Colors.pink,
+                              child: Icon(Icons.favorite, color: Colors.white)),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text("${interest.fromName} ne aapko interest bheja hai",
+                                style: const TextStyle(fontWeight: FontWeight.w600)),
+                          ),
+                          const Icon(Icons.chevron_right, color: Colors.grey),
+                        ],
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.cancel, color: Colors.red, size: 28),
-                      onPressed: () => interestService.respondToInterest(
-                        interestId: interest.id,
-                        fromUid: interest.fromUid,
-                        toUid: interest.toUid,
-                        accept: false,
-                      ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                            icon: const Icon(Icons.close, size: 18),
+                            label: const Text("Decline"),
+                            onPressed: () => interestService.respondToInterest(
+                              interestId: interest.id,
+                              fromUid: interest.fromUid,
+                              toUid: interest.toUid,
+                              accept: false,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                            icon: const Icon(Icons.check, size: 18, color: Colors.white),
+                            label: const Text("Accept", style: TextStyle(color: Colors.white)),
+                            onPressed: () => interestService.respondToInterest(
+                              interestId: interest.id,
+                              fromUid: interest.fromUid,
+                              toUid: interest.toUid,
+                              accept: true,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

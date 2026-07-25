@@ -5,6 +5,7 @@ import '../../../models/user_profile.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/profile_service.dart';
 import '../../../services/interest_service.dart';
+import '../../profile/view_profile_screen.dart';
 
 const Color kBrandColor = Color(0xFF0F766E);
 
@@ -144,63 +145,87 @@ class _ProfileCardState extends State<_ProfileCard> {
         padding: const EdgeInsets.all(15.0),
         child: Column(
           children: [
+            InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => ViewProfileScreen(profile: profile))),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                      radius: 32,
+                      backgroundColor: avatarColor.withOpacity(0.1),
+                      child: Icon(avatarIcon, size: 36, color: avatarColor)),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [
+                          Flexible(
+                              child: Text(profile.fullName,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      fontSize: 17, fontWeight: FontWeight.bold))),
+                          if (profile.isVerified) ...[
+                            const SizedBox(width: 4),
+                            const Icon(Icons.verified, size: 16, color: kBrandColor),
+                          ],
+                        ]),
+                        const SizedBox(height: 4),
+                        Text("${profile.dob} • ${profile.religion}",
+                            style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),
+                        const SizedBox(height: 4),
+                        Row(children: [
+                          const Icon(Icons.location_on, size: 15, color: Colors.grey),
+                          Expanded(
+                            child: Text(profile.location,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(color: Colors.grey, fontSize: 12.5)),
+                          ),
+                        ]),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right, color: Colors.grey),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
             Row(
               children: [
-                CircleAvatar(
-                    radius: 32,
-                    backgroundColor: avatarColor.withOpacity(0.1),
-                    child: Icon(avatarIcon, size: 36, color: avatarColor)),
-                const SizedBox(width: 14),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(children: [
-                        Flexible(
-                            child: Text(profile.fullName,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    fontSize: 17, fontWeight: FontWeight.bold))),
-                        if (profile.isVerified) ...[
-                          const SizedBox(width: 4),
-                          const Icon(Icons.verified, size: 16, color: kBrandColor),
-                        ],
-                      ]),
-                      const SizedBox(height: 4),
-                      Text("${profile.dob} • ${profile.religion}",
-                          style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),
-                      const SizedBox(height: 4),
-                      Row(children: [
-                        const Icon(Icons.location_on, size: 15, color: Colors.grey),
-                        Expanded(
-                          child: Text(profile.location,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(color: Colors.grey, fontSize: 12.5)),
-                        ),
-                      ]),
-                    ],
+                  child: SizedBox(
+                    height: 40,
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => ViewProfileScreen(profile: profile))),
+                      child: const Text("View Full Profile"),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: SizedBox(
+                    height: 40,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _alreadySent ? Colors.grey.shade300 : kBrandColor,
+                      ),
+                      icon: Icon(_alreadySent ? Icons.check : Icons.favorite_border,
+                          size: 18, color: _alreadySent ? Colors.grey.shade700 : Colors.white),
+                      label: Text(
+                        _checking
+                            ? "..."
+                            : (_alreadySent ? "Sent" : "Send Interest"),
+                        style: TextStyle(color: _alreadySent ? Colors.grey.shade700 : Colors.white),
+                      ),
+                      onPressed: (_checking || _alreadySent) ? null : _sendInterest,
+                    ),
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              height: 40,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _alreadySent ? Colors.grey.shade300 : kBrandColor,
-                ),
-                icon: Icon(_alreadySent ? Icons.check : Icons.favorite_border,
-                    size: 18, color: _alreadySent ? Colors.grey.shade700 : Colors.white),
-                label: Text(
-                  _checking
-                      ? "..."
-                      : (_alreadySent ? "Interest Sent" : "Send Interest"),
-                  style: TextStyle(color: _alreadySent ? Colors.grey.shade700 : Colors.white),
-                ),
-                onPressed: (_checking || _alreadySent) ? null : _sendInterest,
-              ),
             ),
           ],
         ),
