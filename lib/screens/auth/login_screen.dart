@@ -15,12 +15,15 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
   final AuthService _authService = AuthService();
   final ProfileService _profileService = ProfileService();
 
   bool _isLoginMode = true;
   bool _isLoading = false;
   bool _isDisclaimerAccepted = false;
+  bool _disclaimerError = false;
+  bool _obscurePassword = true;
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -45,55 +48,56 @@ class _LoginScreenState extends State<LoginScreen> {
     ));
   }
 
+  String? _required(String? value, String fieldName) {
+    if (value == null || value.trim().isEmpty) {
+      return "$fieldName zaroori hai";
+    }
+    return null;
+  }
+
+  String? _validateEmail(String? value) {
+    final email = value?.trim() ?? '';
+    if (email.isEmpty) return "Email zaroori hai";
+    final isValid = RegExp(
+            r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+        .hasMatch(email);
+    if (!isValid) return "Sahi email format daalein (jaise name@gmail.com)";
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    final password = value ?? '';
+    if (password.isEmpty) return "Password zaroori hai";
+    if (password.length < 6) return "Password kam se kam 6 characters ka ho";
+    return null;
+  }
+
+  String? _validateMobile(String? value) {
+    final mobile = value?.trim() ?? '';
+    if (mobile.isEmpty) return "Mobile number zaroori hai";
+    if (mobile.length < 10) return "Mobile number 10 digit ka hona chahiye";
+    if (!RegExp(r'^[0-9]+$').hasMatch(mobile)) return "Sirf numbers likhein";
+    return null;
+  }
+
   Future<void> _submitForm() async {
+    setState(() => _disclaimerError = false);
+
+    final formValid = _formKey.currentState?.validate() ?? false;
+
+    if (!_isLoginMode && !_isDisclaimerAccepted) {
+      setState(() => _disclaimerError = true);
+    }
+
+    if (!formValid || (!_isLoginMode && !_isDisclaimerAccepted)) {
+      _showSnack("Kripya form mein highlighted errors theek karein.");
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
-
-    final isEmailValid = RegExp(
-            r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
-        .hasMatch(email);
-
-    if (email.isEmpty || password.isEmpty) {
-      _showSnack("Kripya Email aur Password bharein.");
-      setState(() => _isLoading = false);
-      return;
-    }
-    if (!isEmailValid) {
-      _showSnack("Kripya ek sahi Gmail ID daalein.");
-      setState(() => _isLoading = false);
-      return;
-    }
-
-    if (!_isLoginMode) {
-      if (_nameController.text.trim().isEmpty ||
-          _ageController.text.trim().isEmpty ||
-          _mobileController.text.trim().isEmpty ||
-          _genderController.text.trim().isEmpty ||
-          _religionController.text.trim().isEmpty ||
-          _categoryController.text.trim().isEmpty ||
-          _villageController.text.trim().isEmpty ||
-          _districtController.text.trim().isEmpty ||
-          _stateController.text.trim().isEmpty ||
-          _occupationController.text.trim().isEmpty ||
-          _familyDetailsController.text.trim().isEmpty ||
-          _requirementsController.text.trim().isEmpty) {
-        _showSnack("Kripya sabhi details bharein, koi bhi field khali na chhodein.");
-        setState(() => _isLoading = false);
-        return;
-      }
-      if (_mobileController.text.trim().length < 10) {
-        _showSnack("Kripya ek sahi 10-digit Mobile Number daalein.");
-        setState(() => _isLoading = false);
-        return;
-      }
-      if (!_isDisclaimerAccepted) {
-        _showSnack("Kripya Disclaimer par tick karke agree karein.");
-        setState(() => _isLoading = false);
-        return;
-      }
-    }
 
     try {
       if (_isLoginMode) {
@@ -127,7 +131,19 @@ class _LoginScreenState extends State<LoginScreen> {
             context, MaterialPageRoute(builder: (context) => const DashboardScreen()));
       }
     } on FirebaseAuthException catch (e) {
-      _showSnack(e.message ?? "Error: Account banane mein dikkat aayi.");
+      String friendly = e.message ?? "Account banane mein dikkat aayi.";
+      if (e.code == 'email-already-in-use') {
+        friendly = "Ye email pehle se registered hai. Login try karein.";
+      } else if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        friendly = "Email ya Password galat hai.";
+      } else if (e.code == 'weak-password') {
+        friendly = "Password bahut kamzor hai, kam se kam 6 characters rakhein.";
+      } else if (e.code == 'network-request-failed') {
+        friendly = "Internet connection check karein.";
+      }
+      _showSnack(friendly);
+    } catch (e) {
+      _showSnack("Kuch galat ho gaya. Dobara try karein.");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -152,7 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
             context, MaterialPageRoute(builder: (context) => const DashboardScreen()));
       }
     } catch (e) {
-      _showSnack("Error: ${e.toString()}");
+      _showSnack("Google Sign-In mein error aayi. Dobara try karein.");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -201,24 +217,38 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _field(IconData icon, String hint, TextEditingController controller,
-      {bool isPassword = false, int maxLines = 1, bool isNumber = false}) {
-    return TextField(
+      {bool isPassword = false,
+      int maxLines = 1,
+      bool isNumber = false,
+      String? Function(String?)? validator}) {
+    return TextFormField(
       controller: controller,
-      obscureText: isPassword,
+      obscureText: isPassword ? _obscurePassword : false,
       maxLines: isPassword ? 1 : maxLines,
       keyboardType: isNumber ? TextInputType.phone : TextInputType.text,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      validator: validator,
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: kBrandColor),
+        suffixIcon: isPassword
+            ? IconButton(
+                icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility,
+                    color: Colors.grey),
+                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+              )
+            : null,
         hintText: hint,
         border: const OutlineInputBorder(),
       ),
     );
   }
 
-  Widget _dropdown(IconData icon, String hint, List<String> items,
+  Widget _dropdown(IconData icon, String hint, List<String> items, String fieldName,
       ValueChanged<String?> onChanged) {
     return DropdownButtonFormField<String>(
       isExpanded: true,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      validator: (v) => _required(v, fieldName),
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: kBrandColor),
         hintText: hint,
@@ -230,9 +260,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _dobField() {
-    return TextField(
+    return TextFormField(
       controller: _ageController,
       readOnly: true,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      validator: (v) => _required(v, "Date of Birth"),
       onTap: () async {
         final picked = await showDatePicker(
           context: context,
@@ -281,131 +313,157 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.favorite, color: kBrandColor, size: 56),
-              const SizedBox(height: 16),
-              Text(_isLoginMode ? "Welcome Back!" : "Create Account",
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: kBrandColor)),
-              const SizedBox(height: 28),
-              if (!_isLoginMode) ...[
-                _field(Icons.person, "Full Name", _nameController),
-                const SizedBox(height: 12),
-                Row(children: [
-                  Expanded(child: _dobField()),
-                  const SizedBox(width: 12),
-                  Expanded(
-                      child: _dropdown(Icons.people, "Gender", const ["Male", "Female", "Other"],
-                          (v) => _genderController.text = v ?? '')),
-                ]),
-                const SizedBox(height: 12),
-                _field(Icons.phone, "Mobile Number (For Admin Only)", _mobileController,
-                    isNumber: true),
-                const SizedBox(height: 12),
-                Row(children: [
-                  Expanded(
-                      child: _dropdown(Icons.menu_book, "Religion",
-                          const ["Hindu", "Muslim", "Sikh", "Ishai"],
-                          (v) => _religionController.text = v ?? '')),
-                  const SizedBox(width: 12),
-                  Expanded(
-                      child: _dropdown(Icons.groups, "Category",
-                          const ["General", "OBC", "SC", "ST", "Other"],
-                          (v) => _categoryController.text = v ?? '')),
-                ]),
-                const SizedBox(height: 12),
-                Row(children: [
-                  Expanded(child: _field(Icons.home, "Gaon / Town / City", _villageController)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _field(Icons.location_city, "Jila (District)", _districtController)),
-                ]),
-                const SizedBox(height: 12),
-                _field(Icons.map, "Pradesh (State)", _stateController),
-                const SizedBox(height: 12),
-                _dropdown(Icons.work, "Occupation", const ["Job", "Business", "Farming", "Other"],
-                    (v) => _occupationController.text = v ?? ''),
-                const SizedBox(height: 12),
-                _field(Icons.family_restroom, "Family Details (Occupation, Income, etc.)",
-                    _familyDetailsController, maxLines: 2),
-                const SizedBox(height: 12),
-                _field(Icons.list_alt, "Any other requirement / condition",
-                    _requirementsController, maxLines: 2),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.favorite, color: kBrandColor, size: 56),
                 const SizedBox(height: 16),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Checkbox(
-                      value: _isDisclaimerAccepted,
-                      onChanged: (v) => setState(() => _isDisclaimerAccepted = v ?? false),
-                      activeColor: kBrandColor,
-                    ),
-                    const Expanded(
-                      child: Text(
-                        "Disclaimer: Hamara kaam bas do families ko connect karana hai, Ladka/Ladki aur pariwar ke baare main janch aur padtal karna aapki jimmedaari hai. Hamari app ke through koi bhi galat ya fraud activity ke liye ham zimmedar nahi hain.",
-                        style: TextStyle(fontSize: 13),
+                Text(_isLoginMode ? "Welcome Back!" : "Create Account",
+                    style: const TextStyle(
+                        fontSize: 24, fontWeight: FontWeight.bold, color: kBrandColor)),
+                const SizedBox(height: 28),
+                if (!_isLoginMode) ...[
+                  _field(Icons.person, "Full Name", _nameController,
+                      validator: (v) => _required(v, "Full Name")),
+                  const SizedBox(height: 12),
+                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Expanded(child: _dobField()),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: _dropdown(Icons.people, "Gender", const ["Male", "Female", "Other"],
+                            "Gender", (v) => setState(() => _genderController.text = v ?? ''))),
+                  ]),
+                  const SizedBox(height: 12),
+                  _field(Icons.phone, "Mobile Number (For Admin Only)", _mobileController,
+                      isNumber: true, validator: _validateMobile),
+                  const SizedBox(height: 12),
+                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Expanded(
+                        child: _dropdown(Icons.menu_book, "Religion",
+                            const ["Hindu", "Muslim", "Sikh", "Ishai"], "Religion",
+                            (v) => setState(() => _religionController.text = v ?? ''))),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: _dropdown(Icons.groups, "Category",
+                            const ["General", "OBC", "SC", "ST", "Other"], "Category",
+                            (v) => setState(() => _categoryController.text = v ?? ''))),
+                  ]),
+                  const SizedBox(height: 12),
+                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Expanded(
+                        child: _field(Icons.home, "Gaon / Town / City", _villageController,
+                            validator: (v) => _required(v, "City"))),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: _field(Icons.location_city, "Jila (District)", _districtController,
+                            validator: (v) => _required(v, "District"))),
+                  ]),
+                  const SizedBox(height: 12),
+                  _field(Icons.map, "Pradesh (State)", _stateController,
+                      validator: (v) => _required(v, "State")),
+                  const SizedBox(height: 12),
+                  _dropdown(Icons.work, "Occupation", const ["Job", "Business", "Farming", "Other"],
+                      "Occupation", (v) => setState(() => _occupationController.text = v ?? '')),
+                  const SizedBox(height: 12),
+                  _field(Icons.family_restroom, "Family Details (Occupation, Income, etc.)",
+                      _familyDetailsController,
+                      maxLines: 2, validator: (v) => _required(v, "Family Details")),
+                  const SizedBox(height: 12),
+                  _field(Icons.list_alt, "Any other requirement / condition",
+                      _requirementsController,
+                      maxLines: 2, validator: (v) => _required(v, "Requirement")),
+                  const SizedBox(height: 16),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Checkbox(
+                        value: _isDisclaimerAccepted,
+                        onChanged: (v) => setState(() {
+                          _isDisclaimerAccepted = v ?? false;
+                          if (_isDisclaimerAccepted) _disclaimerError = false;
+                        }),
+                        activeColor: kBrandColor,
                       ),
+                      const Expanded(
+                        child: Text(
+                          "Disclaimer: Hamara kaam bas do families ko connect karana hai, Ladka/Ladki aur pariwar ke baare main janch aur padtal karna aapki jimmedaari hai. Hamari app ke through koi bhi galat ya fraud activity ke liye ham zimmedar nahi hain.",
+                          style: TextStyle(fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (_disclaimerError)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 12),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text("Disclaimer accept karna zaroori hai",
+                            style: TextStyle(color: Colors.red, fontSize: 12)),
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                ],
+                _field(Icons.email, "Gmail ID", _emailController, validator: _validateEmail),
+                const SizedBox(height: 12),
+                _field(Icons.lock, "Password", _passwordController,
+                    isPassword: true, validator: _validatePassword),
+                if (_isLoginMode)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                        onPressed: _showForgotPasswordDialog,
+                        child: const Text("Forgot Password?")),
+                  ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: kBrandColor),
+                    onPressed: _isLoading ? null : _submitForm,
+                    child: _isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : Text(_isLoginMode ? "Secure Login" : "Sign Up",
+                            style: const TextStyle(color: Colors.white, fontSize: 16)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Row(children: [
+                  Expanded(child: Divider()),
+                  Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text("OR")),
+                  Expanded(child: Divider()),
+                ]),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.account_circle, color: Colors.red),
+                    label: const Text("Continue with Google"),
+                    onPressed: _isLoading ? null : _signInWithGoogle,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(_isLoginMode ? "Don't have an account? " : "Already have an account? "),
+                    GestureDetector(
+                      onTap: () => setState(() {
+                        _isLoginMode = !_isLoginMode;
+                        _emailController.clear();
+                        _passwordController.clear();
+                      }),
+                      child: Text(_isLoginMode ? "Sign Up" : "Login",
+                          style:
+                              const TextStyle(color: kBrandColor, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
               ],
-              _field(Icons.email, "Gmail ID", _emailController),
-              const SizedBox(height: 12),
-              _field(Icons.lock, "Password", _passwordController, isPassword: true),
-              if (_isLoginMode)
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                      onPressed: _showForgotPasswordDialog,
-                      child: const Text("Forgot Password?")),
-                ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: kBrandColor),
-                  onPressed: _isLoading ? null : _submitForm,
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : Text(_isLoginMode ? "Secure Login" : "Sign Up",
-                          style: const TextStyle(color: Colors.white, fontSize: 16)),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Row(children: [
-                Expanded(child: Divider()),
-                Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text("OR")),
-                Expanded(child: Divider()),
-              ]),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.account_circle, color: Colors.red),
-                  label: const Text("Continue with Google"),
-                  onPressed: _isLoading ? null : _signInWithGoogle,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(_isLoginMode ? "Don't have an account? " : "Already have an account? "),
-                  GestureDetector(
-                    onTap: () => setState(() {
-                      _isLoginMode = !_isLoginMode;
-                      _emailController.clear();
-                      _passwordController.clear();
-                    }),
-                    child: Text(_isLoginMode ? "Sign Up" : "Login",
-                        style: const TextStyle(color: kBrandColor, fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),

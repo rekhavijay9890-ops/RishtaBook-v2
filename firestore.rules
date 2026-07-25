@@ -5,15 +5,29 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if request.auth != null;
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow update: if request.auth != null &&
-        (request.auth.uid == userId || request.auth.token.email == "rekhavijay9890@gmail.com");
+
+      allow create: if request.auth != null && request.auth.uid == userId
+        && request.resource.data.isVerified == false
+        && request.resource.data.verificationStatus == 'none';
+
+      allow update: if request.auth != null && (
+        request.auth.token.email == "rekhavijay9890@gmail.com" ||
+        (request.auth.uid == userId &&
+          request.resource.data.isVerified == resource.data.isVerified &&
+          (request.resource.data.verificationStatus == resource.data.verificationStatus ||
+           (request.resource.data.verificationStatus == 'pending' && resource.data.isVerified == false))
+        )
+      );
     }
 
     match /interests/{interestId} {
       allow read: if request.auth != null &&
         (request.auth.uid == resource.data.fromUid || request.auth.uid == resource.data.toUid);
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.fromUid;
+
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.fromUid
+        && request.resource.data.fromUid != request.resource.data.toUid;
+
       allow update: if request.auth != null &&
         (request.auth.uid == resource.data.fromUid || request.auth.uid == resource.data.toUid);
     }
