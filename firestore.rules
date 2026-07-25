@@ -11,10 +11,8 @@ service cloud.firestore {
 
     // Any signed-in user can browse profiles (needed for the Home tab)
     // but can only edit their own document.
-    match /users/{userId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow update: if request.auth != null && request.auth.uid == userId;
+    allow update: if request.auth != null &&
+        (request.auth.uid == userId || request.auth.token.email == "rekhavijay9890@gmail.com");
       // Verification decisions are written from the Admin screen using
       // the *same* per-user update rule above - since there's no custom
       // admin role in Auth yet, restrict who can reach that screen at
@@ -41,5 +39,12 @@ service cloud.firestore {
       allow create: if request.auth != null &&
         request.auth.uid in request.resource.data.participants;
 
-      allow update: if request.auth != null &&
-        (request.auth.uid == userId || request.auth.token.email == "rekhavijay9890@gmail.com");
+      match /messages/{messageId} {
+        allow read: if request.auth != null &&
+          request.auth.uid in get(/databases/$(database)/documents/matches/$(matchId)).data.participants;
+        allow create: if request.auth != null &&
+          request.auth.uid == request.resource.data.senderId &&
+          request.auth.uid in get(/databases/$(database)/documents/matches/$(matchId)).data.participants;
+      }
+    }
+  }
