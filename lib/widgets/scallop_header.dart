@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'app_theme.dart';
+import '../theme/app_theme.dart';
 
 /// The app's signature shape: a scalloped arch, borrowed from the
 /// bordered edge of a wedding invitation card.
