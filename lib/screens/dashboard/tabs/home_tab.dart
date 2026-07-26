@@ -214,6 +214,7 @@ class _ProfileCardState extends State<_ProfileCard> {
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _alreadySent ? Colors.grey.shade300 : kBrandColor,
+                        disabledBackgroundColor: Colors.grey.shade300,
                       ),
                       icon: Icon(_alreadySent ? Icons.check : Icons.favorite_border,
                           size: 18, color: _alreadySent ? Colors.grey.shade700 : Colors.white),
