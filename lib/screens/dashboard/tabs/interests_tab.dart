@@ -8,7 +8,9 @@ import '../../../services/interest_service.dart';
 import '../../../services/profile_service.dart';
 import '../../profile/view_profile_screen.dart';
 
-const Color kBrandColor = Color(0xFF0F766E);
+import '../../../theme/app_theme.dart';
+
+const Color kBrandColor = AppColors.primary;
 
 class InterestsTab extends StatelessWidget {
   const InterestsTab({super.key});

@@ -4,7 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/chat_message.dart';
 import '../../services/chat_service.dart';
 
-const Color kBrandColor = Color(0xFF0F766E);
+import '../../theme/app_theme.dart';
+
+const Color kBrandColor = AppColors.primary;
 
 class ChatScreen extends StatefulWidget {
   final String matchId;

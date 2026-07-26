@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../models/user_profile.dart';
 
-const Color kBrandColor = Color(0xFF0F766E);
+import '../../theme/app_theme.dart';
+
+const Color kBrandColor = AppColors.primary;
 
 /// Read-only, full-detail view of a profile - every field the person
 /// filled in at signup (not just the shortened preview shown on the
@@ -29,7 +31,7 @@ class ViewProfileScreen extends StatelessWidget {
         backgroundColor: kBrandColor,
         foregroundColor: Colors.white,
       ),
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: AppColors.background,
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [

@@ -6,7 +6,9 @@ import '../../../services/auth_service.dart';
 import '../../../services/profile_service.dart';
 import '../../auth/login_screen.dart';
 
-const Color kBrandColor = Color(0xFF0F766E);
+import '../../../theme/app_theme.dart';
+
+const Color kBrandColor = AppColors.primary;
 
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});

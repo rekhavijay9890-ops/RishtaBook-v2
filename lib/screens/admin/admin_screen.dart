@@ -4,7 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/user_profile.dart';
 import '../../services/profile_service.dart';
 
-const Color kBrandColor = Color(0xFF0F766E);
+import '../../theme/app_theme.dart';
+
+const Color kBrandColor = AppColors.primary;
 
 /// Only reachable by emails listed in [AppConfig.adminEmails] (see the
 /// admin icon in the dashboard AppBar). Lists every profile with

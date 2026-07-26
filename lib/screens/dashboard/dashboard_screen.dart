@@ -11,7 +11,9 @@ import 'tabs/chats_tab.dart';
 import 'tabs/profile_tab.dart';
 import 'tabs/about_tab.dart';
 
-const Color kBrandColor = Color(0xFF0F766E);
+import '../../theme/app_theme.dart';
+
+const Color kBrandColor = AppColors.primary;
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -90,7 +92,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final pendingCount = notifSnapshot.data?.docs.length ?? 0;
 
         return Scaffold(
-          backgroundColor: Colors.grey.shade100,
+          backgroundColor: AppColors.background,
           appBar: AppBar(
             title: const Text("RishtaBook", style: TextStyle(fontWeight: FontWeight.bold)),
             backgroundColor: kBrandColor,

@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'theme/app_theme.dart';
 import 'services/auth_service.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
-
-const Color kBrandColor = Color(0xFF0F766E);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,16 +31,14 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'RishtaBook',
-      theme: ThemeData(
-        primaryColor: kBrandColor,
-        colorScheme: ColorScheme.fromSeed(seedColor: kBrandColor),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light,
       home: StreamBuilder<User?>(
         stream: AuthService().authStateChanges,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(body: Center(child: CircularProgressIndicator(color: kBrandColor)));
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+            );
           }
           if (snapshot.hasData) {
             return const DashboardScreen();
