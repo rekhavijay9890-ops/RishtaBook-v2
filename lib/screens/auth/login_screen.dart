@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../theme/app_theme.dart';
 import '../../widgets/scallop_header.dart';
@@ -341,9 +340,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: const Icon(Icons.favorite, color: Colors.white, size: 42),
                       ),
                       const SizedBox(height: 14),
-                      Text("RishtaBook",
-                          style: GoogleFonts.playfairDisplay(
-                              fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white)),
+                      const Text("RishtaBook",
+                          style: TextStyle(
+                              fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white, fontFamily: 'serif')),
                       const SizedBox(height: 4),
                       Text(_isLoginMode ? "Welcome back" : "Create your account",
                           style: const TextStyle(fontSize: 14, color: Colors.white70)),

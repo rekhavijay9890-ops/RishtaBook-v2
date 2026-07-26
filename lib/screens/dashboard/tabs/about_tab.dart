@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/scallop_header.dart';
 
@@ -21,8 +20,8 @@ class AboutTab extends StatelessWidget {
             child: const Icon(Icons.favorite_rounded, size: 56, color: AppColors.primary),
           ),
           const SizedBox(height: 18),
-          Text("RishtaBook", style: GoogleFonts.playfairDisplay(
-              fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.ink)),
+          const Text("RishtaBook", style: TextStyle(
+              fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.ink, fontFamily: 'serif')),
           const SizedBox(height: 6),
           const Text("Version 2.0.0", style: TextStyle(color: AppColors.muted)),
           const OrnateDivider(),

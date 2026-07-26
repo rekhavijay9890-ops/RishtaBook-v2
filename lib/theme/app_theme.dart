@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// RishtaBook design tokens.
 ///
@@ -46,8 +45,8 @@ class AppTheme {
   AppTheme._();
 
   static TextTheme _textTheme(TextTheme base) {
-    final display = GoogleFonts.playfairDisplayTextTheme(base);
-    final body = GoogleFonts.muktaTextTheme(base);
+    final display = base;
+    final body = base;
     return body.copyWith(
       displayLarge: display.displayLarge?.copyWith(color: AppColors.ink),
       displayMedium: display.displayMedium?.copyWith(color: AppColors.ink),
@@ -91,10 +90,11 @@ class AppTheme {
         foregroundColor: AppColors.surface,
         elevation: 0,
         centerTitle: false,
-        titleTextStyle: GoogleFonts.playfairDisplay(
+        titleTextStyle: const TextStyle(
           color: AppColors.surface,
           fontSize: 22,
           fontWeight: FontWeight.w700,
+          fontFamily: 'serif',
         ),
         iconTheme: const IconThemeData(color: AppColors.surface),
       ),
@@ -114,7 +114,7 @@ class AppTheme {
         filled: true,
         fillColor: AppColors.surface,
         contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        hintStyle: GoogleFonts.mukta(color: AppColors.muted, fontSize: 15),
+        hintStyle: const TextStyle(color: AppColors.muted, fontSize: 15),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadii.sm),
           borderSide: BorderSide(color: AppColors.divider),
@@ -144,7 +144,7 @@ class AppTheme {
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 14),
           textStyle:
-              GoogleFonts.mukta(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 0.2),
+              const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 0.2),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.sm)),
         ),
       ),
@@ -153,20 +153,20 @@ class AppTheme {
           foregroundColor: AppColors.ink,
           side: const BorderSide(color: AppColors.divider, width: 1.4),
           padding: const EdgeInsets.symmetric(vertical: 14),
-          textStyle: GoogleFonts.mukta(fontSize: 15, fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.sm)),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
-          textStyle: GoogleFonts.mukta(fontWeight: FontWeight.w700),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppColors.ink,
-        contentTextStyle: GoogleFonts.mukta(color: AppColors.surface),
+        contentTextStyle: const TextStyle(color: AppColors.surface),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.sm)),
       ),
       dialogTheme: DialogThemeData(
