@@ -6,22 +6,142 @@ import '../../../services/auth_service.dart';
 import '../../../services/profile_service.dart';
 import '../../../services/interest_service.dart';
 import '../../profile/view_profile_screen.dart';
-
 import '../../../theme/app_theme.dart';
 
 const Color kBrandColor = AppColors.primary;
 
-class HomeTab extends StatelessWidget {
+class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
 
   @override
+  State<HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<HomeTab> {
+  final ProfileService _profileService = ProfileService();
+  final AuthService _authService = AuthService();
+
+  String? _religionFilter;
+  String? _categoryFilter;
+  String? _genderFilter;
+  String? _occupationFilter;
+
+  bool get _hasActiveFilters =>
+      _religionFilter != null ||
+      _categoryFilter != null ||
+      _genderFilter != null ||
+      _occupationFilter != null;
+
+  List<UserProfile> _applyFilters(List<UserProfile> profiles) {
+    return profiles.where((p) {
+      if (_religionFilter != null && p.religion != _religionFilter) return false;
+      if (_categoryFilter != null && p.category != _categoryFilter) return false;
+      if (_genderFilter != null && p.gender != _genderFilter) return false;
+      if (_occupationFilter != null && p.occupation != _occupationFilter) return false;
+      return true;
+    }).toList();
+  }
+
+  void _openFilterSheet() {
+    String? religion = _religionFilter;
+    String? category = _categoryFilter;
+    String? gender = _genderFilter;
+    String? occupation = _occupationFilter;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            Widget filterDropdown(String label, String? value, List<String> options,
+                ValueChanged<String?> onChanged) {
+              return DropdownButtonFormField<String>(
+                isExpanded: true,
+                value: value,
+                decoration: InputDecoration(labelText: label),
+                items: [
+                  const DropdownMenuItem<String>(value: null, child: Text("Sabhi")),
+                  ...options.map((o) => DropdownMenuItem(value: o, child: Text(o))),
+                ],
+                onChanged: (v) => setSheetState(() => onChanged(v)),
+              );
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text("Filter Matches", style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 16),
+                  filterDropdown("Religion", religion, const ["Hindu", "Muslim", "Sikh", "Ishai"],
+                      (v) => religion = v),
+                  const SizedBox(height: 12),
+                  filterDropdown("Category", category,
+                      const ["General", "OBC", "SC", "ST", "Other"], (v) => category = v),
+                  const SizedBox(height: 12),
+                  filterDropdown(
+                      "Gender", gender, const ["Male", "Female", "Other"], (v) => gender = v),
+                  const SizedBox(height: 12),
+                  filterDropdown("Occupation", occupation,
+                      const ["Job", "Business", "Farming", "Other"], (v) => occupation = v),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            setSheetState(() {
+                              religion = null;
+                              category = null;
+                              gender = null;
+                              occupation = null;
+                            });
+                          },
+                          child: const Text("Clear"),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _religionFilter = religion;
+                              _categoryFilter = category;
+                              _genderFilter = gender;
+                              _occupationFilter = occupation;
+                            });
+                            Navigator.pop(context);
+                          },
+                          child: const Text("Apply"),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final authService = AuthService();
-    final profileService = ProfileService();
-    final currentUserId = authService.currentUser?.uid ?? "";
+    final currentUserId = _authService.currentUser?.uid ?? "";
 
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: profileService.allProfilesStream(),
+      stream: _profileService.allProfilesStream(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator(color: kBrandColor));
@@ -30,8 +150,12 @@ class HomeTab extends StatelessWidget {
           return const Center(child: Text("Abhi tak koi naya profile nahi hai."));
         }
 
-        final allProfiles =
-            snapshot.data!.docs.where((doc) => doc.id != currentUserId).toList();
+        final allProfiles = snapshot.data!.docs
+            .where((doc) => doc.id != currentUserId)
+            .map((doc) => UserProfile.fromMap(doc.id, doc.data()))
+            .toList();
+
+        final filteredProfiles = _applyFilters(allProfiles);
 
         if (allProfiles.isEmpty) {
           return const Center(
@@ -39,18 +163,46 @@ class HomeTab extends StatelessWidget {
                   style: TextStyle(color: Colors.grey)));
         }
 
-        return ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            const Text("Recommended Matches",
-                style:
-                    TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: kBrandColor)),
-            const SizedBox(height: 15),
-            ...allProfiles.map((doc) {
-              final profile = UserProfile.fromMap(doc.id, doc.data());
-              return _ProfileCard(currentUserId: currentUserId, profile: profile);
-            }),
-          ],
+        return RefreshIndicator(
+          color: kBrandColor,
+          onRefresh: () async {
+            // The list is already realtime via the Firestore stream; this
+            // just gives the pull-to-refresh gesture a visible response.
+            await Future.delayed(const Duration(milliseconds: 500));
+          },
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Recommended Matches",
+                      style: TextStyle(
+                          fontSize: 22, fontWeight: FontWeight.bold, color: kBrandColor)),
+                  IconButton(
+                    icon: Badge(
+                      isLabelVisible: _hasActiveFilters,
+                      smallSize: 9,
+                      child: const Icon(Icons.filter_list, color: kBrandColor),
+                    ),
+                    onPressed: _openFilterSheet,
+                    tooltip: "Filter",
+                  ),
+                ],
+              ),
+              if (allProfiles.isNotEmpty && filteredProfiles.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.only(top: 40),
+                  child: Center(
+                    child: Text("In filters se koi profile nahi mili.",
+                        style: TextStyle(color: Colors.grey)),
+                  ),
+                ),
+              const SizedBox(height: 15),
+              ...filteredProfiles.map((profile) =>
+                  _ProfileCard(currentUserId: currentUserId, profile: profile)),
+            ],
+          ),
         );
       },
     );
@@ -197,35 +349,50 @@ class _ProfileCardState extends State<_ProfileCard> {
               children: [
                 Expanded(
                   child: SizedBox(
-                    height: 40,
+                    height: 42,
                     child: OutlinedButton(
                       onPressed: () => Navigator.push(
                           context,
                           MaterialPageRoute(
                               builder: (context) => ViewProfileScreen(profile: profile))),
-                      child: const Text("View Full Profile"),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                      ),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text("View Profile", style: TextStyle(fontSize: 13)),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: SizedBox(
-                    height: 40,
-                    child: ElevatedButton.icon(
+                    height: 42,
+                    child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _alreadySent ? Colors.grey.shade300 : kBrandColor,
                         disabledBackgroundColor: Colors.grey.shade300,
-                        
-                      ),
-                      icon: Icon(_alreadySent ? Icons.check : Icons.favorite_border,
-                          size: 18, color: _alreadySent ? Colors.grey.shade700 : Colors.white),
-                      label: Text(
-                        _checking
-                            ? "..."
-                            : (_alreadySent ? "Sent" : "Send Interest"),
-                        style: TextStyle(color: _alreadySent ? Colors.grey.shade700 : Colors.white),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
                       ),
                       onPressed: (_checking || _alreadySent) ? null : _sendInterest,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(_alreadySent ? Icons.check : Icons.favorite_border,
+                                size: 16, color: _alreadySent ? Colors.grey.shade700 : Colors.white),
+                            const SizedBox(width: 6),
+                            Text(
+                              _checking ? "..." : (_alreadySent ? "Sent" : "Send Interest"),
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  color: _alreadySent ? Colors.grey.shade700 : Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
