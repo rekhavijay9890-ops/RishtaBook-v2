@@ -6,7 +6,6 @@ import '../../../services/auth_service.dart';
 import '../../../services/interest_service.dart';
 import '../../../services/profile_service.dart';
 import '../../chat/chat_screen.dart';
-
 import '../../../theme/app_theme.dart';
 
 const Color kBrandColor = AppColors.primary;
@@ -51,7 +50,7 @@ class ChatsTab extends StatelessWidget {
             return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
               future: ProfileService().getUserProfile(otherUid),
               builder: (context, profileSnapshot) {
-                final name = profileSnapshot.data?.data()?['fullName'] ?? 'Loading...';
+                final name = profileSnapshot.data?.data()?['fullName'] ?? 'लोड हो रहा है...';
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
                   child: ListTile(
@@ -59,7 +58,7 @@ class ChatsTab extends StatelessWidget {
                         backgroundColor: kBrandColor, child: Icon(Icons.favorite, color: Colors.white)),
                     title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: Text(
-                      match.lastMessage.isEmpty ? "Baat shuru karein!" : match.lastMessage,
+                      match.lastMessage.isEmpty ? "बात शुरू करें!" : match.lastMessage,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

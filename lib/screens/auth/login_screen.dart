@@ -7,6 +7,16 @@ import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../dashboard/dashboard_screen.dart';
 
+const List<String> kIndianStates = [
+  'आंध्र प्रदेश','अरुणाचल प्रदेश','असम','बिहार','छत्तीसगढ़',
+  'गोवा','गुजरात','हरियाणा','हिमाचल प्रदेश','झारखंड','कर्नाटक',
+  'केरल','मध्य प्रदेश','महाराष्ट्र','मणिपुर','मेघालय','मिज़ोरम',
+  'नागालैंड','ओडिशा','पंजाब','राजस्थान','सिक्किम','तमिलनाडु',
+  'तेलंगाना','त्रिपुरा','उत्तर प्रदेश','उत्तराखंड','पश्चिम बंगाल',
+  'अंडमान व निकोबार','चंडीगढ़','दादरा व नगर हवेली','दमन व दीव',
+  'दिल्ली','जम्मू और कश्मीर','लद्दाख','लक्षद्वीप','पुदुच्चेरी',
+];
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -25,20 +35,24 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _disclaimerError = false;
   bool _obscurePassword = true;
 
-  final _emailController = TextEditingController();
+  final _emailController    = TextEditingController();
   final _passwordController = TextEditingController();
-  final _nameController = TextEditingController();
-  final _ageController = TextEditingController();
-  final _mobileController = TextEditingController();
-  final _genderController = TextEditingController();
-  final _villageController = TextEditingController();
+  final _nameController     = TextEditingController();
+  final _ageController      = TextEditingController();
+  final _mobileController   = TextEditingController();
+  final _genderController   = TextEditingController();
+  final _villageController  = TextEditingController();
   final _districtController = TextEditingController();
-  final _stateController = TextEditingController();
-  final _religionController = TextEditingController();
-  final _categoryController = TextEditingController();
+  final _stateController    = TextEditingController();
+  final _religionController  = TextEditingController();
+  final _categoryController  = TextEditingController();
+  final _casteController     = TextEditingController();
+  final _gotraController     = TextEditingController();
   final _occupationController = TextEditingController();
+  final _brothersController  = TextEditingController();
+  final _sistersController   = TextEditingController();
   final _familyDetailsController = TextEditingController();
-  final _requirementsController = TextEditingController();
+  final _requirementsController  = TextEditingController();
 
   void _showSnack(String message, {bool isError = true}) {
     if (!mounted) return;
@@ -48,55 +62,45 @@ class _LoginScreenState extends State<LoginScreen> {
     ));
   }
 
-  String? _required(String? value, String fieldName) {
-    if (value == null || value.trim().isEmpty) {
-      return "$fieldName zaroori hai";
+  String? _required(String? value, String fieldName) =>
+      (value == null || value.trim().isEmpty) ? "$fieldName भरना अनिवार्य है" : null;
+
+  String? _validateEmail(String? value) {
+    final email = value?.trim() ?? '';
+    if (email.isEmpty) return "ईमेल / Email भरना अनिवार्य है";
+    if (!RegExp(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(email)) {
+      return "सही ईमेल डालें / Enter valid email (e.g. name@gmail.com)";
     }
     return null;
   }
 
-  String? _validateEmail(String? value) {
-    final email = value?.trim() ?? '';
-    if (email.isEmpty) return "Email zaroori hai";
-    final isValid = RegExp(
-            r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
-        .hasMatch(email);
-    if (!isValid) return "Sahi email format daalein (jaise name@gmail.com)";
-    return null;
-  }
-
   String? _validatePassword(String? value) {
-    final password = value ?? '';
-    if (password.isEmpty) return "Password zaroori hai";
-    if (password.length < 6) return "Password kam se kam 6 characters ka ho";
+    if (value == null || value.isEmpty) return "पासवर्ड / Password भरना अनिवार्य है";
+    if (value.length < 6) return "पासवर्ड कम से कम 6 अक्षर / min 6 characters का होना चाहिए";
     return null;
   }
 
   String? _validateMobile(String? value) {
     final mobile = value?.trim() ?? '';
-    if (mobile.isEmpty) return "Mobile number zaroori hai";
-    if (mobile.length < 10) return "Mobile number 10 digit ka hona chahiye";
-    if (!RegExp(r'^[0-9]+$').hasMatch(mobile)) return "Sirf numbers likhein";
+    if (mobile.isEmpty) return "मोबाइल नंबर / Mobile No. भरना अनिवार्य है";
+    if (mobile.length < 10) return "मोबाइल नंबर / Mobile No. 10 अंक / digits का होना चाहिए";
+    if (!RegExp(r'^[0-9]+$').hasMatch(mobile)) return "केवल अंक / Numbers only लिखें";
     return null;
   }
 
   Future<void> _submitForm() async {
     setState(() => _disclaimerError = false);
-
     final formValid = _formKey.currentState?.validate() ?? false;
-
     if (!_isLoginMode && !_isDisclaimerAccepted) {
       setState(() => _disclaimerError = true);
     }
-
     if (!formValid || (!_isLoginMode && !_isDisclaimerAccepted)) {
-      _showSnack("Kripya form mein highlighted errors theek karein.");
+      _showSnack("कृपया फ़ॉर्म में दी गई त्रुटियाँ सुधारें।");
       return;
     }
 
     setState(() => _isLoading = true);
-
-    final email = _emailController.text.trim();
+    final email    = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
     try {
@@ -104,46 +108,48 @@ class _LoginScreenState extends State<LoginScreen> {
         await _authService.signIn(email, password);
       } else {
         final userCredential = await _authService.register(email, password);
-        final selectedGender = _genderController.text.trim();
-
         await _profileService.createUserProfile(userCredential.user!.uid, {
           'uid': userCredential.user!.uid,
-          'fullName': _nameController.text.trim(),
-          'age': _ageController.text.trim(),
-          'mobile': _mobileController.text.trim(),
-          'gender': selectedGender,
-          'religion': _religionController.text.trim(),
-          'category': _categoryController.text.trim(),
-          'village': _villageController.text.trim(),
-          'district': _districtController.text.trim(),
-          'state': _stateController.text.trim(),
-          'occupation': _occupationController.text.trim(),
+          'fullName':      _nameController.text.trim(),
+          'age':           _ageController.text.trim(),
+          'mobile':        _mobileController.text.trim(),
+          'gender':        _genderController.text.trim(),
+          'religion':      _religionController.text.trim(),
+          'category':      _categoryController.text.trim(),
+          'caste':         _casteController.text.trim(),
+          'gotra':         _gotraController.text.trim(),
+          'village':       _villageController.text.trim(),
+          'district':      _districtController.text.trim(),
+          'state':         _stateController.text.trim(),
+          'occupation':    _occupationController.text.trim(),
+          'brothers':      _brothersController.text.trim(),
+          'sisters':       _sistersController.text.trim(),
           'familyDetails': _familyDetailsController.text.trim(),
-          'requirements': _requirementsController.text.trim(),
-          'email': email,
+          'requirements':  _requirementsController.text.trim(),
+          'email':         email,
           'verificationStatus': 'none',
-          'isVerified': false,
-          'createdAt': DateTime.now(),
+          'isVerified':    false,
+          'createdAt':     DateTime.now(),
         });
       }
       if (mounted) {
         Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => const DashboardScreen()));
+            context, MaterialPageRoute(builder: (_) => const DashboardScreen()));
       }
     } on FirebaseAuthException catch (e) {
-      String friendly = e.message ?? "Account banane mein dikkat aayi.";
+      String friendly = "खाता बनाने में समस्या आई।";
       if (e.code == 'email-already-in-use') {
-        friendly = "Ye email pehle se registered hai. Login try karein.";
+        friendly = "यह ईमेल पहले से पंजीकृत है। लॉगिन करें।";
       } else if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
-        friendly = "Email ya Password galat hai.";
+        friendly = "ईमेल या पासवर्ड गलत है।";
       } else if (e.code == 'weak-password') {
-        friendly = "Password bahut kamzor hai, kam se kam 6 characters rakhein.";
+        friendly = "पासवर्ड बहुत कमज़ोर है, कम से कम 6 अक्षर रखें।";
       } else if (e.code == 'network-request-failed') {
-        friendly = "Internet connection check karein.";
+        friendly = "इंटरनेट कनेक्शन जाँचें।";
       }
       _showSnack(friendly);
     } catch (e) {
-      _showSnack("Kuch galat ho gaya. Dobara try karein.");
+      _showSnack("कुछ गलत हो गया। दोबारा कोशिश करें।");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -155,9 +161,9 @@ class _LoginScreenState extends State<LoginScreen> {
       final userCredential = await _authService.signInWithGoogle();
       if (userCredential.additionalUserInfo?.isNewUser ?? false) {
         await _profileService.createUserProfile(userCredential.user!.uid, {
-          'uid': userCredential.user!.uid,
-          'fullName': userCredential.user!.displayName ?? 'Naya User',
-          'email': userCredential.user!.email,
+          'uid':      userCredential.user!.uid,
+          'fullName': userCredential.user!.displayName ?? 'नया उपयोगकर्ता',
+          'email':    userCredential.user!.email,
           'verificationStatus': 'none',
           'isVerified': false,
           'createdAt': DateTime.now(),
@@ -165,51 +171,46 @@ class _LoginScreenState extends State<LoginScreen> {
       }
       if (mounted) {
         Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => const DashboardScreen()));
+            context, MaterialPageRoute(builder: (_) => const DashboardScreen()));
       }
     } catch (e) {
-      _showSnack("Google Sign-In mein error aayi. Dobara try karein.");
+      _showSnack("Google लॉगिन में समस्या आई। दोबारा कोशिश करें।");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _showForgotPasswordDialog() {
-    final resetEmailController = TextEditingController(text: _emailController.text);
+    final ctrl = TextEditingController(text: _emailController.text);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Reset Password"),
+        title: const Text("पासवर्ड रीसेट करें / Reset Password"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-                "Apna registered email daalein, hum aapko password reset karne ka link bhejenge."),
+            const Text("अपना ईमेल डालें / Enter your email, हम रीसेट लिंक भेजेंगे / we'll send a reset link."),
             const SizedBox(height: 12),
-            TextField(
-              controller: resetEmailController,
-              decoration: const InputDecoration(hintText: "Gmail ID"),
-            ),
+            TextField(controller: ctrl, decoration: const InputDecoration(hintText: "ईमेल / Email ID")),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("रद्द करें / Cancel")),
           ElevatedButton(
             onPressed: () async {
-              if (resetEmailController.text.isNotEmpty) {
+              if (ctrl.text.isNotEmpty) {
                 try {
-                  await _authService.sendPasswordResetEmail(resetEmailController.text.trim());
+                  await _authService.sendPasswordResetEmail(ctrl.text.trim());
                   if (context.mounted) {
                     Navigator.pop(context);
-                    _showSnack("Password reset link aapke email par bhej diya gaya hai!",
-                        isError: false);
+                    _showSnack("पासवर्ड रीसेट लिंक भेज दिया गया है!", isError: false);
                   }
-                } catch (e) {
-                  if (context.mounted) _showSnack("Error: Email nahi mila ya galat hai.");
+                } catch (_) {
+                  if (context.mounted) _showSnack("त्रुटि: ईमेल नहीं मिला या गलत है।");
                 }
               }
             },
-            child: const Text("Send Link"),
+            child: const Text("लिंक भेजें / Send Link"),
           ),
         ],
       ),
@@ -217,10 +218,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _field(IconData icon, String hint, TextEditingController controller,
-      {bool isPassword = false,
-      int maxLines = 1,
-      bool isNumber = false,
-      String? Function(String?)? validator}) {
+      {bool isPassword = false, int maxLines = 1, bool isNumber = false,
+       String? Function(String?)? validator}) {
     return TextFormField(
       controller: controller,
       obscureText: isPassword ? _obscurePassword : false,
@@ -257,61 +256,56 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Widget _sectionHeader(String title) => Padding(
+        padding: const EdgeInsets.only(top: 10, bottom: 6),
+        child: Text(title,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 14.5)),
+      );
+
   Widget _dobField() {
     return TextFormField(
       controller: _ageController,
       readOnly: true,
       autovalidateMode: AutovalidateMode.onUserInteraction,
-      validator: (v) => _required(v, "Date of Birth"),
+      validator: (v) => _required(v, "जन्म तिथि"),
       onTap: () async {
         final picked = await showDatePicker(
           context: context,
           initialDate: DateTime(2000, 1, 1),
           firstDate: DateTime(1950),
           lastDate: DateTime.now().subtract(const Duration(days: 6570)),
-          builder: (context, child) {
-            return Theme(
-              data: Theme.of(context).copyWith(
-                colorScheme: const ColorScheme.light(
-                  primary: AppColors.primary,
-                  onPrimary: Colors.white,
-                  onSurface: AppColors.ink,
-                ),
-              ),
-              child: child!,
-            );
-          },
+          builder: (context, child) => Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: const ColorScheme.light(
+                primary: AppColors.primary, onPrimary: Colors.white, onSurface: AppColors.ink),
+            ),
+            child: child!,
+          ),
         );
         if (picked != null) {
           setState(() {
             _ageController.text =
-                "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
+                "${picked.day.toString().padLeft(2,'0')}/${picked.month.toString().padLeft(2,'0')}/${picked.year}";
           });
         }
       },
       decoration: const InputDecoration(
         prefixIcon: Icon(Icons.calendar_today_outlined, color: AppColors.primary, size: 20),
-        hintText: "Date of Birth",
+        hintText: "जन्म तिथि / Date of Birth (DD/MM/YYYY)",
       ),
     );
   }
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _nameController.dispose();
-    _ageController.dispose();
-    _mobileController.dispose();
-    _genderController.dispose();
-    _villageController.dispose();
-    _districtController.dispose();
-    _stateController.dispose();
-    _religionController.dispose();
-    _categoryController.dispose();
-    _occupationController.dispose();
-    _familyDetailsController.dispose();
-    _requirementsController.dispose();
+    for (final c in [
+      _emailController, _passwordController, _nameController, _ageController,
+      _mobileController, _genderController, _villageController, _districtController,
+      _stateController, _religionController, _categoryController, _casteController,
+      _gotraController, _occupationController, _brothersController, _sistersController,
+      _familyDetailsController, _requirementsController,
+    ]) { c.dispose(); }
     super.dispose();
   }
 
@@ -334,17 +328,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
-                          shape: BoxShape.circle,
-                        ),
+                          color: Colors.white.withOpacity(0.15), shape: BoxShape.circle),
                         child: const Icon(Icons.favorite, color: Colors.white, size: 42),
                       ),
                       const SizedBox(height: 14),
                       const Text("RishtaBook",
                           style: TextStyle(
-                              fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white, fontFamily: 'serif')),
+                              fontSize: 26, fontWeight: FontWeight.w700,
+                              color: Colors.white, fontFamily: 'serif')),
                       const SizedBox(height: 4),
-                      Text(_isLoginMode ? "Welcome back" : "Create your account",
+                      Text(_isLoginMode ? "स्वागत है / Welcome Back" : "नया खाता बनाएँ / Create Account",
                           style: const TextStyle(fontSize: 14, color: Colors.white70)),
                     ],
                   ),
@@ -356,99 +349,158 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (!_isLoginMode) ...[
-                      _field(Icons.person_outline, "Full Name", _nameController,
-                          validator: (v) => _required(v, "Full Name")),
-                      const SizedBox(height: 14),
+                      _sectionHeader("👤 व्यक्तिगत जानकारी / Personal Info"),
+                      _field(Icons.person_outline, "पूरा नाम / Full Name",
+                          _nameController, validator: (v) => _required(v, "पूरा नाम / Full Name")),
+                      const SizedBox(height: 12),
                       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Expanded(child: _dobField()),
-                        const SizedBox(width: 14),
+                        const SizedBox(width: 12),
                         Expanded(
-                            child: _dropdown(Icons.people_outline, "Gender",
-                                const ["Male", "Female", "Other"], "Gender",
-                                (v) => setState(() => _genderController.text = v ?? ''))),
+                          child: _dropdown(
+                            Icons.people_outline, "लिंग / Gender",
+                            const ["पुरुष / Male", "स्त्री / Female", "अन्य / Other"],
+                            "लिंग / Gender", (v) => setState(() => _genderController.text = v ?? '')),
+                        ),
                       ]),
-                      const SizedBox(height: 14),
-                      _field(Icons.phone_outlined, "Mobile Number (For Admin Only)",
+                      const SizedBox(height: 12),
+                      _field(Icons.phone_outlined, "मोबाइल नंबर / Mobile No. (Admin only)",
                           _mobileController, isNumber: true, validator: _validateMobile),
-                      const SizedBox(height: 14),
+
+                      _sectionHeader("🛕 धर्म एवं समाज / Religion & Community"),
                       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Expanded(
-                            child: _dropdown(Icons.menu_book_outlined, "Religion",
-                                const ["Hindu", "Muslim", "Sikh", "Ishai"], "Religion",
-                                (v) => setState(() => _religionController.text = v ?? ''))),
-                        const SizedBox(width: 14),
+                          child: _dropdown(
+                            Icons.menu_book_outlined, "धर्म / Religion",
+                            const ["हिन्दू / Hindu", "मुस्लिम / Muslim", "सिख / Sikh", "ईसाई / Christian", "बौद्ध / Buddhist", "जैन / Jain", "अन्य / Other"],
+                            "धर्म / Religion", (v) => setState(() => _religionController.text = v ?? '')),
+                        ),
+                        const SizedBox(width: 12),
                         Expanded(
-                            child: _dropdown(Icons.groups_outlined, "Category",
-                                const ["General", "OBC", "SC", "ST", "Other"], "Category",
-                                (v) => setState(() => _categoryController.text = v ?? ''))),
+                          child: _dropdown(
+                            Icons.groups_outlined, "वर्ग / Category",
+                            const ["सामान्य / General", "OBC", "SC", "ST", "अन्य / Other"],
+                            "वर्ग / Category", (v) => setState(() => _categoryController.text = v ?? '')),
+                        ),
                       ]),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 12),
+                      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Expanded(child: _field(Icons.account_tree_outlined, "जाति / Caste", _casteController)),
+                        const SizedBox(width: 12),
+                        Expanded(child: _field(Icons.spa_outlined, "गोत्र / Gotra", _gotraController)),
+                      ]),
+
+                      _sectionHeader("📍 पता / Address"),
                       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Expanded(
-                            child: _field(Icons.home_outlined, "Gaon / Town / City",
-                                _villageController, validator: (v) => _required(v, "City"))),
-                        const SizedBox(width: 14),
+                          child: _field(Icons.home_outlined, "गाँव / Village or Town",
+                              _villageController, validator: (v) => _required(v, "गाँव/शहर")),
+                        ),
+                        const SizedBox(width: 12),
                         Expanded(
-                            child: _field(Icons.location_city_outlined, "Jila (District)",
-                                _districtController, validator: (v) => _required(v, "District"))),
+                          child: _field(Icons.location_city_outlined, "जिला / District",
+                              _districtController, validator: (v) => _required(v, "जिला / District")),
+                        ),
                       ]),
-                      const SizedBox(height: 14),
-                      _field(Icons.map_outlined, "Pradesh (State)", _stateController,
-                          validator: (v) => _required(v, "State")),
-                      const SizedBox(height: 14),
-                      _dropdown(Icons.work_outline, "Occupation",
-                          const ["Job", "Business", "Farming", "Other"], "Occupation",
-                          (v) => setState(() => _occupationController.text = v ?? '')),
-                      const SizedBox(height: 14),
-                      _field(Icons.family_restroom_outlined,
-                          "Family Details (Occupation, Income, etc.)", _familyDetailsController,
-                          maxLines: 2, validator: (v) => _required(v, "Family Details")),
-                      const SizedBox(height: 14),
-                      _field(Icons.list_alt_outlined, "Any other requirement / condition",
-                          _requirementsController,
-                          maxLines: 2, validator: (v) => _required(v, "Requirement")),
-                      const SizedBox(height: 16),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Checkbox(
-                            value: _isDisclaimerAccepted,
-                            onChanged: (v) => setState(() {
-                              _isDisclaimerAccepted = v ?? false;
-                              if (_isDisclaimerAccepted) _disclaimerError = false;
-                            }),
-                            activeColor: AppColors.primary,
-                          ),
-                          const Expanded(
-                            child: Text(
-                              "Disclaimer: Hamara kaam bas do families ko connect karana hai, Ladka/Ladki aur pariwar ke baare main janch aur padtal karna aapki jimmedaari hai. Hamari app ke through koi bhi galat ya fraud activity ke liye ham zimmedar nahi hain.",
-                              style: TextStyle(fontSize: 12.5, color: AppColors.muted),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        isExpanded: true,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        validator: (v) => _required(v, "राज्य / State"),
+                        decoration: const InputDecoration(
+                          prefixIcon: Icon(Icons.map_outlined, color: AppColors.primary, size: 20),
+                          hintText: "राज्य / State",
+                        ),
+                        items: kIndianStates
+                            .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                            .toList(),
+                        onChanged: (v) => setState(() => _stateController.text = v ?? ''),
+                      ),
+
+                      _sectionHeader("💼 व्यवसाय / Occupation"),
+                      _dropdown(
+                        Icons.work_outline, "व्यवसाय / Occupation",
+                        const ["नौकरी / Job", "व्यापार / Business", "खेती / Farming", "स्वरोजगार / Self Employed", "विद्यार्थी / Student", "अन्य / Other"],
+                        "व्यवसाय / Occupation", (v) => setState(() => _occupationController.text = v ?? '')),
+
+                      _sectionHeader("👨‍👩‍👧‍👦 पारिवारिक जानकारी / Family Details"),
+                      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _brothersController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              prefixIcon: Icon(Icons.person_outline, color: AppColors.primary, size: 20),
+                              hintText: "भाइयों की संख्या / No. of Brothers",
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _sistersController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              prefixIcon: Icon(Icons.person_outline, color: AppColors.primary, size: 20),
+                              hintText: "बहनों की संख्या / No. of Sisters",
+                            ),
+                          ),
+                        ),
+                      ]),
+                      const SizedBox(height: 12),
+                      _field(Icons.family_restroom_outlined,
+                          "पारिवारिक विवरण / Family Details (Father/Mother occupation, income, etc.)",
+                          _familyDetailsController, maxLines: 2,
+                          validator: (v) => _required(v, "पारिवारिक विवरण")),
+
+                      _sectionHeader("💑 जीवनसाथी की अपेक्षाएँ / Partner Preference"),
+                      _field(Icons.list_alt_outlined,
+                          "कोई विशेष शर्त / Any preference or condition",
+                          _requirementsController, maxLines: 2,
+                          validator: (v) => _required(v, "अपेक्षाएँ")),
+
+                      const SizedBox(height: 16),
+                      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Checkbox(
+                          value: _isDisclaimerAccepted,
+                          onChanged: (v) => setState(() {
+                            _isDisclaimerAccepted = v ?? false;
+                            if (_isDisclaimerAccepted) _disclaimerError = false;
+                          }),
+                          activeColor: AppColors.primary,
+                        ),
+                        const Expanded(
+                          child: Text(
+                            "अस्वीकरण: हमारा कार्य केवल दो परिवारों को जोड़ना है। "
+                            "जाँच-पड़ताल की जिम्मेदारी आपकी है। "
+                            "किसी भी धोखाधड़ी के लिए हम उत्तरदायी नहीं हैं।",
+                            style: TextStyle(fontSize: 12.5, color: AppColors.muted),
+                          ),
+                        ),
+                      ]),
                       if (_disclaimerError)
                         const Padding(
                           padding: EdgeInsets.only(left: 12),
                           child: Align(
                             alignment: Alignment.centerLeft,
-                            child: Text("Disclaimer accept karna zaroori hai",
+                            child: Text("अस्वीकरण / Disclaimer स्वीकार करना अनिवार्य है",
                                 style: TextStyle(color: AppColors.error, fontSize: 12)),
                           ),
                         ),
                       const SizedBox(height: 18),
                     ],
-                    _field(Icons.email_outlined, "Gmail ID", _emailController,
+
+                    _field(Icons.email_outlined, "ईमेल / Email ID", _emailController,
                         validator: _validateEmail),
                     const SizedBox(height: 14),
-                    _field(Icons.lock_outline, "Password", _passwordController,
+                    _field(Icons.lock_outline, "पासवर्ड / Password", _passwordController,
                         isPassword: true, validator: _validatePassword),
                     if (_isLoginMode)
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
                             onPressed: _showForgotPasswordDialog,
-                            child: const Text("Forgot Password?")),
+                            child: const Text("पासवर्ड भूल गए? / Forgot Password?")),
                       ),
                     const SizedBox(height: 8),
                     SizedBox(
@@ -458,21 +510,25 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: _isLoading ? null : _submitForm,
                         child: _isLoading
                             ? const SizedBox(
-                                width: 22,
-                                height: 22,
+                                width: 22, height: 22,
                                 child: CircularProgressIndicator(
-                                    color: Colors.white, strokeWidth: 2.4),
-                              )
-                            : Text(_isLoginMode ? "Secure Login" : "Sign Up"),
+                                    color: Colors.white, strokeWidth: 2.4))
+                            : Text(_isLoginMode ? "सुरक्षित लॉगिन / Secure Login" : "पंजीकरण करें / Sign Up"),
                       ),
                     ),
-                    const OrnateDivider(verticalPadding: 22),
+                    const SizedBox(height: 20),
+                    const Row(children: [
+                      Expanded(child: Divider()),
+                      Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text("या / OR")),
+                      Expanded(child: Divider()),
+                    ]),
+                    const SizedBox(height: 14),
                     SizedBox(
                       width: double.infinity,
                       height: 52,
                       child: OutlinedButton.icon(
                         icon: const Icon(Icons.g_mobiledata, color: AppColors.primary, size: 28),
-                        label: const Text("Continue with Google"),
+                        label: const Text("Google से लॉगिन / Continue with Google"),
                         onPressed: _isLoading ? null : _signInWithGoogle,
                       ),
                     ),
@@ -481,17 +537,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                            _isLoginMode
-                                ? "Don't have an account? "
-                                : "Already have an account? ",
-                            style: const TextStyle(color: AppColors.muted)),
+                          _isLoginMode ? "नया खाता नहीं है? / No account? " : "पहले से खाता है? / Already registered? ",
+                          style: const TextStyle(color: AppColors.muted)),
                         GestureDetector(
                           onTap: () => setState(() {
                             _isLoginMode = !_isLoginMode;
                             _emailController.clear();
                             _passwordController.clear();
                           }),
-                          child: Text(_isLoginMode ? "Sign Up" : "Login",
+                          child: Text(_isLoginMode ? "पंजीकरण करें / Sign Up" : "लॉगिन करें",
                               style: const TextStyle(
                                   color: AppColors.primary, fontWeight: FontWeight.bold)),
                         ),

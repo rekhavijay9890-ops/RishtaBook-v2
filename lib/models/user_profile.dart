@@ -7,15 +7,17 @@ class UserProfile {
   final String mobile;
   final String religion;
   final String category;
+  final String caste;
+  final String gotra;
   final String village;
   final String district;
   final String state;
   final String occupation;
+  final String brothers;
+  final String sisters;
   final String familyDetails;
   final String requirements;
   final String email;
-
-  /// none | pending | approved | rejected
   final String verificationStatus;
   final bool isVerified;
 
@@ -27,10 +29,14 @@ class UserProfile {
     required this.mobile,
     required this.religion,
     required this.category,
+    required this.caste,
+    required this.gotra,
     required this.village,
     required this.district,
     required this.state,
     required this.occupation,
+    required this.brothers,
+    required this.sisters,
     required this.familyDetails,
     required this.requirements,
     required this.email,
@@ -47,10 +53,14 @@ class UserProfile {
       mobile: data['mobile'] ?? '',
       religion: data['religion'] ?? '--',
       category: data['category'] ?? 'N/A',
+      caste: data['caste'] ?? '',
+      gotra: data['gotra'] ?? '',
       village: data['village'] ?? '--',
       district: data['district'] ?? '--',
       state: data['state'] ?? '--',
       occupation: data['occupation'] ?? 'N/A',
+      brothers: data['brothers'] ?? '',
+      sisters: data['sisters'] ?? '',
       familyDetails: data['familyDetails'] ?? 'N/A',
       requirements: data['requirements'] ?? 'N/A',
       email: data['email'] ?? 'N/A',
@@ -62,6 +72,6 @@ class UserProfile {
   String get location =>
       [village, district, state].where((s) => s.isNotEmpty && s != '--').join(', ');
 
-  bool get isFemale => gender.toLowerCase() == 'female';
-  bool get isMale => gender.toLowerCase() == 'male';
+  bool get isFemale => gender.toLowerCase().contains('female') || gender.toLowerCase().contains('stri');
+  bool get isMale   => gender.toLowerCase().contains('male') || gender.toLowerCase().contains('purush');
 }

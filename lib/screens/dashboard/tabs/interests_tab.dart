@@ -7,7 +7,6 @@ import '../../../services/auth_service.dart';
 import '../../../services/interest_service.dart';
 import '../../../services/profile_service.dart';
 import '../../profile/view_profile_screen.dart';
-
 import '../../../theme/app_theme.dart';
 
 const Color kBrandColor = AppColors.primary;
@@ -28,16 +27,16 @@ class InterestsTab extends StatelessWidget {
               unselectedLabelColor: Colors.grey,
               indicatorColor: kBrandColor,
               tabs: [
-                Tab(text: "Received"),
-                Tab(text: "Sent"),
+                Tab(text: "प्राप्त / Received"),
+                Tab(text: "भेजी गई / Sent"),
               ],
             ),
           ),
           const Expanded(
             child: TabBarView(
               children: [
-                _ReceivedInterests(),
-                _SentInterests(),
+                _प्राप्तInterests(),
+                _भेजी गईInterests(),
               ],
             ),
           ),
@@ -47,8 +46,8 @@ class InterestsTab extends StatelessWidget {
   }
 }
 
-class _ReceivedInterests extends StatelessWidget {
-  const _ReceivedInterests();
+class _प्राप्तInterests extends StatelessWidget {
+  const _प्राप्तInterests();
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +63,7 @@ class _ReceivedInterests extends StatelessWidget {
         }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return const Center(
-              child: Text("Abhi tak koi interest nahi aaya hai.", style: TextStyle(color: Colors.grey)));
+              child: Text("अभी तक कोई रुचि नहीं आई।", style: TextStyle(color: Colors.grey)));
         }
 
         final interests = snapshot.data!.docs.map((doc) => Interest.fromDoc(doc)).toList();
@@ -87,7 +86,7 @@ class _ReceivedInterests extends StatelessWidget {
                         if (!context.mounted) return;
                         if (!doc.exists) {
                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                              content: Text("Profile load nahi ho payi.")));
+                              content: Text("प्रोफ़ाइल लोड नहीं हो पाई। / Profile could not be loaded.")));
                           return;
                         }
                         final profile = UserProfile.fromMap(doc.id, doc.data()!);
@@ -101,7 +100,7 @@ class _ReceivedInterests extends StatelessWidget {
                               child: Icon(Icons.favorite, color: Colors.white)),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: Text("${interest.fromName} ne aapko interest bheja hai",
+                            child: Text("${interest.fromName} ने आपको रुचि भेजी है / sent you an interest",
                                 style: const TextStyle(fontWeight: FontWeight.w600)),
                           ),
                           const Icon(Icons.chevron_right, color: Colors.grey),
@@ -115,7 +114,7 @@ class _ReceivedInterests extends StatelessWidget {
                           child: OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
                             icon: const Icon(Icons.close, size: 18),
-                            label: const Text("Decline"),
+                            label: const Text("अस्वीकार करें"),
                             onPressed: () => interestService.respondToInterest(
                               interestId: interest.id,
                               fromUid: interest.fromUid,
@@ -129,7 +128,7 @@ class _ReceivedInterests extends StatelessWidget {
                           child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                             icon: const Icon(Icons.check, size: 18, color: Colors.white),
-                            label: const Text("Accept", style: TextStyle(color: Colors.white)),
+                            label: const Text("स्वीकार करें", style: TextStyle(color: Colors.white)),
                             onPressed: () => interestService.respondToInterest(
                               interestId: interest.id,
                               fromUid: interest.fromUid,
@@ -151,8 +150,8 @@ class _ReceivedInterests extends StatelessWidget {
   }
 }
 
-class _SentInterests extends StatelessWidget {
-  const _SentInterests();
+class _भेजी गईInterests extends StatelessWidget {
+  const _भेजी गईInterests();
 
   @override
   Widget build(BuildContext context) {
@@ -168,7 +167,7 @@ class _SentInterests extends StatelessWidget {
         }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return const Center(
-              child: Text("Aapne abhi tak koi interest nahi bheja hai.", style: TextStyle(color: Colors.grey)));
+              child: Text("आपने अभी तक कोई रुचि नहीं भेजी।", style: TextStyle(color: Colors.grey)));
         }
 
         final interests = snapshot.data!.docs.map((doc) => Interest.fromDoc(doc)).toList();
@@ -179,13 +178,13 @@ class _SentInterests extends StatelessWidget {
           itemBuilder: (context, index) {
             final interest = interests[index];
             Color statusColor = Colors.orange;
-            String statusText = "Pending";
+            String statusText = "प्रतीक्षित";
             if (interest.status == 'accepted') {
               statusColor = Colors.green;
-              statusText = "Accepted - Chat mein jaayein!";
+              statusText = "स्वीकार करेंed - Chat mein jaayein!";
             } else if (interest.status == 'rejected') {
               statusColor = Colors.red;
-              statusText = "Declined";
+              statusText = "अस्वीकार करेंd";
             }
 
             return Card(

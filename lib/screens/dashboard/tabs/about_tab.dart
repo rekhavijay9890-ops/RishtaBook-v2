@@ -23,18 +23,18 @@ class AboutTab extends StatelessWidget {
           const Text("RishtaBook", style: TextStyle(
               fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.ink, fontFamily: 'serif')),
           const SizedBox(height: 6),
-          const Text("Version 2.0.0", style: TextStyle(color: AppColors.muted)),
+          const Text("संस्करण / Version 2.0.0", style: TextStyle(color: AppColors.muted)),
           const OrnateDivider(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 30),
             child: const Text(
-              "RishtaBook is India's most trusted premium matchmaking platform. Humara maksad hai do dilon ko ek surakshit aur modern tarike se milana - ab real matching aur direct chat ke saath.",
+              "RishtaBook भारत का एक विश्वसनीय विवाह मंच है। हमारा उद्देश्य है दो परिवारों को सुरक्षित और आधुनिक तरीके से जोड़ना — अब सीधे मिलान और चैट के साथ।",
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 15.5, height: 1.6, color: AppColors.ink),
             ),
           ),
           const SizedBox(height: 40),
-          const Text("Made with ❤️ in India",
+          const Text("❤️ भारत में बनाया गया / Made with love in India",
               style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.muted)),
           const SizedBox(height: 20),
         ],

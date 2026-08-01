@@ -5,12 +5,14 @@ class ChatMessage {
   final String id;
   final String senderId;
   final String text;
+  final String? imageUrl;
   final DateTime? sentAt;
 
   const ChatMessage({
     required this.id,
     required this.senderId,
     required this.text,
+    required this.imageUrl,
     required this.sentAt,
   });
 
@@ -20,6 +22,7 @@ class ChatMessage {
       id: doc.id,
       senderId: data['senderId'] ?? '',
       text: data['text'] ?? '',
+      imageUrl: data['imageUrl'] as String?,
       sentAt: (data['sentAt'] as Timestamp?)?.toDate(),
     );
   }

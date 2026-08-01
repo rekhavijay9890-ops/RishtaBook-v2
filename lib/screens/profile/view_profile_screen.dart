@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../models/user_profile.dart';
-
 import '../../theme/app_theme.dart';
 
 const Color kBrandColor = AppColors.primary;
@@ -27,7 +26,7 @@ class ViewProfileScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Profile Details"),
+        title: const Text("प्रोफ़ाइल विवरण / Profile Details"),
         backgroundColor: kBrandColor,
         foregroundColor: Colors.white,
       ),
@@ -55,21 +54,27 @@ class ViewProfileScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-          _Section(title: "Basic Details", children: [
-            _Row(Icons.calendar_today, "Date of Birth", profile.dob),
-            _Row(Icons.people, "Gender", profile.gender),
-            _Row(Icons.menu_book, "Religion", profile.religion),
-            _Row(Icons.groups, "Category", profile.category),
+          _Section(title: "व्यक्तिगत जानकारी / Personal Info", children: [
+            _Row(Icons.calendar_today, "जन्म तिथि / Date of Birth", profile.dob),
+            _Row(Icons.people, "लिंग / Ling", profile.gender),
+            _Row(Icons.menu_book, "धर्म / Dharm", profile.religion),
+            _Row(Icons.groups, "वर्ग / Varg", profile.category),
+            if (profile.caste.isनहींtEmpty) _Row(Icons.account_tree, "जाति / Caste", profile.caste),
+            if (profile.gotra.isनहींtEmpty) _Row(Icons.spa, "Gotra", profile.gotra),
           ]),
-          _Section(title: "Location", children: [
-            _Row(Icons.home, "Address", profile.location),
+          _Section(title: "पता / Address", children: [
+            _Row(Icons.home, "Address / Pata", profile.location),
           ]),
-          _Section(title: "Occupation & Family", children: [
-            _Row(Icons.work, "Occupation", profile.occupation),
-            _Row(Icons.family_restroom, "Family Details", profile.familyDetails),
+          _Section(title: "व्यवसाय & Family / Peshaa aur Parivar", children: [
+            _Row(Icons.work, "व्यवसाय / Kaam", profile.occupation),
+            if (profile.brothers.isनहींtEmpty)
+              _Row(Icons.person, "भाई", profile.brothers),
+            if (profile.sisters.isनहींtEmpty)
+              _Row(Icons.person, "बहन", profile.sisters),
+            _Row(Icons.family_restroom, "परिवार की जानकारी", profile.familyDetails),
           ]),
-          _Section(title: "Partner Requirement", children: [
-            _Row(Icons.list_alt, "What they're looking for", profile.requirements),
+          _Section(title: "जीवनसाथी की प्राथमिकता", children: [
+            _Row(Icons.list_alt, "जीवनसाथी में चाहिए", profile.requirements),
           ]),
         ],
       ),
@@ -129,7 +134,7 @@ class _Row extends StatelessWidget {
               children: [
                 Text(label, style: const TextStyle(fontSize: 11.5, color: Colors.grey)),
                 const SizedBox(height: 2),
-                Text(value.isEmpty ? "N/A" : value,
+                Text(value.isEmpty ? "उपलब्ध नहीं / Not Available" : value,
                     style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w500)),
               ],
             ),

@@ -5,7 +5,6 @@ import '../../../models/user_profile.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/profile_service.dart';
 import '../../auth/login_screen.dart';
-
 import '../../../theme/app_theme.dart';
 
 const Color kBrandColor = AppColors.primary;
@@ -19,7 +18,7 @@ class ProfileTab extends StatelessWidget {
     final profileService = ProfileService();
     final user = authService.currentUser;
 
-    if (user == null) return const Center(child: Text("Kripya login karein"));
+    if (user == null) return const Center(child: Text("कृपया लॉगिन करें / Please login"));
 
     Future<void> logout() async {
       await authService.signOut();
@@ -39,9 +38,9 @@ class ProfileTab extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text("Profile data nahi mila."),
+                const Text("प्रोफ़ाइल डेटा नहीं मिला। / Profile data not found."),
                 const SizedBox(height: 16),
-                ElevatedButton(onPressed: logout, child: const Text("Logout")),
+                ElevatedButton(onPressed: logout, child: const Text("लॉगआउट / Logout")),
               ],
             ),
           );
@@ -54,37 +53,37 @@ class ProfileTab extends StatelessWidget {
           verificationBox = _StatusBanner(
             icon: Icons.verified,
             color: Colors.green,
-            title: "Profile Verified",
-            subtitle: "Aapka profile admin dwara verify ho chuka hai.",
+            title: "प्रोफ़ाइल सत्यापित / Profile Verified",
+            subtitle: "आपकी प्रोफ़ाइल व्यवस्थापक द्वारा सत्यापित हो चुकी है।",
           );
         } else if (profile.verificationStatus == 'pending') {
           verificationBox = _StatusBanner(
             icon: Icons.hourglass_top,
             color: Colors.orange,
-            title: "Verification Pending",
-            subtitle: "Admin jald hi aapki profile review karenge.",
+            title: "Verification प्रतीक्षित",
+            subtitle: "व्यवस्थापक जल्द ही आपकी प्रोफ़ाइल देखेंगे।",
           );
         } else if (profile.verificationStatus == 'rejected') {
           verificationBox = _StatusBanner(
             icon: Icons.error_outline,
             color: Colors.red,
-            title: "Verification Rejected",
-            subtitle: "Kripya admin se WhatsApp par sampark karein.",
+            title: "सत्यापन अस्वीकृत / Verification Rejected",
+            subtitle: "कृपया व्यवस्थापक से संपर्क करें।",
             action: TextButton(
               onPressed: () => profileService.requestVerification(user.uid),
-              child: const Text("Dubara Request Karein"),
+              child: const Text("फिर से अनुरोध करें"),
             ),
           );
         } else {
           verificationBox = _StatusBanner(
             icon: Icons.shield_outlined,
             color: kBrandColor,
-            title: "Get Verified",
-            subtitle: "Verified badge se aapki profile par zyada trust milta hai.",
+            title: "सत्यापित हों",
+            subtitle: "सत्यापित बैज से आपकी प्रोफ़ाइल पर ज़्यादा विश्वास मिलता है।",
             action: ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: kBrandColor),
               onPressed: () => profileService.requestVerification(user.uid),
-              child: const Text("Request Verification", style: TextStyle(color: Colors.white)),
+              child: const Text("सत्यापन अनुरोध करें", style: TextStyle(color: Colors.white)),
             ),
           );
         }
@@ -97,7 +96,7 @@ class ProfileTab extends StatelessWidget {
                 radius: 42,
                 backgroundColor: kBrandColor,
                 child: Text(
-                  profile.fullName.isNotEmpty ? profile.fullName[0].toUpperCase() : "?",
+                  profile.fullName.isनहींtEmpty ? profile.fullName[0].toUpperCase() : "?",
                   style: const TextStyle(fontSize: 32, color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -118,14 +117,22 @@ class ProfileTab extends StatelessWidget {
             const SizedBox(height: 20),
             verificationBox,
             const SizedBox(height: 20),
-            _InfoTile(icon: Icons.calendar_today, title: "Date of Birth", value: profile.dob),
-            _InfoTile(icon: Icons.people, title: "Gender", value: profile.gender),
-            _InfoTile(icon: Icons.menu_book, title: "Religion", value: profile.religion),
-            _InfoTile(icon: Icons.groups, title: "Category", value: profile.category),
-            _InfoTile(icon: Icons.work, title: "Occupation", value: profile.occupation),
-            _InfoTile(icon: Icons.home, title: "Address", value: profile.location),
-            _InfoTile(icon: Icons.family_restroom, title: "Family Details", value: profile.familyDetails),
-            _InfoTile(icon: Icons.list_alt, title: "Requirement", value: profile.requirements),
+            _InfoTile(icon: Icons.calendar_today, title: "जन्म तिथि / Date of Birth", value: profile.dob),
+            _InfoTile(icon: Icons.people, title: "लिंग / Ling", value: profile.gender),
+            _InfoTile(icon: Icons.menu_book, title: "धर्म / Dharm", value: profile.religion),
+            _InfoTile(icon: Icons.groups, title: "वर्ग / Varg", value: profile.category),
+            if (profile.caste.isनहींtEmpty)
+              _InfoTile(icon: Icons.account_tree, title: "जाति / Caste", value: profile.caste),
+            if (profile.gotra.isनहींtEmpty)
+              _InfoTile(icon: Icons.spa, title: "Gotra", value: profile.gotra),
+            _InfoTile(icon: Icons.work, title: "व्यवसाय / Kaam", value: profile.occupation),
+            _InfoTile(icon: Icons.home, title: "पता / Address", value: profile.location),
+            if (profile.brothers.isनहींtEmpty)
+              _InfoTile(icon: Icons.person, title: "भाई", value: profile.brothers),
+            if (profile.sisters.isनहींtEmpty)
+              _InfoTile(icon: Icons.person, title: "बहन", value: profile.sisters),
+            _InfoTile(icon: Icons.family_restroom, title: "परिवार की जानकारी", value: profile.familyDetails),
+            _InfoTile(icon: Icons.list_alt, title: "जीवनसाथी की प्राथमिकता", value: profile.requirements),
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
@@ -133,7 +140,7 @@ class ProfileTab extends StatelessWidget {
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 icon: const Icon(Icons.logout, color: Colors.white),
-                label: const Text("Logout Account", style: TextStyle(color: Colors.white)),
+                label: const Text("खाता लॉगआउट करें / Logout Account", style: TextStyle(color: Colors.white)),
                 onPressed: logout,
               ),
             ),

@@ -63,7 +63,7 @@ class _HomeTabState extends State<HomeTab> {
                 value: value,
                 decoration: InputDecoration(labelText: label),
                 items: [
-                  const DropdownMenuItem<String>(value: null, child: Text("Sabhi")),
+                  const DropdownMenuItem<String>(value: null, child: Text("सभी / All")),
                   ...options.map((o) => DropdownMenuItem(value: o, child: Text(o))),
                 ],
                 onChanged: (v) => setSheetState(() => onChanged(v)),
@@ -81,19 +81,19 @@ class _HomeTabState extends State<HomeTab> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text("Filter Matches", style: Theme.of(context).textTheme.titleLarge),
+                  Text("फ़िल्टर करें", style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 16),
-                  filterDropdown("Religion", religion, const ["Hindu", "Muslim", "Sikh", "Ishai"],
+                  filterDropdown("धर्म / Religion", religion, const ["हिन्दू / Hindu", "मुस्लिम / Muslim", "सिख / Sikh", "ईसाई / Christian"],
                       (v) => religion = v),
                   const SizedBox(height: 12),
-                  filterDropdown("Category", category,
-                      const ["General", "OBC", "SC", "ST", "Other"], (v) => category = v),
+                  filterDropdown("वर्ग / Category", category,
+                      const ["सामान्य / General", "ओबीसी", "एससी", "एसटी", "अन्य / Other"], (v) => category = v),
                   const SizedBox(height: 12),
                   filterDropdown(
-                      "Gender", gender, const ["Male", "Female", "Other"], (v) => gender = v),
+                      "लिंग / Gender", gender, const ["पुरुष / Male", "स्त्री / Female", "अन्य / Other"], (v) => gender = v),
                   const SizedBox(height: 12),
-                  filterDropdown("Occupation", occupation,
-                      const ["Job", "Business", "Farming", "Other"], (v) => occupation = v),
+                  filterDropdown("व्यवसाय / Occupation", occupation,
+                      const ["नौकरी / Job", "व्यापार / Business", "खेती / Farming", "अन्य / Other"], (v) => occupation = v),
                   const SizedBox(height: 20),
                   Row(
                     children: [
@@ -107,7 +107,7 @@ class _HomeTabState extends State<HomeTab> {
                               occupation = null;
                             });
                           },
-                          child: const Text("Clear"),
+                          child: const Text("हटाएँ"),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -122,7 +122,7 @@ class _HomeTabState extends State<HomeTab> {
                             });
                             Navigator.pop(context);
                           },
-                          child: const Text("Apply"),
+                          child: const Text("लागू करें / Apply"),
                         ),
                       ),
                     ],
@@ -147,7 +147,7 @@ class _HomeTabState extends State<HomeTab> {
           return const Center(child: CircularProgressIndicator(color: kBrandColor));
         }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(child: Text("Abhi tak koi naya profile nahi hai."));
+          return const Center(child: Text("अभी तक कोई नई प्रोफ़ाइल नहीं है।"));
         }
 
         final allProfiles = snapshot.data!.docs
@@ -159,7 +159,7 @@ class _HomeTabState extends State<HomeTab> {
 
         if (allProfiles.isEmpty) {
           return const Center(
-              child: Text("Abhi aapke alawa koi aur user nahi hai.",
+              child: Text("अभी आपके अलावा कोई नहीं है। / No other users yet.",
                   style: TextStyle(color: Colors.grey)));
         }
 
@@ -176,7 +176,7 @@ class _HomeTabState extends State<HomeTab> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text("Recommended Matches",
+                  const Text("अनुशंसित रिश्ते / Recommended Matches",
                       style: TextStyle(
                           fontSize: 22, fontWeight: FontWeight.bold, color: kBrandColor)),
                   IconButton(
@@ -186,15 +186,15 @@ class _HomeTabState extends State<HomeTab> {
                       child: const Icon(Icons.filter_list, color: kBrandColor),
                     ),
                     onPressed: _openFilterSheet,
-                    tooltip: "Filter",
+                    tooltip: "फ़िल्टर / Filter",
                   ),
                 ],
               ),
-              if (allProfiles.isNotEmpty && filteredProfiles.isEmpty)
+              if (allProfiles.isनहींtEmpty && filteredProfiles.isEmpty)
                 const Padding(
                   padding: EdgeInsets.only(top: 40),
                   child: Center(
-                    child: Text("In filters se koi profile nahi mili.",
+                    child: Text("इन फ़िल्टर से कोई प्रोफ़ाइल नहीं मिली। / No profiles match these filters.",
                         style: TextStyle(color: Colors.grey)),
                   ),
                 ),
@@ -221,7 +221,7 @@ class _ProfileCard extends StatefulWidget {
 class _ProfileCardState extends State<_ProfileCard> {
   final InterestService _interestService = InterestService();
   bool _checking = true;
-  bool _alreadySent = false;
+  bool _alreadyभेजी गई = false;
 
   @override
   void initState() {
@@ -233,7 +233,7 @@ class _ProfileCardState extends State<_ProfileCard> {
     final exists = await _interestService.hasExistingInterest(
         widget.currentUserId, widget.profile.uid);
     if (mounted) setState(() {
-      _alreadySent = exists;
+      _alreadyभेजी गई = exists;
       _checking = false;
     });
   }
@@ -246,7 +246,7 @@ class _ProfileCardState extends State<_ProfileCard> {
       if (exists) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text("Interest pehle se bheja ja chuka hai.")));
+              content: Text("रुचि / Interest पहले से भेजी जा चुकी है।")));
         }
       } else {
         // Fetch our own name for the interest record.
@@ -260,7 +260,7 @@ class _ProfileCardState extends State<_ProfileCard> {
         );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text("${widget.profile.fullName} ko interest bhej diya gaya! 💌"),
+            content: Text("${widget.profile.fullName} को रुचि भेज दी गई! 💌"),
             backgroundColor: Colors.green,
           ));
         }
@@ -268,11 +268,11 @@ class _ProfileCardState extends State<_ProfileCard> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text("Interest bhejne mein error aayi."), backgroundColor: Colors.red));
+            content: Text("रुचि भेजने में त्रुटि / Error sending interest."), backgroundColor: Colors.red));
       }
     } finally {
       if (mounted) setState(() {
-        _alreadySent = true;
+        _alreadyभेजी गई = true;
         _checking = false;
       });
     }
@@ -360,7 +360,7 @@ class _ProfileCardState extends State<_ProfileCard> {
                       ),
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
-                        child: Text("View Profile", style: TextStyle(fontSize: 13)),
+                        child: Text("प्रोफ़ाइल देखें / View Profile", style: TextStyle(fontSize: 13)),
                       ),
                     ),
                   ),
@@ -371,24 +371,24 @@ class _ProfileCardState extends State<_ProfileCard> {
                     height: 42,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _alreadySent ? Colors.grey.shade300 : kBrandColor,
+                        backgroundColor: _alreadyभेजी गई ? Colors.grey.shade300 : kBrandColor,
                         disabledBackgroundColor: Colors.grey.shade300,
                         padding: const EdgeInsets.symmetric(horizontal: 6),
                       ),
-                      onPressed: (_checking || _alreadySent) ? null : _sendInterest,
+                      onPressed: (_checking || _alreadyभेजी गई) ? null : _sendInterest,
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(_alreadySent ? Icons.check : Icons.favorite_border,
-                                size: 16, color: _alreadySent ? Colors.grey.shade700 : Colors.white),
+                            Icon(_alreadyभेजी गई ? Icons.check : Icons.favorite_border,
+                                size: 16, color: _alreadyभेजी गई ? Colors.grey.shade700 : Colors.white),
                             const SizedBox(width: 6),
                             Text(
-                              _checking ? "..." : (_alreadySent ? "Sent" : "Send Interest"),
+                              _checking ? "..." : (_alreadyभेजी गई ? "भेजी गई" : "रुचि भेजें / Send Interest"),
                               style: TextStyle(
                                   fontSize: 13,
-                                  color: _alreadySent ? Colors.grey.shade700 : Colors.white),
+                                  color: _alreadyभेजी गई ? Colors.grey.shade700 : Colors.white),
                             ),
                           ],
                         ),
