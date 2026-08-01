@@ -35,8 +35,8 @@ class InterestsTab extends StatelessWidget {
           const Expanded(
             child: TabBarView(
               children: [
-                _प्राप्तInterests(),
-                _भेजी गईInterests(),
+                _ReceivedInterests(),
+                _SentInterests(),
               ],
             ),
           ),
@@ -46,8 +46,8 @@ class InterestsTab extends StatelessWidget {
   }
 }
 
-class _प्राप्तInterests extends StatelessWidget {
-  const _प्राप्तInterests();
+class _ReceivedInterests extends StatelessWidget {
+  const _ReceivedInterests();
 
   @override
   Widget build(BuildContext context) {
@@ -150,8 +150,8 @@ class _प्राप्तInterests extends StatelessWidget {
   }
 }
 
-class _भेजी गईInterests extends StatelessWidget {
-  const _भेजी गईInterests();
+class _SentInterests extends StatelessWidget {
+  const _SentInterests();
 
   @override
   Widget build(BuildContext context) {

@@ -35,11 +35,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     AboutTab(),
   ];
 
-  void _showनहींtifications(String uid) {
+  void _showNotifications(String uid) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("नहींtifications"),
+        title: const Text("Notifications"),
         content: SizedBox(
           width: double.maxFinite,
           height: 300,
@@ -118,7 +118,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 isLabelVisible: pendingCount > 0,
                 child: IconButton(
                   icon: const Icon(Icons.notifications_active),
-                  onPressed: () => _showनहींtifications(uid),
+                  onPressed: () => _showNotifications(uid),
                 ),
               ),
               const SizedBox(width: 4),

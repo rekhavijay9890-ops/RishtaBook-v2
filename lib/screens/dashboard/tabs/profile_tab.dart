@@ -96,7 +96,7 @@ class ProfileTab extends StatelessWidget {
                 radius: 42,
                 backgroundColor: kBrandColor,
                 child: Text(
-                  profile.fullName.isनहींtEmpty ? profile.fullName[0].toUpperCase() : "?",
+                  profile.fullName.isEmpty ? profile.fullName[0].toUpperCase() : "?",
                   style: const TextStyle(fontSize: 32, color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -121,15 +121,15 @@ class ProfileTab extends StatelessWidget {
             _InfoTile(icon: Icons.people, title: "लिंग / Ling", value: profile.gender),
             _InfoTile(icon: Icons.menu_book, title: "धर्म / Dharm", value: profile.religion),
             _InfoTile(icon: Icons.groups, title: "वर्ग / Varg", value: profile.category),
-            if (profile.caste.isनहींtEmpty)
+            if (profile.caste.isEmpty)
               _InfoTile(icon: Icons.account_tree, title: "जाति / Caste", value: profile.caste),
-            if (profile.gotra.isनहींtEmpty)
+            if (profile.gotra.isEmpty)
               _InfoTile(icon: Icons.spa, title: "Gotra", value: profile.gotra),
             _InfoTile(icon: Icons.work, title: "व्यवसाय / Kaam", value: profile.occupation),
             _InfoTile(icon: Icons.home, title: "पता / Address", value: profile.location),
-            if (profile.brothers.isनहींtEmpty)
+            if (profile.brothers.isEmpty)
               _InfoTile(icon: Icons.person, title: "भाई", value: profile.brothers),
-            if (profile.sisters.isनहींtEmpty)
+            if (profile.sisters.isEmpty)
               _InfoTile(icon: Icons.person, title: "बहन", value: profile.sisters),
             _InfoTile(icon: Icons.family_restroom, title: "परिवार की जानकारी", value: profile.familyDetails),
             _InfoTile(icon: Icons.list_alt, title: "जीवनसाथी की प्राथमिकता", value: profile.requirements),

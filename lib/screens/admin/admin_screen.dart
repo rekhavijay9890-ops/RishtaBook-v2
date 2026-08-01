@@ -37,7 +37,7 @@ class AdminScreen extends StatelessWidget {
         ),
         body: const TabBarView(
           children: [
-            _सत्यापनTab(),
+            _VerificationsTab(),
             _AllUsersTab(),
           ],
         ),
@@ -46,15 +46,15 @@ class AdminScreen extends StatelessWidget {
   }
 }
 
-class _सत्यापनTab extends StatelessWidget {
-  const _सत्यापनTab();
+class _VerificationsTab extends StatelessWidget {
+  const _VerificationsTab();
 
   @override
   Widget build(BuildContext context) {
     final profileService = ProfileService();
 
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: profileService.pendingसत्यापनStream(),
+      stream: profileService.pendingVerificationsStream(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator(color: kBrandColor));
@@ -217,7 +217,7 @@ class _AllUsersTabState extends State<_AllUsersTab> {
                     child: ExpansionTile(
                       leading: CircleAvatar(
                         backgroundColor: kBrandColor.withOpacity(0.1),
-                        child: Text(p.fullName.isनहींtEmpty ? p.fullName[0].toUpperCase() : "?",
+                        child: Text(p.fullName.isEmpty ? p.fullName[0].toUpperCase() : "?",
                             style: const TextStyle(color: kBrandColor, fontWeight: FontWeight.bold)),
                       ),
                       title: Text(p.fullName, style: const TextStyle(fontWeight: FontWeight.w600)),

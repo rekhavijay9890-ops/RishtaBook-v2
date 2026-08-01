@@ -59,17 +59,17 @@ class ViewProfileScreen extends StatelessWidget {
             _Row(Icons.people, "लिंग / Ling", profile.gender),
             _Row(Icons.menu_book, "धर्म / Dharm", profile.religion),
             _Row(Icons.groups, "वर्ग / Varg", profile.category),
-            if (profile.caste.isनहींtEmpty) _Row(Icons.account_tree, "जाति / Caste", profile.caste),
-            if (profile.gotra.isनहींtEmpty) _Row(Icons.spa, "Gotra", profile.gotra),
+            if (profile.caste.isEmpty) _Row(Icons.account_tree, "जाति / Caste", profile.caste),
+            if (profile.gotra.isEmpty) _Row(Icons.spa, "Gotra", profile.gotra),
           ]),
           _Section(title: "पता / Address", children: [
             _Row(Icons.home, "Address / Pata", profile.location),
           ]),
           _Section(title: "व्यवसाय & Family / Peshaa aur Parivar", children: [
             _Row(Icons.work, "व्यवसाय / Kaam", profile.occupation),
-            if (profile.brothers.isनहींtEmpty)
+            if (profile.brothers.isEmpty)
               _Row(Icons.person, "भाई", profile.brothers),
-            if (profile.sisters.isनहींtEmpty)
+            if (profile.sisters.isEmpty)
               _Row(Icons.person, "बहन", profile.sisters),
             _Row(Icons.family_restroom, "परिवार की जानकारी", profile.familyDetails),
           ]),
