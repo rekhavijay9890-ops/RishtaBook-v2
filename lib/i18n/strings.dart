@@ -136,10 +136,12 @@ const Map<String, Map<String, String>> _dict = {
 };
 
 extension StringsX on BuildContext {
+  /// Whether the app-wide language toggle is currently set to Hindi.
+  bool get isHindi => watch<LanguageController>().isHindi;
+
   /// t('home.suggested') → looked up in the language currently selected.
   /// Pass [args] to sprintf-style %s/%d placeholders in order.
   String t(String key, [List<Object>? args]) {
-    final isHindi = watch<LanguageController>().isHindi;
     final entry = _dict[key];
     var value = entry == null ? key : (isHindi ? entry['hi']! : entry['en']!);
     if (args != null) {

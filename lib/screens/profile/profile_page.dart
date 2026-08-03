@@ -89,7 +89,6 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final authService = AuthService();
     final profileService = ProfileService();
-    final creditService = CreditService();
     final user = authService.currentUser;
     if (user == null) return Center(child: Text(context.t('common.error')));
 

@@ -11,8 +11,6 @@ import '../../services/kundali_service.dart';
 import '../../i18n/strings.dart';
 import '../../i18n/language_controller.dart';
 import '../../theme/app_colors.dart';
-import '../../theme/app_text.dart';
-import '../../widgets/rb_avatar.dart';
 import '../../widgets/rb_section_label.dart';
 import '../../widgets/wallet_strip.dart';
 import '../../widgets/match_card.dart';
