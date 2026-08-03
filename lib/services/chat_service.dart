@@ -18,23 +18,22 @@ class ChatService {
     required String text,
     String? imageUrl,
   }) async {
-    final now = DateTime.now();
     await _messages(matchId).add({
       'senderId': senderId,
       'text': text,
       'imageUrl': imageUrl,
-      'sentAt': now,
+      'sentAt': FieldValue.serverTimestamp(),
     });
     await _db.collection('matches').doc(matchId).update({
       'lastMessage': imageUrl != null ? '📷 Photo' : text,
-      'lastMessageAt': now,
+      'lastMessageAt': FieldValue.serverTimestamp(),
     });
   }
 
   /// Mark this user as having seen all messages in this match up to now.
   Future<void> markSeen(String matchId, String uid) {
     return _db.collection('matches').doc(matchId).update({
-      'lastSeen_$uid': DateTime.now(),
+      'lastSeen_$uid': FieldValue.serverTimestamp(),
     });
   }
 

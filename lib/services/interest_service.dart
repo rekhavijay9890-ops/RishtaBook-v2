@@ -20,35 +20,36 @@ class InterestService {
     return "${sorted[0]}_${sorted[1]}";
   }
 
+  /// Interests use a deterministic `{fromUid}_{toUid}` doc id (rather than
+  /// an auto-id) so firestore.rules can look up "is there an accepted
+  /// interest between these two people" with a plain get(), which is what
+  /// actually gates match creation — see the `matches` create rule.
+  static String _interestId(String fromUid, String toUid) => '${fromUid}_$toUid';
+
   Future<bool> hasExistingInterest(String fromUid, String toUid) async {
-    final forward = await _interests
-        .where('fromUid', isEqualTo: fromUid)
-        .where('toUid', isEqualTo: toUid)
-        .limit(1)
-        .get();
-    if (forward.docs.isNotEmpty) return true;
-    final backward = await _interests
-        .where('fromUid', isEqualTo: toUid)
-        .where('toUid', isEqualTo: fromUid)
-        .limit(1)
-        .get();
-    return backward.docs.isNotEmpty;
+    final forward = await _interests.doc(_interestId(fromUid, toUid)).get();
+    if (forward.exists && forward.data()?['status'] != 'rejected') return true;
+    final backward = await _interests.doc(_interestId(toUid, fromUid)).get();
+    if (backward.exists && backward.data()?['status'] != 'rejected') return true;
+    return false;
   }
 
+  /// A previously rejected interest can be re-sent — this just resets the
+  /// same document back to pending rather than blocking forever.
   Future<void> sendInterest({
     required String fromUid,
     required String fromName,
     required String toUid,
     required String toName,
   }) {
-    return _interests.add({
+    return _interests.doc(_interestId(fromUid, toUid)).set({
       'fromUid': fromUid,
       'fromName': fromName,
       'toUid': toUid,
       'toName': toName,
       'status': 'pending',
-      'createdAt': DateTime.now(),
-    });
+      'createdAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> receivedInterestsStream(String uid) {
@@ -76,7 +77,7 @@ class InterestService {
       final matchId = matchIdFor(fromUid, toUid);
       await _matches.doc(matchId).set({
         'participants': [fromUid, toUid],
-        'createdAt': DateTime.now(),
+        'createdAt': FieldValue.serverTimestamp(),
         'lastMessage': '',
         'lastMessageAt': null,
       }, SetOptions(merge: true));

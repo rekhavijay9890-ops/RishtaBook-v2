@@ -11,6 +11,13 @@ class ProfileService {
     return _users.doc(uid).set(data);
   }
 
+  /// Merges [data] into an existing profile — used both for post-signup
+  /// edits and for completing a profile that was only partially created
+  /// (e.g. a first Google sign-in, which only sets fullName/email).
+  Future<void> updateUserProfile(String uid, Map<String, dynamic> data) {
+    return _users.doc(uid).set(data, SetOptions(merge: true));
+  }
+
   Stream<DocumentSnapshot<Map<String, dynamic>>> userProfileStream(String uid) {
     return _users.doc(uid).snapshots();
   }

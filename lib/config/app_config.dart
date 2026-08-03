@@ -12,4 +12,11 @@ class AppConfig {
 
   static bool isAdmin(String? email) =>
       email != null && adminEmails.contains(email.toLowerCase());
+
+  /// TODO: replace with your live/test Razorpay key id from the Razorpay
+  /// dashboard. This id alone is safe to ship in the client (it's not a
+  /// secret), but see CreditService's class doc — crediting on the
+  /// success callback still needs server-side signature verification
+  /// before this goes anywhere near real money.
+  static const String razorpayKeyId = "rzp_test_1234567890abcd";
 }

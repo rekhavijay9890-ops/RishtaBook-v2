@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../models/user_profile.dart';
-import '../../theme/app_theme.dart';
+import '../../theme/app_colors.dart';
 
-const Color kBrandColor = AppColors.primary;
+const Color kBrandColor = AppColors.saffron;
 
 /// Read-only, full-detail view of a profile - every field the person
 /// filled in at signup (not just the shortened preview shown on the
@@ -30,7 +30,7 @@ class ViewProfileScreen extends StatelessWidget {
         backgroundColor: kBrandColor,
         foregroundColor: Colors.white,
       ),
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.pageBg,
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
@@ -59,23 +59,35 @@ class ViewProfileScreen extends StatelessWidget {
             _Row(Icons.people, "लिंग / Ling", profile.gender),
             _Row(Icons.menu_book, "धर्म / Dharm", profile.religion),
             _Row(Icons.groups, "वर्ग / Varg", profile.category),
-            if (profile.caste.isEmpty) _Row(Icons.account_tree, "जाति / Caste", profile.caste),
-            if (profile.gotra.isEmpty) _Row(Icons.spa, "Gotra", profile.gotra),
+            if (profile.caste.isNotEmpty) _Row(Icons.account_tree, "जाति / Caste", profile.caste),
+            if (profile.gotra.isNotEmpty) _Row(Icons.spa, "Gotra", profile.gotra),
           ]),
           _Section(title: "पता / Address", children: [
             _Row(Icons.home, "Address / Pata", profile.location),
           ]),
           _Section(title: "व्यवसाय & Family / Peshaa aur Parivar", children: [
             _Row(Icons.work, "व्यवसाय / Kaam", profile.occupation),
-            if (profile.brothers.isEmpty)
+            if (profile.brothers.isNotEmpty)
               _Row(Icons.person, "भाई", profile.brothers),
-            if (profile.sisters.isEmpty)
+            if (profile.sisters.isNotEmpty)
               _Row(Icons.person, "बहन", profile.sisters),
             _Row(Icons.family_restroom, "परिवार की जानकारी", profile.familyDetails),
           ]),
           _Section(title: "जीवनसाथी की प्राथमिकता", children: [
             _Row(Icons.list_alt, "जीवनसाथी में चाहिए", profile.requirements),
           ]),
+          if (profile.hasKundaliDetails)
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.star_border),
+                label: const Text("कुंडली मिलान देखें / View Kundali Match"),
+                onPressed: () => Navigator.pushNamed(context, '/kundali', arguments: {
+                  'otherUid': profile.uid,
+                  'otherName': profile.fullName,
+                }),
+              ),
+            ),
         ],
       ),
     );

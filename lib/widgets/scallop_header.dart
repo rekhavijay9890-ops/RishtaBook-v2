@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
+import '../theme/app_colors.dart';
 
 /// The app's signature shape: a scalloped arch, borrowed from the
 /// bordered edge of a wedding invitation card.
@@ -50,7 +50,7 @@ class ScallopHeader extends StatelessWidget {
         height: height,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: AppColors.heroGradient,
+            colors: [AppColors.safDark, AppColors.saffron],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -74,15 +74,15 @@ class OrnateDivider extends StatelessWidget {
       padding: EdgeInsets.symmetric(vertical: verticalPadding),
       child: Row(
         children: [
-          Expanded(child: Divider(color: AppColors.divider, thickness: 1)),
+          Expanded(child: Divider(color: AppColors.borderColor, thickness: 1)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Transform.rotate(
               angle: 0.785398,
-              child: Container(width: 7, height: 7, color: AppColors.accent),
+              child: Container(width: 7, height: 7, color: AppColors.gold),
             ),
           ),
-          Expanded(child: Divider(color: AppColors.divider, thickness: 1)),
+          Expanded(child: Divider(color: AppColors.borderColor, thickness: 1)),
         ],
       ),
     );

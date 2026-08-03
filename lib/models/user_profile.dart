@@ -20,6 +20,11 @@ class UserProfile {
   final String email;
   final String verificationStatus;
   final bool isVerified;
+  final String rashi;
+  final String nakshatra;
+  final String manglik;
+  final int credits;
+  final String? photoUrl;
 
   const UserProfile({
     required this.uid,
@@ -42,6 +47,11 @@ class UserProfile {
     required this.email,
     required this.verificationStatus,
     required this.isVerified,
+    this.rashi = '',
+    this.nakshatra = '',
+    this.manglik = 'unknown',
+    this.credits = 0,
+    this.photoUrl,
   });
 
   factory UserProfile.fromMap(String uid, Map<String, dynamic> data) {
@@ -66,8 +76,15 @@ class UserProfile {
       email: data['email'] ?? 'N/A',
       verificationStatus: data['verificationStatus'] ?? 'none',
       isVerified: data['isVerified'] ?? false,
+      rashi: data['rashi'] ?? '',
+      nakshatra: data['nakshatra'] ?? '',
+      manglik: data['manglik'] ?? 'unknown',
+      credits: (data['credits'] is int) ? data['credits'] as int : (data['credits'] as num?)?.toInt() ?? 0,
+      photoUrl: data['photoUrl'] as String?,
     );
   }
+
+  bool get hasKundaliDetails => rashi.isNotEmpty && nakshatra.isNotEmpty;
 
   String get location =>
       [village, district, state].where((s) => s.isNotEmpty && s != '--').join(', ');
