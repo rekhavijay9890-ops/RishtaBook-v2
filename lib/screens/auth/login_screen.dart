@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import '../../theme/app_theme.dart';
+import '../../theme/app_colors.dart';
 import '../../widgets/scallop_header.dart';
 import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
-import '../dashboard/dashboard_screen.dart';
+import '../../services/credit_service.dart';
+import '../../services/kundali_service.dart';
+import '../root_shell.dart';
 
 const List<String> kIndianStates = [
   'आंध्र प्रदेश','अरुणाचल प्रदेश','असम','बिहार','छत्तीसगढ़',
@@ -18,7 +20,14 @@ const List<String> kIndianStates = [
 ];
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  /// When non-null, this screen is shown to an ALREADY authenticated user
+  /// whose profile is missing required fields (e.g. a first Google
+  /// sign-in, which only sets fullName/email) — it renders the full
+  /// registration form pre-filled, with no email/password fields, and
+  /// submits via `updateUserProfile` instead of creating a new account.
+  final User? completingProfileFor;
+
+  const LoginScreen({super.key, this.completingProfileFor});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -28,6 +37,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final AuthService _authService = AuthService();
   final ProfileService _profileService = ProfileService();
+  final CreditService _creditService = CreditService();
+
+  bool get _completingProfile => widget.completingProfileFor != null;
 
   bool _isLoginMode = true;
   bool _isLoading = false;
@@ -53,6 +65,21 @@ class _LoginScreenState extends State<LoginScreen> {
   final _sistersController   = TextEditingController();
   final _familyDetailsController = TextEditingController();
   final _requirementsController  = TextEditingController();
+  final _referralCodeController  = TextEditingController();
+
+  String _rashi = '';
+  String _nakshatra = '';
+  String _manglik = 'no';
+
+  @override
+  void initState() {
+    super.initState();
+    if (_completingProfile) {
+      _isLoginMode = false;
+      _nameController.text = widget.completingProfileFor!.displayName ?? '';
+      _emailController.text = widget.completingProfileFor!.email ?? '';
+    }
+  }
 
   void _showSnack(String message, {bool isError = true}) {
     if (!mounted) return;
@@ -88,18 +115,55 @@ class _LoginScreenState extends State<LoginScreen> {
     return null;
   }
 
+  Map<String, dynamic> _profileData() => {
+        'fullName':      _nameController.text.trim(),
+        'age':           _ageController.text.trim(),
+        'mobile':        _mobileController.text.trim(),
+        'gender':        _genderController.text.trim(),
+        'religion':      _religionController.text.trim(),
+        'category':      _categoryController.text.trim(),
+        'caste':         _casteController.text.trim(),
+        'gotra':         _gotraController.text.trim(),
+        'village':       _villageController.text.trim(),
+        'district':      _districtController.text.trim(),
+        'state':         _stateController.text.trim(),
+        'occupation':    _occupationController.text.trim(),
+        'brothers':      _brothersController.text.trim(),
+        'sisters':       _sistersController.text.trim(),
+        'familyDetails': _familyDetailsController.text.trim(),
+        'requirements':  _requirementsController.text.trim(),
+        'rashi':         _rashi,
+        'nakshatra':     _nakshatra,
+        'manglik':       _manglik,
+      };
+
   Future<void> _submitForm() async {
     setState(() => _disclaimerError = false);
     final formValid = _formKey.currentState?.validate() ?? false;
-    if (!_isLoginMode && !_isDisclaimerAccepted) {
+    if (!_isLoginMode && !_completingProfile && !_isDisclaimerAccepted) {
       setState(() => _disclaimerError = true);
     }
-    if (!formValid || (!_isLoginMode && !_isDisclaimerAccepted)) {
+    if (!formValid || (!_isLoginMode && !_completingProfile && !_isDisclaimerAccepted)) {
       _showSnack("कृपया फ़ॉर्म में दी गई त्रुटियाँ सुधारें।");
       return;
     }
 
     setState(() => _isLoading = true);
+
+    if (_completingProfile) {
+      try {
+        await _profileService.updateUserProfile(widget.completingProfileFor!.uid, {
+          ..._profileData(),
+          'email': widget.completingProfileFor!.email ?? '',
+        });
+      } catch (_) {
+        _showSnack("कुछ गलत हो गया। दोबारा कोशिश करें।");
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
+      return;
+    }
+
     final email    = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
@@ -108,33 +172,28 @@ class _LoginScreenState extends State<LoginScreen> {
         await _authService.signIn(email, password);
       } else {
         final userCredential = await _authService.register(email, password);
-        await _profileService.createUserProfile(userCredential.user!.uid, {
-          'uid': userCredential.user!.uid,
-          'fullName':      _nameController.text.trim(),
-          'age':           _ageController.text.trim(),
-          'mobile':        _mobileController.text.trim(),
-          'gender':        _genderController.text.trim(),
-          'religion':      _religionController.text.trim(),
-          'category':      _categoryController.text.trim(),
-          'caste':         _casteController.text.trim(),
-          'gotra':         _gotraController.text.trim(),
-          'village':       _villageController.text.trim(),
-          'district':      _districtController.text.trim(),
-          'state':         _stateController.text.trim(),
-          'occupation':    _occupationController.text.trim(),
-          'brothers':      _brothersController.text.trim(),
-          'sisters':       _sistersController.text.trim(),
-          'familyDetails': _familyDetailsController.text.trim(),
-          'requirements':  _requirementsController.text.trim(),
-          'email':         email,
+        final uid = userCredential.user!.uid;
+        await _profileService.createUserProfile(uid, {
+          'uid': uid,
+          ..._profileData(),
+          'email': email,
           'verificationStatus': 'none',
-          'isVerified':    false,
-          'createdAt':     DateTime.now(),
+          'isVerified': false,
+          'credits': CreditService.signupBonus,
+          'createdAt': DateTime.now(),
         });
+        await _creditService.grantSignupBonus(uid);
+        final referralCode = _referralCodeController.text.trim();
+        if (referralCode.isNotEmpty && referralCode != uid) {
+          try {
+            await _creditService.grantReferralBonus(referralCode, friendName: _nameController.text.trim());
+          } catch (_) {
+            // Invalid/unknown referral code — signup still succeeds.
+          }
+        }
       }
       if (mounted) {
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (_) => const DashboardScreen()));
+        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const RootShell()), (r) => false);
       }
     } on FirebaseAuthException catch (e) {
       String friendly = "खाता बनाने में समस्या आई।";
@@ -160,19 +219,21 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final userCredential = await _authService.signInWithGoogle();
       if (userCredential.additionalUserInfo?.isNewUser ?? false) {
-        await _profileService.createUserProfile(userCredential.user!.uid, {
-          'uid':      userCredential.user!.uid,
+        final uid = userCredential.user!.uid;
+        await _profileService.createUserProfile(uid, {
+          'uid':      uid,
           'fullName': userCredential.user!.displayName ?? 'नया उपयोगकर्ता',
           'email':    userCredential.user!.email,
           'verificationStatus': 'none',
           'isVerified': false,
+          'credits': CreditService.signupBonus,
           'createdAt': DateTime.now(),
         });
+        await _creditService.grantSignupBonus(uid);
       }
-      if (mounted) {
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (_) => const DashboardScreen()));
-      }
+      // AuthGate reacts to the auth-state change on its own — if the
+      // profile is still incomplete it will route back here in
+      // completingProfileFor mode instead of leaving the user stuck.
     } catch (e) {
       _showSnack("Google लॉगिन में समस्या आई। दोबारा कोशिश करें।");
     } finally {
@@ -228,11 +289,11 @@ class _LoginScreenState extends State<LoginScreen> {
       autovalidateMode: AutovalidateMode.onUserInteraction,
       validator: validator,
       decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
+        prefixIcon: Icon(icon, color: AppColors.saffron, size: 20),
         suffixIcon: isPassword
             ? IconButton(
                 icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility,
-                    color: AppColors.muted),
+                    color: AppColors.ghost),
                 onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
               )
             : null,
@@ -248,7 +309,7 @@ class _LoginScreenState extends State<LoginScreen> {
       autovalidateMode: AutovalidateMode.onUserInteraction,
       validator: (v) => _required(v, fieldName),
       decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
+        prefixIcon: Icon(icon, color: AppColors.saffron, size: 20),
         hintText: hint,
       ),
       items: items.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
@@ -260,7 +321,7 @@ class _LoginScreenState extends State<LoginScreen> {
         padding: const EdgeInsets.only(top: 10, bottom: 6),
         child: Text(title,
             style: const TextStyle(
-                fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 14.5)),
+                fontWeight: FontWeight.bold, color: AppColors.saffron, fontSize: 14.5)),
       );
 
   Widget _dobField() {
@@ -278,7 +339,7 @@ class _LoginScreenState extends State<LoginScreen> {
           builder: (context, child) => Theme(
             data: Theme.of(context).copyWith(
               colorScheme: const ColorScheme.light(
-                primary: AppColors.primary, onPrimary: Colors.white, onSurface: AppColors.ink),
+                primary: AppColors.saffron, onPrimary: Colors.white, onSurface: AppColors.ink),
             ),
             child: child!,
           ),
@@ -291,7 +352,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       },
       decoration: const InputDecoration(
-        prefixIcon: Icon(Icons.calendar_today_outlined, color: AppColors.primary, size: 20),
+        prefixIcon: Icon(Icons.calendar_today_outlined, color: AppColors.saffron, size: 20),
         hintText: "जन्म तिथि / Date of Birth (DD/MM/YYYY)",
       ),
     );
@@ -304,15 +365,16 @@ class _LoginScreenState extends State<LoginScreen> {
       _mobileController, _genderController, _villageController, _districtController,
       _stateController, _religionController, _categoryController, _casteController,
       _gotraController, _occupationController, _brothersController, _sistersController,
-      _familyDetailsController, _requirementsController,
+      _familyDetailsController, _requirementsController, _referralCodeController,
     ]) { c.dispose(); }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final showFullForm = !_isLoginMode || _completingProfile;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.pageBg,
       body: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -337,7 +399,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               fontSize: 26, fontWeight: FontWeight.w700,
                               color: Colors.white, fontFamily: 'serif')),
                       const SizedBox(height: 4),
-                      Text(_isLoginMode ? "स्वागत है / Welcome Back" : "नया खाता बनाएँ / Create Account",
+                      Text(
+                          _completingProfile
+                              ? "अपनी प्रोफ़ाइल पूरी करें / Complete your profile"
+                              : (_isLoginMode ? "स्वागत है / Welcome Back" : "नया खाता बनाएँ / Create Account"),
                           style: const TextStyle(fontSize: 14, color: Colors.white70)),
                     ],
                   ),
@@ -348,7 +413,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (!_isLoginMode) ...[
+                    if (showFullForm) ...[
                       _sectionHeader("👤 व्यक्तिगत जानकारी / Personal Info"),
                       _field(Icons.person_outline, "पूरा नाम / Full Name",
                           _nameController, validator: (v) => _required(v, "पूरा नाम / Full Name")),
@@ -408,7 +473,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         autovalidateMode: AutovalidateMode.onUserInteraction,
                         validator: (v) => _required(v, "राज्य / State"),
                         decoration: const InputDecoration(
-                          prefixIcon: Icon(Icons.map_outlined, color: AppColors.primary, size: 20),
+                          prefixIcon: Icon(Icons.map_outlined, color: AppColors.saffron, size: 20),
                           hintText: "राज्य / State",
                         ),
                         items: kIndianStates
@@ -430,7 +495,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             controller: _brothersController,
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
-                              prefixIcon: Icon(Icons.person_outline, color: AppColors.primary, size: 20),
+                              prefixIcon: Icon(Icons.person_outline, color: AppColors.saffron, size: 20),
                               hintText: "भाइयों की संख्या / No. of Brothers",
                             ),
                           ),
@@ -441,7 +506,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             controller: _sistersController,
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
-                              prefixIcon: Icon(Icons.person_outline, color: AppColors.primary, size: 20),
+                              prefixIcon: Icon(Icons.person_outline, color: AppColors.saffron, size: 20),
                               hintText: "बहनों की संख्या / No. of Sisters",
                             ),
                           ),
@@ -459,6 +524,53 @@ class _LoginScreenState extends State<LoginScreen> {
                           _requirementsController, maxLines: 2,
                           validator: (v) => _required(v, "अपेक्षाएँ")),
 
+                      _sectionHeader("⭐ कुंडली (वैकल्पिक) / Kundali (optional)"),
+                      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              prefixIcon: Icon(Icons.brightness_7_outlined, color: AppColors.saffron, size: 20),
+                              hintText: "राशि / Rashi",
+                            ),
+                            items: KundaliService.rashis.map((r) => DropdownMenuItem(value: r, child: Text(r, overflow: TextOverflow.ellipsis))).toList(),
+                            onChanged: (v) => setState(() => _rashi = v ?? ''),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              prefixIcon: Icon(Icons.star_border, color: AppColors.saffron, size: 20),
+                              hintText: "नक्षत्र / Nakshatra",
+                            ),
+                            items: KundaliService.nakshatras.map((n) => DropdownMenuItem(value: n, child: Text(n, overflow: TextOverflow.ellipsis))).toList(),
+                            onChanged: (v) => setState(() => _nakshatra = v ?? ''),
+                          ),
+                        ),
+                      ]),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        value: _manglik,
+                        decoration: const InputDecoration(
+                          prefixIcon: Icon(Icons.warning_amber_outlined, color: AppColors.saffron, size: 20),
+                          hintText: "मांगलिक / Manglik",
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: 'no', child: Text('नहीं / No')),
+                          DropdownMenuItem(value: 'yes', child: Text('हाँ / Yes')),
+                        ],
+                        onChanged: (v) => setState(() => _manglik = v ?? 'no'),
+                      ),
+
+                      if (!_completingProfile) ...[
+                        _sectionHeader("🎁 रेफ़रल कोड / Referral code (optional)"),
+                        _field(Icons.card_giftcard_outlined, "किसी दोस्त का रेफ़रल कोड / Friend's referral code", _referralCodeController),
+                      ],
+                    ],
+
+                    if (!_completingProfile) ...[
                       const SizedBox(height: 16),
                       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Checkbox(
@@ -467,7 +579,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             _isDisclaimerAccepted = v ?? false;
                             if (_isDisclaimerAccepted) _disclaimerError = false;
                           }),
-                          activeColor: AppColors.primary,
+                          activeColor: AppColors.saffron,
                         ),
                         const Expanded(
                           child: Text(
@@ -478,7 +590,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ]),
-                      if (_disclaimerError)
+                      if (_disclaimerError && !_isLoginMode)
                         const Padding(
                           padding: EdgeInsets.only(left: 12),
                           child: Align(
@@ -490,19 +602,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 18),
                     ],
 
-                    _field(Icons.email_outlined, "ईमेल / Email ID", _emailController,
-                        validator: _validateEmail),
-                    const SizedBox(height: 14),
-                    _field(Icons.lock_outline, "पासवर्ड / Password", _passwordController,
-                        isPassword: true, validator: _validatePassword),
-                    if (_isLoginMode)
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                            onPressed: _showForgotPasswordDialog,
-                            child: const Text("पासवर्ड भूल गए? / Forgot Password?")),
-                      ),
-                    const SizedBox(height: 8),
+                    if (!_completingProfile) ...[
+                      _field(Icons.email_outlined, "ईमेल / Email ID", _emailController,
+                          validator: _validateEmail),
+                      const SizedBox(height: 14),
+                      _field(Icons.lock_outline, "पासवर्ड / Password", _passwordController,
+                          isPassword: true, validator: _validatePassword),
+                      if (_isLoginMode)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                              onPressed: _showForgotPasswordDialog,
+                              child: const Text("पासवर्ड भूल गए? / Forgot Password?")),
+                        ),
+                      const SizedBox(height: 8),
+                    ],
                     SizedBox(
                       width: double.infinity,
                       height: 52,
@@ -513,44 +627,48 @@ class _LoginScreenState extends State<LoginScreen> {
                                 width: 22, height: 22,
                                 child: CircularProgressIndicator(
                                     color: Colors.white, strokeWidth: 2.4))
-                            : Text(_isLoginMode ? "सुरक्षित लॉगिन / Secure Login" : "पंजीकरण करें / Sign Up"),
+                            : Text(_completingProfile
+                                ? "प्रोफ़ाइल सहेजें / Save Profile"
+                                : (_isLoginMode ? "सुरक्षित लॉगिन / Secure Login" : "पंजीकरण करें / Sign Up")),
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    const Row(children: [
-                      Expanded(child: Divider()),
-                      Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text("या / OR")),
-                      Expanded(child: Divider()),
-                    ]),
-                    const SizedBox(height: 14),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.g_mobiledata, color: AppColors.primary, size: 28),
-                        label: const Text("Google से लॉगिन / Continue with Google"),
-                        onPressed: _isLoading ? null : _signInWithGoogle,
-                      ),
-                    ),
-                    const SizedBox(height: 26),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          _isLoginMode ? "नया खाता नहीं है? / No account? " : "पहले से खाता है? / Already registered? ",
-                          style: const TextStyle(color: AppColors.muted)),
-                        GestureDetector(
-                          onTap: () => setState(() {
-                            _isLoginMode = !_isLoginMode;
-                            _emailController.clear();
-                            _passwordController.clear();
-                          }),
-                          child: Text(_isLoginMode ? "पंजीकरण करें / Sign Up" : "लॉगिन करें",
-                              style: const TextStyle(
-                                  color: AppColors.primary, fontWeight: FontWeight.bold)),
+                    if (!_completingProfile) ...[
+                      const SizedBox(height: 20),
+                      const Row(children: [
+                        Expanded(child: Divider()),
+                        Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text("या / OR")),
+                        Expanded(child: Divider()),
+                      ]),
+                      const SizedBox(height: 14),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.g_mobiledata, color: AppColors.saffron, size: 28),
+                          label: const Text("Google से लॉगिन / Continue with Google"),
+                          onPressed: _isLoading ? null : _signInWithGoogle,
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 26),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            _isLoginMode ? "नया खाता नहीं है? / No account? " : "पहले से खाता है? / Already registered? ",
+                            style: const TextStyle(color: AppColors.muted)),
+                          GestureDetector(
+                            onTap: () => setState(() {
+                              _isLoginMode = !_isLoginMode;
+                              _emailController.clear();
+                              _passwordController.clear();
+                            }),
+                            child: Text(_isLoginMode ? "पंजीकरण करें / Sign Up" : "लॉगिन करें",
+                                style: const TextStyle(
+                                    color: AppColors.saffron, fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),

@@ -6,9 +6,9 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../models/user_profile.dart';
 import '../../services/profile_service.dart';
-import '../../theme/app_theme.dart';
+import '../../theme/app_colors.dart';
 
-const Color kBrandColor = AppColors.primary;
+const Color kBrandColor = AppColors.saffron;
 
 /// Only reachable by emails listed in [AppConfig.adminEmails] (see the
 /// admin icon in the dashboard AppBar). Two tabs: pending verification
@@ -217,7 +217,7 @@ class _AllUsersTabState extends State<_AllUsersTab> {
                     child: ExpansionTile(
                       leading: CircleAvatar(
                         backgroundColor: kBrandColor.withOpacity(0.1),
-                        child: Text(p.fullName.isEmpty ? p.fullName[0].toUpperCase() : "?",
+                        child: Text(p.fullName.isNotEmpty ? p.fullName[0].toUpperCase() : "?",
                             style: const TextStyle(color: kBrandColor, fontWeight: FontWeight.bold)),
                       ),
                       title: Text(p.fullName, style: const TextStyle(fontWeight: FontWeight.w600)),

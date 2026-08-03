@@ -10,6 +10,9 @@ service cloud.firestore {
         && request.resource.data.isVerified == false
         && request.resource.data.verificationStatus == 'none';
 
+      // Note: `credits` is still a client-trusted field (no Cloud Functions
+      // in this project yet) — see CreditService's class doc for the
+      // production hardening this needs before real money is involved.
       allow update: if request.auth != null && (
         request.auth.token.email == "rekhavijay9890@gmail.com" ||
         (request.auth.uid == userId &&
@@ -18,6 +21,11 @@ service cloud.firestore {
            (request.resource.data.verificationStatus == 'pending' && resource.data.isVerified == false))
         )
       );
+
+      match /transactions/{txnId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null && request.auth.uid == userId;
+      }
     }
 
     match /interests/{interestId} {
@@ -28,15 +36,35 @@ service cloud.firestore {
         && request.auth.uid == request.resource.data.fromUid
         && request.resource.data.fromUid != request.resource.data.toUid;
 
+      // Only the receiver can accept/reject a pending interest (closes the
+      // self-accept hole), and only the original sender may reset a
+      // rejected interest back to pending to try again later.
       allow update: if request.auth != null &&
-        (request.auth.uid == resource.data.fromUid || request.auth.uid == resource.data.toUid);
+        request.resource.data.fromUid == resource.data.fromUid &&
+        request.resource.data.toUid == resource.data.toUid &&
+        (
+          (request.auth.uid == resource.data.toUid && resource.data.status == 'pending') ||
+          (request.auth.uid == resource.data.fromUid && resource.data.status == 'rejected' &&
+            request.resource.data.status == 'pending')
+        );
     }
 
     match /matches/{matchId} {
       allow read, update: if request.auth != null &&
         request.auth.uid in resource.data.participants;
+
+      // A match may only be created once a mutual, accepted interest
+      // exists between the same two participants — this is what actually
+      // enforces "both sides consented" instead of trusting the client.
+      // Requires interests to use a deterministic `{fromUid}_{toUid}` doc
+      // id (see InterestService.sendInterest) so it can be looked up here.
       allow create: if request.auth != null &&
-        request.auth.uid in request.resource.data.participants;
+        request.auth.uid in request.resource.data.participants &&
+        request.resource.data.participants.size() == 2 &&
+        (
+          _acceptedInterest(request.resource.data.participants[0], request.resource.data.participants[1]) ||
+          _acceptedInterest(request.resource.data.participants[1], request.resource.data.participants[0])
+        );
 
       match /messages/{messageId} {
         allow read: if request.auth != null &&
@@ -45,6 +73,16 @@ service cloud.firestore {
           request.auth.uid == request.resource.data.senderId &&
           request.auth.uid in get(/databases/$(database)/documents/matches/$(matchId)).data.participants;
       }
+    }
+
+    match /reports/{reportId} {
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.reporterUid;
+      allow read: if request.auth != null && request.auth.token.email == "rekhavijay9890@gmail.com";
+    }
+
+    function _acceptedInterest(fromUid, toUid) {
+      return exists(/databases/$(database)/documents/interests/$(fromUid + '_' + toUid)) &&
+        get(/databases/$(database)/documents/interests/$(fromUid + '_' + toUid)).data.status == 'accepted';
     }
   }
 }
