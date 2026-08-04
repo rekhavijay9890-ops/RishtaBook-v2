@@ -1,11 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'notification_service.dart';
+
 /// Handles the "interest" flow: one user sends interest to another,
 /// the receiver accepts or rejects it, and an accept creates a
 /// [MatchRecord] (see models/interest.dart) that both users can then
 /// chat inside.
 class InterestService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final NotificationService _notificationService = NotificationService();
 
   CollectionReference<Map<String, dynamic>> get _interests =>
       _db.collection('interests');
@@ -41,8 +44,8 @@ class InterestService {
     required String fromName,
     required String toUid,
     required String toName,
-  }) {
-    return _interests.doc(_interestId(fromUid, toUid)).set({
+  }) async {
+    await _interests.doc(_interestId(fromUid, toUid)).set({
       'fromUid': fromUid,
       'fromName': fromName,
       'toUid': toUid,
@@ -50,6 +53,7 @@ class InterestService {
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+    await _notificationService.notifyInterestReceived(toUid, fromName: fromName);
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> receivedInterestsStream(String uid) {
@@ -81,6 +85,13 @@ class InterestService {
         'lastMessage': '',
         'lastMessageAt': null,
       }, SetOptions(merge: true));
+
+      final interestDoc = await _interests.doc(interestId).get();
+      final toName = (interestDoc.data()?['toName'] as String?)?.trim();
+      await _notificationService.notifyInterestAccepted(
+        fromUid,
+        byName: (toName?.isNotEmpty ?? false) ? toName! : 'Someone',
+      );
     }
   }
 

@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'notification_service.dart';
+
 /// Credits: the app's pay-to-contact currency. One field on the user doc
 /// (`credits`, an int) plus an append-only `users/{uid}/transactions`
 /// ledger so the balance is always reconstructable and auditable.
@@ -83,6 +85,7 @@ class CreditService {
   Future<void> grant(String uid, {required int amount, required String type, required String label}) async {
     await _userDoc(uid).update({'credits': FieldValue.increment(amount)});
     await _logTxn(uid, type: type, delta: amount, label: label);
+    await NotificationService().notifyCreditAdded(uid, amount: amount, label: label);
   }
 
   /// Charges [chatUnlockCost] the first time a user opens a given match's

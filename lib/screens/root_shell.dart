@@ -5,12 +5,13 @@ import '../config/app_config.dart';
 import '../services/auth_service.dart';
 import '../services/interest_service.dart';
 import '../services/chat_service.dart';
-import '../theme/app_colors.dart';
+import '../services/notification_service.dart';
 import 'home/home_page.dart';
 import 'search/search_page.dart';
 import 'interests/interests_page.dart';
 import 'chat/chats_list_page.dart';
 import 'profile/profile_page.dart';
+import 'notifications/notifications_screen.dart';
 
 /// Persistent app shell: dark header actions (admin, notifications) live
 /// per-tab now, but the bottom nav + tab switching stays a simple
@@ -78,7 +79,7 @@ class _RootShellState extends State<RootShell> {
 
 /// Small shared header action row (admin + notification bell) any tab's
 /// RbHeader can drop into its `actions`. Kept here so Home/Search/etc.
-/// don't each re-implement the pending-interest badge logic.
+/// don't each re-implement the unread-count badge logic.
 class RootHeaderActions extends StatelessWidget {
   const RootHeaderActions({super.key});
 
@@ -87,7 +88,7 @@ class RootHeaderActions extends StatelessWidget {
     final auth = AuthService();
     final uid = auth.currentUser?.uid ?? '';
     final isAdmin = AppConfig.isAdmin(auth.currentUser?.email);
-    final interestService = InterestService();
+    final notificationService = NotificationService();
 
     return Row(
       children: [
@@ -97,55 +98,21 @@ class RootHeaderActions extends StatelessWidget {
             tooltip: 'Admin',
             onPressed: () => Navigator.pushNamed(context, '/admin'),
           ),
-        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: interestService.receivedInterestsStream(uid),
+        StreamBuilder<int>(
+          stream: notificationService.unreadCountStream(uid),
           builder: (context, snap) {
-            final count = snap.data?.docs.length ?? 0;
+            final count = snap.data ?? 0;
             return IconButton(
               icon: Badge(
                 label: Text('$count'),
                 isLabelVisible: count > 0,
                 child: const Icon(Icons.notifications_active_outlined, color: Colors.white),
               ),
-              onPressed: () => _showNotifications(context, uid, interestService),
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())),
             );
           },
         ),
       ],
-    );
-  }
-
-  void _showNotifications(BuildContext context, String uid, InterestService interestService) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.cardBg,
-        title: const Text('Notifications'),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 300,
-          child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: interestService.receivedInterestsStream(uid),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return const Center(child: CircularProgressIndicator(color: AppColors.saffron));
-              if (snapshot.data!.docs.isEmpty) return const Center(child: Text('No new notifications.'));
-              return ListView(
-                children: snapshot.data!.docs.map((doc) {
-                  final data = doc.data();
-                  final name = data['fromName'] ?? 'Someone';
-                  return ListTile(
-                    leading: const CircleAvatar(backgroundColor: AppColors.saffron, child: Icon(Icons.favorite, color: Colors.white, size: 18)),
-                    title: Text('$name sent you an interest'),
-                    subtitle: const Text('Go to Interests tab to respond'),
-                    onTap: () => Navigator.pop(context),
-                  );
-                }).toList(),
-              );
-            },
-          ),
-        ),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))],
-      ),
     );
   }
 }

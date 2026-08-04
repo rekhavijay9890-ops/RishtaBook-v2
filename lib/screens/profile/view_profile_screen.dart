@@ -1,16 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../models/user_profile.dart';
 import '../../theme/app_colors.dart';
+import '../../services/auth_service.dart';
+import '../../services/notification_service.dart';
 
 const Color kBrandColor = AppColors.saffron;
 
 /// Read-only, full-detail view of a profile - every field the person
 /// filled in at signup (not just the shortened preview shown on the
 /// Home tab card).
-class ViewProfileScreen extends StatelessWidget {
+class ViewProfileScreen extends StatefulWidget {
   final UserProfile profile;
   const ViewProfileScreen({super.key, required this.profile});
+
+  @override
+  State<ViewProfileScreen> createState() => _ViewProfileScreenState();
+}
+
+class _ViewProfileScreenState extends State<ViewProfileScreen> {
+  UserProfile get profile => widget.profile;
+
+  @override
+  void initState() {
+    super.initState();
+    _logView();
+  }
+
+  /// Fire-and-forget: lets the viewed person know someone looked at their
+  /// profile. Skipped for self-views and swallowed on any failure - a
+  /// notification hiccup should never affect browsing.
+  Future<void> _logView() async {
+    try {
+      final viewer = AuthService().currentUser;
+      if (viewer == null || viewer.uid == profile.uid) return;
+      final viewerDoc = await FirebaseFirestore.instance.collection('users').doc(viewer.uid).get();
+      final viewerName = (viewerDoc.data()?['fullName'] as String?)?.trim();
+      await NotificationService().notifyProfileViewed(
+        profile.uid,
+        viewerName: (viewerName?.isNotEmpty ?? false) ? viewerName! : 'Someone',
+      );
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
