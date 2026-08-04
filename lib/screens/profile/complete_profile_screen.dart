@@ -38,6 +38,24 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   String _rashi = '';
   String _nakshatra = '';
   String _manglik = 'no';
+  int _heightCm = 170;
+  String _maritalStatus = 'never_married';
+  String _education = '';
+
+  static const _maritalStatusOptions = [
+    ('never_married', 'maritalStatus.neverMarried'),
+    ('divorced', 'maritalStatus.divorced'),
+    ('widowed', 'maritalStatus.widowed'),
+    ('awaiting_divorce', 'maritalStatus.awaitingDivorce'),
+  ];
+  static const _educationOptions = [
+    ('high_school', 'education.highSchool'),
+    ('diploma', 'education.diploma'),
+    ('bachelors', 'education.bachelors'),
+    ('masters', 'education.masters'),
+    ('doctorate', 'education.doctorate'),
+    ('other', 'education.other'),
+  ];
 
   // Dropdowns store a fixed bilingual value (unchanged regardless of
   // display language) so existing saved profiles and any other code
@@ -93,6 +111,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     _rashi = data['rashi'] ?? '';
     _nakshatra = data['nakshatra'] ?? '';
     _manglik = data['manglik'] ?? 'no';
+    _heightCm = (data['heightCm'] as num?)?.toInt() ?? 170;
+    _maritalStatus = data['maritalStatus'] ?? 'never_married';
+    _education = data['education'] ?? '';
     if (mounted) setState(() => _loading = false);
   }
 
@@ -127,6 +148,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         'rashi': _rashi,
         'nakshatra': _nakshatra,
         'manglik': _manglik,
+        'heightCm': _heightCm,
+        'maritalStatus': _maritalStatus,
+        'education': _education,
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -221,6 +245,40 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   _stateDropdown(context.t('completeProfile.stateHint'), _stateController),
                   _sectionHeader("💼 ${context.t('completeProfile.occupationSection')}"),
                   _bilingualDropdown(context.t('completeProfile.occupationHint'), _occupationOptions, _occupationController),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    value: _education.isNotEmpty ? _education : null,
+                    decoration: InputDecoration(hintText: context.t('completeProfile.educationHint')),
+                    items: _educationOptions.map((o) => DropdownMenuItem(value: o.$1, child: Text(context.t(o.$2)))).toList(),
+                    onChanged: (v) => setState(() => _education = v ?? ''),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Expanded(
+                      flex: 2,
+                      child: Builder(builder: (context) {
+                        final inches = (_heightCm / 2.54).round();
+                        final display = "${inches ~/ 12}'${inches % 12}\" ($_heightCm cm)";
+                        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text("${context.t('completeProfile.heightHint')}: $display", style: const TextStyle(fontSize: 12.5)),
+                          Slider(
+                            min: 120, max: 210,
+                            value: _heightCm.toDouble(),
+                            activeColor: AppColors.saffron,
+                            label: display,
+                            onChanged: (v) => setState(() => _heightCm = v.round()),
+                          ),
+                        ]);
+                      }),
+                    ),
+                  ]),
+                  DropdownButtonFormField<String>(
+                    value: _maritalStatus,
+                    decoration: InputDecoration(hintText: context.t('completeProfile.maritalStatusHint')),
+                    items: _maritalStatusOptions.map((o) => DropdownMenuItem(value: o.$1, child: Text(context.t(o.$2)))).toList(),
+                    onChanged: (v) => setState(() => _maritalStatus = v ?? 'never_married'),
+                  ),
                   _sectionHeader("👨‍👩‍👧‍👦 ${context.t('completeProfile.familySection')}"),
                   Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Expanded(child: _field(context.t('completeProfile.brothersHint'), _brothersController)),

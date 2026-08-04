@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../models/user_profile.dart';
+import '../../models/partner_preferences.dart';
 import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/credit_service.dart';
+import '../../services/matchmaking_service.dart';
 import '../../i18n/strings.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text.dart';
@@ -25,6 +27,7 @@ class _SearchPageState extends State<SearchPage> {
 
   String? _religion, _category, _gender, _occupation, _state;
   final _searchCtrl = TextEditingController();
+  bool _sortByMatch = false;
 
   bool get _hasFilters => _religion != null || _category != null || _gender != null || _occupation != null || _state != null;
 
@@ -120,6 +123,18 @@ class _SearchPageState extends State<SearchPage> {
                   Row(children: [
                     Expanded(child: Text(context.t('search.title'), style: AppText.headerTitle)),
                     GestureDetector(
+                      onTap: () => setState(() => _sortByMatch = !_sortByMatch),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        margin: const EdgeInsets.only(right: 6),
+                        decoration: BoxDecoration(
+                          color: _sortByMatch ? AppColors.saffron : Colors.white.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        child: Text(context.t('match.sortByScore'), style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                    GestureDetector(
                       onTap: _openFilterSheet,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -164,6 +179,7 @@ class _SearchPageState extends State<SearchPage> {
               stream: _profileService.userProfileStream(uid),
               builder: (context, meSnap) {
                 final unlockedUids = List<String>.from(meSnap.data?.data()?['unlockedProfileUids'] ?? []);
+                final myPrefs = PartnerPreferences.fromMap(meSnap.data?.data()?['preferences'] as Map<String, dynamic>?);
                 return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                   stream: _profileService.allProfilesStream(),
                   builder: (context, snapshot) {
@@ -175,6 +191,10 @@ class _SearchPageState extends State<SearchPage> {
                         .map((doc) => UserProfile.fromMap(doc.id, doc.data()))
                         .toList();
                     final results = _apply(all);
+                    if (_sortByMatch) {
+                      results.sort((a, b) =>
+                          MatchmakingService.score(b, myPrefs).compareTo(MatchmakingService.score(a, myPrefs)));
+                    }
                     return ListView(
                       padding: const EdgeInsets.all(12),
                       children: [
@@ -197,6 +217,7 @@ class _SearchPageState extends State<SearchPage> {
                             padding: const EdgeInsets.only(bottom: 10),
                             child: _ResultTile(
                               profile: results[i],
+                              matchScorePct: MatchmakingService.score(results[i], myPrefs),
                               locked: i >= CreditService.freeSearchPreviewCount && !unlockedUids.contains(results[i].uid),
                               onUnlock: () async {
                                 final ok = await _creditService.unlockProfile(uid, targetUid: results[i].uid, targetName: results[i].fullName);
@@ -224,12 +245,13 @@ class _SearchPageState extends State<SearchPage> {
 
 class _ResultTile extends StatelessWidget {
   final UserProfile profile;
+  final int matchScorePct;
   final bool locked;
   final VoidCallback onUnlock;
   final VoidCallback onOpen;
   final VoidCallback onChat;
 
-  const _ResultTile({required this.profile, required this.locked, required this.onUnlock, required this.onOpen, required this.onChat});
+  const _ResultTile({required this.profile, required this.matchScorePct, required this.locked, required this.onUnlock, required this.onOpen, required this.onChat});
 
   @override
   Widget build(BuildContext context) {
@@ -259,6 +281,7 @@ class _ResultTile extends StatelessWidget {
                       Text('${profile.occupation} · ${profile.location}', style: AppText.bodySmall, overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 5),
                       Wrap(spacing: 5, children: [
+                        RbBadge(text: context.t('match.scoreLabel', ['$matchScorePct']), color: AppColors.saffron),
                         if (profile.isVerified) RbBadge(text: context.t('common.verified'), color: AppColors.teal),
                       ]),
                     ]),

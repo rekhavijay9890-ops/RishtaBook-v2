@@ -12,6 +12,7 @@ class MatchCard extends StatefulWidget {
   final String city;
   final String caste;
   final int? kundaliScore;
+  final int? matchScorePct;
   final bool verified;
   final bool premium;
   final bool liked;
@@ -31,6 +32,7 @@ class MatchCard extends StatefulWidget {
     required this.city,
     required this.caste,
     this.kundaliScore,
+    this.matchScorePct,
     this.verified = false,
     this.premium = false,
     this.liked = false,
@@ -97,6 +99,8 @@ class _MatchCardState extends State<MatchCard> {
               runSpacing: 4,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
+                if (widget.matchScorePct != null)
+                  RbBadge(text: context.t('match.scoreLabel', ['${widget.matchScorePct}']), color: AppColors.saffron),
                 if (widget.kundaliScore != null)
                   GestureDetector(
                     onTap: widget.onKundali,
