@@ -13,6 +13,7 @@ import '../../widgets/rb_section_label.dart';
 import '../../widgets/referral_cta_card.dart';
 import 'complete_profile_screen.dart';
 import 'manage_photos_screen.dart';
+import 'partner_preference_screen.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -232,6 +233,15 @@ class ProfilePage extends StatelessWidget {
                       icon: const Icon(Icons.edit_outlined, color: AppColors.saffron),
                       label: Text(context.isHindi ? "प्रोफ़ाइल संपादित करें" : "Edit Profile"),
                       onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CompleteProfileScreen(uid: user.uid))),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity, height: 48,
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.favorite_border, color: AppColors.saffron),
+                      label: Text(context.t('partnerPref.entryButton')),
+                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PartnerPreferenceScreen(uid: user.uid))),
                     ),
                   ),
                   const SizedBox(height: 10),

@@ -25,6 +25,9 @@ class UserProfile {
   final String manglik;
   final int credits;
   final List<String> photoUrls;
+  final int? heightCm;
+  final String maritalStatus;
+  final String education;
 
   const UserProfile({
     required this.uid,
@@ -52,6 +55,9 @@ class UserProfile {
     this.manglik = 'unknown',
     this.credits = 0,
     this.photoUrls = const [],
+    this.heightCm,
+    this.maritalStatus = '',
+    this.education = '',
   });
 
   factory UserProfile.fromMap(String uid, Map<String, dynamic> data) {
@@ -81,6 +87,9 @@ class UserProfile {
       manglik: data['manglik'] ?? 'unknown',
       credits: (data['credits'] is int) ? data['credits'] as int : (data['credits'] as num?)?.toInt() ?? 0,
       photoUrls: List<String>.from(data['photoUrls'] ?? const []),
+      heightCm: (data['heightCm'] as num?)?.toInt(),
+      maritalStatus: data['maritalStatus'] ?? '',
+      education: data['education'] ?? '',
     );
   }
 
@@ -93,4 +102,30 @@ class UserProfile {
 
   bool get isFemale => gender.toLowerCase().contains('female') || gender.toLowerCase().contains('stri');
   bool get isMale   => gender.toLowerCase().contains('male') || gender.toLowerCase().contains('purush');
+
+  /// Parses `dob` (stored as dd/mm/yyyy, see BasicDetailsScreen's date
+  /// picker) into a whole number of years. Null if unparseable/unset -
+  /// callers should treat that as "unknown," not zero.
+  int? get age {
+    final parts = dob.split('/');
+    if (parts.length != 3) return null;
+    final day = int.tryParse(parts[0]);
+    final month = int.tryParse(parts[1]);
+    final year = int.tryParse(parts[2]);
+    if (day == null || month == null || year == null) return null;
+    final birth = DateTime(year, month, day);
+    final now = DateTime.now();
+    var years = now.year - birth.year;
+    if (now.month < birth.month || (now.month == birth.month && now.day < birth.day)) years--;
+    return years;
+  }
+
+  /// "5'6"" from heightCm, or empty if not set.
+  String get heightDisplay {
+    if (heightCm == null) return '';
+    final totalInches = (heightCm! / 2.54).round();
+    final feet = totalInches ~/ 12;
+    final inches = totalInches % 12;
+    return "$feet'$inches\"";
+  }
 }

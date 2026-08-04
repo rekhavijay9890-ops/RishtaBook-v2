@@ -3,11 +3,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/user_profile.dart';
+import '../../models/partner_preferences.dart';
 import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/interest_service.dart';
 import '../../services/credit_service.dart';
 import '../../services/kundali_service.dart';
+import '../../services/matchmaking_service.dart';
 import '../../i18n/strings.dart';
 import '../../i18n/language_controller.dart';
 import '../../theme/app_colors.dart';
@@ -123,6 +125,7 @@ class _HomePageState extends State<HomePage> {
               stream: _profileService.userProfileStream(uid),
               builder: (context, meSnap) {
                 final me = meSnap.data?.data() != null ? UserProfile.fromMap(uid, meSnap.data!.data()!) : null;
+                final myPrefs = PartnerPreferences.fromMap(meSnap.data?.data()?['preferences'] as Map<String, dynamic>?);
                 return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                   stream: _profileService.suggestedProfilesStream(),
                   builder: (context, snapshot) {
@@ -136,6 +139,25 @@ class _HomePageState extends State<HomePage> {
                     if (profiles.isEmpty) {
                       return Center(child: Text(context.t('home.noProfiles'), style: const TextStyle(color: AppColors.muted)));
                     }
+                    // Rank by MatchmakingService score against the viewer's own
+                    // partner preferences - the actual "matchmaking engine",
+                    // computed client-side since the candidate pool here is
+                    // already bounded (see suggestedProfilesStream).
+                    int kundaliFor(UserProfile p) {
+                      if (me == null || !me.hasKundaliDetails || !p.hasKundaliDetails) return -1;
+                      return KundaliService.compute(
+                        boyRashi: me.isMale ? me.rashi : p.rashi,
+                        boyNakshatra: me.isMale ? me.nakshatra : p.nakshatra,
+                        girlRashi: me.isMale ? p.rashi : me.rashi,
+                        girlNakshatra: me.isMale ? p.nakshatra : me.nakshatra,
+                      ).total;
+                    }
+                    profiles.sort((a, b) {
+                      final ka = kundaliFor(a), kb = kundaliFor(b);
+                      final sa = MatchmakingService.score(a, myPrefs, kundaliScore: ka >= 0 ? ka : null);
+                      final sb = MatchmakingService.score(b, myPrefs, kundaliScore: kb >= 0 ? kb : null);
+                      return sb.compareTo(sa);
+                    });
                     return ListView(
                       padding: const EdgeInsets.all(16),
                       children: [
@@ -151,15 +173,9 @@ class _HomePageState extends State<HomePage> {
                         const Padding(padding: EdgeInsets.only(bottom: 18), child: ReferralCtaCard()),
                         RbSectionLabel(title: context.t('home.suggested')),
                         ...profiles.map((p) {
-                          int? score;
-                          if (me != null && me.hasKundaliDetails && p.hasKundaliDetails) {
-                            score = KundaliService.compute(
-                              boyRashi: me.isMale ? me.rashi : p.rashi,
-                              boyNakshatra: me.isMale ? me.nakshatra : p.nakshatra,
-                              girlRashi: me.isMale ? p.rashi : me.rashi,
-                              girlNakshatra: me.isMale ? p.nakshatra : me.nakshatra,
-                            ).total;
-                          }
+                          final k = kundaliFor(p);
+                          final score = k >= 0 ? k : null;
+                          final matchPct = MatchmakingService.score(p, myPrefs, kundaliScore: score);
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: MatchCard(
@@ -169,6 +185,7 @@ class _HomePageState extends State<HomePage> {
                               city: p.location,
                               caste: '${p.caste.isNotEmpty ? '${p.caste} · ' : ''}${p.religion}',
                               kundaliScore: score,
+                              matchScorePct: matchPct,
                               verified: p.isVerified,
                               initials: p.fullName.isNotEmpty ? p.fullName[0].toUpperCase() : '?',
                               photoUrl: p.primaryPhotoUrl,

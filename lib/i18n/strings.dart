@@ -333,6 +333,41 @@ const Map<String, Map<String, String>> _dict = {
   'viewProfile.requirements':   {'hi': 'जीवनसाथी में चाहिए', 'en': 'Looking for'},
   'viewProfile.viewKundali':    {'hi': 'कुंडली मिलान देखें', 'en': 'View Kundali Match'},
   'viewProfile.notAvailable':   {'hi': 'उपलब्ध नहीं', 'en': 'Not Available'},
+
+  // ── New profile fields (height / marital status / education) ──
+  'completeProfile.heightHint':        {'hi': 'ऊँचाई', 'en': 'Height'},
+  'completeProfile.maritalStatusHint': {'hi': 'वैवाहिक स्थिति', 'en': 'Marital Status'},
+  'completeProfile.educationHint':     {'hi': 'शिक्षा', 'en': 'Education'},
+  'maritalStatus.neverMarried':  {'hi': 'अविवाहित', 'en': 'Never Married'},
+  'maritalStatus.divorced':      {'hi': 'तलाकशुदा', 'en': 'Divorced'},
+  'maritalStatus.widowed':       {'hi': 'विधवा/विधुर', 'en': 'Widowed'},
+  'maritalStatus.awaitingDivorce': {'hi': 'तलाक लंबित', 'en': 'Awaiting Divorce'},
+  'education.highSchool':   {'hi': 'हाई स्कूल', 'en': 'High School'},
+  'education.diploma':      {'hi': 'डिप्लोमा', 'en': 'Diploma'},
+  'education.bachelors':    {'hi': 'स्नातक', 'en': "Bachelor's Degree"},
+  'education.masters':      {'hi': 'स्नातकोत्तर', 'en': "Master's Degree"},
+  'education.doctorate':    {'hi': 'डॉक्टरेट', 'en': 'Doctorate'},
+  'education.other':        {'hi': 'अन्य', 'en': 'Other'},
+
+  // ── Partner preferences ──
+  'partnerPref.title':        {'hi': 'जीवनसाथी की पसंद', 'en': 'Partner Preferences'},
+  'partnerPref.subtitle':     {'hi': 'इससे आपको बेहतर मिलान दिखाए जाएंगे', 'en': 'This helps us show you better matches'},
+  'partnerPref.ageRange':     {'hi': 'आयु सीमा', 'en': 'Age Range'},
+  'partnerPref.heightRange':  {'hi': 'ऊँचाई सीमा', 'en': 'Height Range'},
+  'partnerPref.religion':     {'hi': 'धर्म (एक या अधिक चुनें)', 'en': 'Religion (select one or more)'},
+  'partnerPref.maritalStatus':{'hi': 'वैवाहिक स्थिति', 'en': 'Marital Status'},
+  'partnerPref.education':    {'hi': 'शिक्षा', 'en': 'Education'},
+  'partnerPref.state':        {'hi': 'राज्य', 'en': 'State'},
+  'partnerPref.manglik':      {'hi': 'मांगलिक', 'en': 'Manglik'},
+  'partnerPref.manglikAny':   {'hi': 'कोई भी', 'en': 'Any'},
+  'partnerPref.anyHint':      {'hi': 'कोई भी (कुछ न चुनें)', 'en': 'Any (leave unselected)'},
+  'partnerPref.saved':        {'hi': 'पसंद सहेजी गई', 'en': 'Preferences saved'},
+  'partnerPref.saveError':    {'hi': 'सहेजने में समस्या आई।', 'en': 'Could not save.'},
+  'partnerPref.entryButton':  {'hi': 'जीवनसाथी की पसंद सेट करें', 'en': 'Set Partner Preferences'},
+
+  // ── Match score badge ──
+  'match.scoreLabel':  {'hi': '%s%% मेल', 'en': '%s%% Match'},
+  'match.sortByScore': {'hi': 'सर्वश्रेष्ठ मेल पहले', 'en': 'Best match first'},
 };
 
 extension StringsX on BuildContext {
