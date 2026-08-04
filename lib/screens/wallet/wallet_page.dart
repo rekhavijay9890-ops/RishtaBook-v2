@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../config/app_config.dart';
 import '../../models/credit_pack.dart';
@@ -23,6 +24,9 @@ class _WalletPageState extends State<WalletPage> {
   final CreditService _creditService = CreditService();
   final AuthService _authService = AuthService();
 
+  bool _adLoading = false;
+  int? _adsRemainingToday;
+
   @override
   void initState() {
     super.initState();
@@ -30,12 +34,59 @@ class _WalletPageState extends State<WalletPage> {
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _onPaymentSuccess);
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _onPaymentError);
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, (_) {});
+    _refreshAdsRemaining();
   }
 
   @override
   void dispose() {
     _razorpay.clear();
     super.dispose();
+  }
+
+  Future<void> _refreshAdsRemaining() async {
+    final uid = _authService.currentUser?.uid ?? '';
+    final remaining = await _creditService.adRewardsRemainingToday(uid);
+    if (mounted) setState(() => _adsRemainingToday = remaining);
+  }
+
+  void _watchAdForCredits() {
+    final remaining = _adsRemainingToday ?? 0;
+    if (remaining <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('wallet.adLimitReached'))));
+      return;
+    }
+    setState(() => _adLoading = true);
+    RewardedAd.load(
+      adUnitId: AppConfig.admobRewardedAdUnitId,
+      request: const AdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) {
+          if (!mounted) return;
+          setState(() => _adLoading = false);
+          ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) => ad.dispose(),
+            onAdFailedToShowFullScreenContent: (ad, error) {
+              ad.dispose();
+              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('wallet.adFailed'))));
+            },
+          );
+          ad.show(onUserEarnedReward: (ad, reward) async {
+            final uid = _authService.currentUser?.uid ?? '';
+            final ok = await _creditService.grantAdReward(uid);
+            await _refreshAdsRemaining();
+            if (mounted && ok) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(context.t('wallet.adRewardEarned', [CreditService.adRewardAmount])), backgroundColor: AppColors.success));
+            }
+          });
+        },
+        onAdFailedToLoad: (error) {
+          if (!mounted) return;
+          setState(() => _adLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('wallet.adFailed'))));
+        },
+      ),
+    );
   }
 
   void _onPaymentSuccess(PaymentSuccessResponse response) async {
@@ -184,6 +235,40 @@ class _WalletPageState extends State<WalletPage> {
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [AppColors.tealLight, AppColors.safLight]),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.teal.withOpacity(0.25)),
+                      ),
+                      child: Row(children: [
+                        const Text('📺', style: TextStyle(fontSize: 26)),
+                        const SizedBox(width: 12),
+                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(context.t('wallet.watchAd'), style: AppText.headingSmall),
+                          const SizedBox(height: 2),
+                          Text(
+                            context.t('wallet.watchAdDesc', [CreditService.adRewardAmount, _adsRemainingToday ?? CreditService.maxAdRewardsPerDay, CreditService.maxAdRewardsPerDay]),
+                            style: AppText.caption,
+                          ),
+                        ])),
+                        GestureDetector(
+                          onTap: (_adLoading || (_adsRemainingToday ?? 1) <= 0) ? null : _watchAdForCredits,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                            decoration: BoxDecoration(
+                              color: (_adsRemainingToday ?? 1) <= 0 ? AppColors.borderColor : AppColors.teal,
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: _adLoading
+                                ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                : Text(context.t('wallet.watchAdCta'), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: (_adsRemainingToday ?? 1) <= 0 ? AppColors.muted : Colors.white)),
+                          ),
+                        ),
+                      ]),
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
                         gradient: LinearGradient(colors: [AppColors.roseLight, AppColors.safLight]),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: AppColors.saffron.withOpacity(0.2)),
@@ -216,6 +301,7 @@ class _WalletPageState extends State<WalletPage> {
                             'referral' => context.t('wallet.txn.referral'),
                             'purchase' => context.t('wallet.txn.purchase'),
                             'signup_bonus' => context.t('wallet.txn.signupBonus'),
+                            'ad_reward' => context.t('wallet.txn.adReward'),
                             'profile_unlocked' => context.t('search.unlock'),
                             _ => type,
                           };

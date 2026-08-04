@@ -97,8 +97,16 @@ const Map<String, Map<String, String>> _dict = {
   'wallet.txn.referral':   {'hi': 'रेफ़रल से मिला', 'en': 'Referral earned'},
   'wallet.txn.purchase':   {'hi': 'पैक खरीदा गया', 'en': 'Pack purchased'},
   'wallet.txn.signupBonus':{'hi': 'स्वागत बोनस', 'en': 'Welcome bonus'},
+  'wallet.txn.adReward':   {'hi': 'विज्ञापन देखा गया', 'en': 'Watched ad'},
   'wallet.paymentSuccess': {'hi': 'भुगतान सफल! क्रेडिट जुड़ गए।', 'en': 'Payment successful! Credits added.'},
   'wallet.paymentFailed':  {'hi': 'भुगतान असफल रहा।', 'en': 'Payment failed.'},
+  'wallet.watchAd':        {'hi': 'विज्ञापन देखें और क्रेडिट कमाएँ', 'en': 'Watch an ad, earn credits'},
+  'wallet.watchAdDesc':    {'hi': 'हर विज्ञापन पर %d क्रेडिट · आज %d/%d बचे', 'en': '%d credits per ad · %d/%d left today'},
+  'wallet.watchAdCta':     {'hi': 'विज्ञापन देखें', 'en': 'Watch ad'},
+  'wallet.adLoading':      {'hi': 'विज्ञापन लोड हो रहा है...', 'en': 'Loading ad...'},
+  'wallet.adLimitReached': {'hi': 'आज की सीमा पूरी हो गई। कल फिर आएँ।', 'en': 'Daily limit reached. Come back tomorrow.'},
+  'wallet.adFailed':       {'hi': 'विज्ञापन लोड नहीं हो पाया। दोबारा कोशिश करें।', 'en': 'Ad failed to load. Try again.'},
+  'wallet.adRewardEarned': {'hi': '+%d क्रेडिट मिले!', 'en': '+%d credits earned!'},
 
   // ── Kundali ──
   'kundali.title':       {'hi': 'कुंडली मिलान', 'en': 'Kundali match'},
