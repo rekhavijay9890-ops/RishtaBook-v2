@@ -141,6 +141,30 @@ const Map<String, Map<String, String>> _dict = {
   'profile.verifyDone':     {'hi': 'प्रोफ़ाइल सत्यापित', 'en': 'Profile verified'},
   'profile.requestVerify':  {'hi': 'सत्यापन अनुरोध करें', 'en': 'Request verification'},
   'profile.notFound':    {'hi': 'प्रोफ़ाइल डेटा नहीं मिला।', 'en': 'Profile data not found.'},
+
+  // ── Referral / Invite & Earn ──
+  'referral.ctaTitle':    {'hi': 'दोस्तों को आमंत्रित करें', 'en': 'Invite friends & earn'},
+  'referral.ctaDesc':     {'hi': 'हर सफल रेफ़रल पर %d क्रेडिट पाएँ', 'en': 'Earn %d credits per successful referral'},
+  'referral.ctaButton':   {'hi': 'आमंत्रित करें', 'en': 'Invite'},
+  'referral.title':       {'hi': 'आमंत्रित करें और कमाएँ', 'en': 'Invite & Earn'},
+  'referral.yourCode':    {'hi': 'आपका रेफ़रल कोड', 'en': 'Your referral code'},
+  'referral.bonusInfo':   {'hi': 'जब कोई आपका कोड इस्तेमाल कर के पंजीकरण करता है, आपको %d क्रेडिट मिलते हैं।', 'en': 'When someone signs up using your code, you get %d credits.'},
+  'referral.addByMobile': {'hi': 'मोबाइल नंबर से आमंत्रित करें', 'en': 'Add by mobile number'},
+  'referral.mobileHint':  {'hi': 'मोबाइल नंबर / Mobile number', 'en': 'Mobile number'},
+  'referral.sendInvite':  {'hi': 'SMS से आमंत्रण भेजें', 'en': 'Send invite via SMS'},
+  'referral.orShareLink': {'hi': 'या लिंक शेयर करें', 'en': 'Or share invite link'},
+  'referral.shareLink':   {'hi': 'आमंत्रण लिंक शेयर करें', 'en': 'Share invite link'},
+  'referral.yourInvites': {'hi': 'आपके आमंत्रण', 'en': 'Your invites'},
+  'referral.noInvites':   {'hi': 'अभी तक कोई आमंत्रण नहीं भेजा गया।', 'en': 'No invites sent yet.'},
+  'referral.statusInvited':   {'hi': 'भेजा गया', 'en': 'Invited'},
+  'referral.statusCompleted': {'hi': 'पंजीकृत ✓', 'en': 'Joined ✓'},
+  'referral.invalidMobile':   {'hi': 'सही मोबाइल नंबर डालें', 'en': 'Enter a valid mobile number'},
+  'referral.inviteLogged':    {'hi': 'आमंत्रण दर्ज हो गया। SMS ऐप खुल रहा है...', 'en': 'Invite logged. Opening SMS app...'},
+  'referral.someoneJoined':   {'hi': 'किसी ने आपके कोड से पंजीकरण किया', 'en': 'Someone joined using your code'},
+  'referral.smsMessage':      {
+    'hi': 'RishtaBook पर मेरे साथ जुड़ें! पंजीकरण के समय मेरा रेफ़रल कोड डालें: %s',
+    'en': 'Join me on RishtaBook! Use my referral code when you sign up: %s',
+  },
 };
 
 extension StringsX on BuildContext {

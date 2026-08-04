@@ -15,6 +15,7 @@ import 'screens/wallet/wallet_page.dart';
 import 'screens/kundali/kundali_page.dart';
 import 'screens/chat/chat_page.dart';
 import 'screens/profile/view_profile_screen.dart';
+import 'screens/referral/referral_screen.dart';
 import 'models/user_profile.dart';
 
 void main() async {
@@ -58,6 +59,8 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const AdminScreen());
           case '/wallet':
             return MaterialPageRoute(builder: (_) => const WalletPage());
+          case '/referral':
+            return MaterialPageRoute(builder: (_) => const ReferralScreen());
           case '/kundali':
             final args = settings.arguments as Map<String, dynamic>;
             return MaterialPageRoute(

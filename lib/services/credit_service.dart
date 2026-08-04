@@ -26,6 +26,20 @@ class CreditService {
 
   CollectionReference<Map<String, dynamic>> _txns(String uid) => _userDoc(uid).collection('transactions');
 
+  CollectionReference<Map<String, dynamic>> _invites(String uid) => _userDoc(uid).collection('referralInvites');
+
+  /// Referral bonus is admin-configurable at runtime via the `config/app`
+  /// Firestore doc (see Admin screen), not just a compile-time constant.
+  /// Falls back to [referralBonus] if that doc/field doesn't exist yet.
+  /// firestore.rules reads the SAME doc when validating a referral credit
+  /// write, so client and rule always agree on the current amount.
+  Future<int> getReferralBonusAmount() async {
+    final doc = await _db.collection('config').doc('app').get();
+    final v = doc.data()?['referralBonus'];
+    if (v is num) return v.toInt();
+    return referralBonus;
+  }
+
   Stream<int> creditsStream(String uid) {
     return _userDoc(uid).snapshots().map((doc) {
       final v = doc.data()?['credits'];
@@ -135,8 +149,50 @@ class CreditService {
 
   Future<void> grantSignupBonus(String uid) => grant(uid, amount: signupBonus, type: 'signup_bonus', label: 'Welcome bonus');
 
-  Future<void> grantReferralBonus(String uid, {required String friendName}) =>
-      grant(uid, amount: referralBonus, type: 'referral', label: friendName);
+  Future<void> grantReferralBonus(String uid, {required String friendName}) async {
+    final amount = await getReferralBonusAmount();
+    await grant(uid, amount: amount, type: 'referral', label: friendName);
+  }
+
+  static String normalizePhone(String phone) => phone.replaceAll(RegExp(r'[^0-9]'), '');
+
+  /// Records that [uid] intends to invite [phone] — shown in their "Your
+  /// invites" list as pending. Does NOT send anything itself; the caller
+  /// (ReferralScreen) opens the device's native SMS composer separately,
+  /// since there's no SMS gateway/backend in this app to send on their
+  /// behalf.
+  Future<void> logManualInvite(String uid, String phone) {
+    return _invites(uid).add({
+      'phone': normalizePhone(phone),
+      'status': 'invited',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> manualInvitesStream(String uid) {
+    return _invites(uid).orderBy('createdAt', descending: true).snapshots();
+  }
+
+  /// Called right after a new signup redeems a referral code: if the
+  /// referrer had logged a manual invite for this new user's phone number,
+  /// mark it completed so it stops showing as pending. Best-effort - if
+  /// the referrer shared a link/code instead of using "add by mobile", or
+  /// the phone numbers don't match, this just finds nothing and no-ops;
+  /// the referral bonus itself (already granted separately) still stands.
+  Future<void> tryCompleteManualInvite(String referrerUid, {required String phone}) async {
+    final normalized = normalizePhone(phone);
+    if (normalized.isEmpty) return;
+    final matches = await _invites(referrerUid)
+        .where('phone', isEqualTo: normalized)
+        .where('status', isEqualTo: 'invited')
+        .limit(1)
+        .get();
+    if (matches.docs.isEmpty) return;
+    await matches.docs.first.reference.update({
+      'status': 'completed',
+      'completedAt': FieldValue.serverTimestamp(),
+    });
+  }
 
   /// Called after the Razorpay checkout success callback. See the class-level
   /// SECURITY NOTE — this trusts the client, which is fine for development
