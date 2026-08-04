@@ -38,12 +38,22 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: AppColors.error));
   }
 
+  /// Pops this screen back to the root route once sign-in/sign-up
+  /// succeeds. EmailAuthScreen is reached via Navigator.push on top of
+  /// AuthLandingScreen (itself the content AuthGate swaps in place), so
+  /// AuthGate reacting to the auth-state change and rebuilding its OWN
+  /// content isn't enough by itself - this screen would just keep sitting
+  /// on top of the stack, covering that updated content, unless it pops.
+  void _returnToAuthGate() {
+    if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
   Future<void> _signIn() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _loading = true);
     try {
       await _authService.signIn(_emailController.text.trim(), _passwordController.text.trim());
-      // AuthGate reacts to the auth-state change on its own.
+      _returnToAuthGate();
     } on FirebaseAuthException catch (e) {
       String friendly = context.t('emailAuth.signInFailed');
       if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
@@ -77,7 +87,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
         'createdAt': DateTime.now(),
       });
       await _creditService.grantSignupBonus(uid);
-      // AuthGate reacts to the auth-state change on its own.
+      _returnToAuthGate();
     } on FirebaseAuthException catch (e) {
       String friendly = context.t('emailAuth.signUpFailed');
       if (e.code == 'email-already-in-use') {
