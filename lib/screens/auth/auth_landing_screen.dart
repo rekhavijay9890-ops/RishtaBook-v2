@@ -7,6 +7,7 @@ import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/credit_service.dart';
 import '../../i18n/language_controller.dart';
+import '../../i18n/strings.dart';
 import 'phone_auth_screen.dart';
 import 'email_auth_screen.dart';
 
@@ -51,7 +52,7 @@ class _AuthLandingScreenState extends State<AuthLandingScreen> {
       // AuthGate reacts to the auth state + profile doc changing on its
       // own - no explicit navigation needed here.
     } catch (e) {
-      _showSnack("Google साइन-इन में समस्या आई। / Google sign-in failed.");
+      if (mounted) _showSnack(context.t('authLanding.googleFailed'));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -106,7 +107,7 @@ class _AuthLandingScreenState extends State<AuthLandingScreen> {
               const SizedBox(height: 14),
               const Text("RishtaBook", style: TextStyle(fontSize: 32, fontWeight: FontWeight.w700, color: Colors.white, fontFamily: 'serif')),
               const SizedBox(height: 4),
-              const Text("स्वागत है / Welcome", style: TextStyle(fontSize: 14, color: Colors.white70)),
+              Text(context.t('authLanding.welcome'), style: const TextStyle(fontSize: 14, color: Colors.white70)),
               const Spacer(flex: 4),
               Padding(
                 padding: const EdgeInsets.fromLTRB(28, 0, 28, 20),
@@ -121,7 +122,7 @@ class _AuthLandingScreenState extends State<AuthLandingScreen> {
                           side: BorderSide.none,
                         ),
                         icon: const Icon(Icons.g_mobiledata, color: AppColors.saffron, size: 28),
-                        label: const Text("Google से जारी रखें / Continue with Google"),
+                        label: Text(context.t('authLanding.continueGoogle')),
                         onPressed: _loading ? null : _signInWithGoogle,
                       ),
                     ),
@@ -130,7 +131,7 @@ class _AuthLandingScreenState extends State<AuthLandingScreen> {
                       height: 52,
                       child: ElevatedButton.icon(
                         icon: const Icon(Icons.phone_android, color: Colors.white),
-                        label: const Text("मोबाइल नंबर से जारी रखें / Continue with Mobile"),
+                        label: Text(context.t('authLanding.continueMobile')),
                         onPressed: _loading
                             ? null
                             : () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PhoneAuthScreen())),
@@ -142,23 +143,23 @@ class _AuthLandingScreenState extends State<AuthLandingScreen> {
                         onPressed: _loading
                             ? null
                             : () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EmailAuthScreen())),
-                        child: const Text("ईमेल से साइन-इन करें / Sign in with email instead",
-                            style: TextStyle(color: Colors.white70, fontSize: 12.5)),
+                        child: Text(context.t('authLanding.signInEmail'),
+                            style: const TextStyle(color: Colors.white70, fontSize: 12.5)),
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      "जारी रखकर आप हमारी नियम व शर्तें स्वीकार करते हैं।\nBy continuing you agree to our Terms & Privacy Policy.",
+                    Text(
+                      context.t('authLanding.terms'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 10.5, color: Colors.white60, height: 1.5),
+                      style: const TextStyle(fontSize: 10.5, color: Colors.white60, height: 1.5),
                     ),
                   ],
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.only(bottom: 18),
-                child: Text("निर्माता / Created by Vijay Vishvakarma",
-                    textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: Colors.white60)),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 18),
+                child: Text(context.t('authLanding.credit'),
+                    textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, color: Colors.white60)),
               ),
             ],
           ),

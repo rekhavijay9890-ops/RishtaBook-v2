@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../theme/app_colors.dart';
 import '../../services/profile_service.dart';
+import '../../i18n/strings.dart';
 
 /// Grid of up to [ProfileService.maxPhotos] photos: tap an empty slot to
 /// add one (gallery -> Storage -> `photoUrls` array), tap an existing photo
@@ -31,9 +32,7 @@ class _ManagePhotosScreenState extends State<ManagePhotosScreen> {
       await _profileService.uploadProfilePhoto(widget.uid, File(picked.path));
     } catch (e) {
       if (mounted) {
-        final msg = e is StateError
-            ? "अधिकतम ${ProfileService.maxPhotos} फ़ोटो जोड़ी जा सकती हैं / Maximum ${ProfileService.maxPhotos} photos allowed"
-            : "फ़ोटो अपलोड नहीं हुई / Could not upload photo";
+        final msg = e is StateError ? context.t('managePhotos.limitReached') : context.t('managePhotos.uploadFailed');
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), backgroundColor: AppColors.error));
       }
     } finally {
@@ -52,7 +51,7 @@ class _ManagePhotosScreenState extends State<ManagePhotosScreen> {
           if (!isPrimary)
             ListTile(
               leading: const Icon(Icons.star_outline, color: AppColors.gold),
-              title: const Text("प्रोफ़ाइल फ़ोटो बनाएं / Set as profile photo"),
+              title: Text(context.t('managePhotos.setPrimary')),
               onTap: () async {
                 Navigator.pop(context);
                 await _profileService.setPrimaryPhoto(widget.uid, url);
@@ -60,7 +59,7 @@ class _ManagePhotosScreenState extends State<ManagePhotosScreen> {
             ),
           ListTile(
             leading: const Icon(Icons.delete_outline, color: AppColors.error),
-            title: const Text("हटाएं / Delete", style: TextStyle(color: AppColors.error)),
+            title: Text(context.t('managePhotos.delete'), style: const TextStyle(color: AppColors.error)),
             onTap: () async {
               Navigator.pop(context);
               await _profileService.deleteProfilePhoto(widget.uid, url);
@@ -77,7 +76,7 @@ class _ManagePhotosScreenState extends State<ManagePhotosScreen> {
     return Scaffold(
       backgroundColor: AppColors.pageBg,
       appBar: AppBar(
-        title: const Text("फ़ोटो प्रबंधित करें / Manage Photos"),
+        title: Text(context.t('managePhotos.title')),
         backgroundColor: AppColors.headerBg,
         foregroundColor: Colors.white,
       ),
@@ -93,7 +92,7 @@ class _ManagePhotosScreenState extends State<ManagePhotosScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  "${urls.length}/${ProfileService.maxPhotos} फ़ोटो · पहली फ़ोटो आपकी प्रोफ़ाइल फ़ोटो होगी\n${urls.length}/${ProfileService.maxPhotos} photos · the first one is your profile photo",
+                  context.t('managePhotos.count', ['${urls.length}']),
                   style: const TextStyle(fontSize: 12, color: AppColors.muted, height: 1.4),
                 ),
                 const SizedBox(height: 14),
@@ -128,7 +127,7 @@ class _ManagePhotosScreenState extends State<ManagePhotosScreen> {
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(color: AppColors.gold, borderRadius: BorderRadius.circular(100)),
-                                  child: const Text("मुख्य", style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white)),
+                                  child: Text(context.t('managePhotos.primaryBadge'), style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white)),
                                 ),
                               ),
                           ],

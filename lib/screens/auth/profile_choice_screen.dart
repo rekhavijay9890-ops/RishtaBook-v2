@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
 import '../../services/profile_service.dart';
+import '../../i18n/strings.dart';
 import '../profile/complete_profile_screen.dart';
 
 /// Shown once, right after [BasicDetailsScreen] — complete the extended
@@ -59,9 +60,9 @@ class _ProfileChoiceScreenState extends State<ProfileChoiceScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text("स्वागत है, ${widget.fullName}! / Welcome, ${widget.fullName}!",
+                    Text(context.t('profileChoice.welcome', [widget.fullName]),
                         style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-                    const Text("खाता बन गया / Account created", style: TextStyle(color: AppColors.muted, fontSize: 12)),
+                    Text(context.t('profileChoice.accountCreated'), style: const TextStyle(color: AppColors.muted, fontSize: 12)),
                   ]),
                 ),
               ]),
@@ -76,15 +77,14 @@ class _ProfileChoiceScreenState extends State<ProfileChoiceScreen> {
                     border: Border.all(color: AppColors.saffron),
                   ),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text("पूरी प्रोफ़ाइल भरें / Complete your profile", style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                    Text(context.t('profileChoice.completeTitle'), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
                     const SizedBox(height: 4),
-                    const Text("जाति, गोत्र, कुंडली, परिवार व अपेक्षाएँ — बेहतर मिलान के लिए\nCaste, gotra, kundali, family & preferences — for better matches",
-                        style: TextStyle(fontSize: 11.5, color: AppColors.muted)),
+                    Text(context.t('profileChoice.completeDesc'), style: const TextStyle(fontSize: 11.5, color: AppColors.muted)),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(color: Colors.white, border: Border.all(color: AppColors.saffron), borderRadius: BorderRadius.circular(100)),
-                      child: const Text("अनुशंसित · ~4 मिनट / Recommended · ~4 min", style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.saffron)),
+                      child: Text(context.t('profileChoice.recommended'), style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.saffron)),
                     ),
                   ]),
                 ),
@@ -96,10 +96,9 @@ class _ProfileChoiceScreenState extends State<ProfileChoiceScreen> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.borderColor)),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text("अभी छोड़ें / Skip for now", style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                    Text(context.t('profileChoice.skipTitle'), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
                     const SizedBox(height: 4),
-                    const Text("सीधे प्रोफ़ाइल देखना शुरू करें। कभी भी प्रोफ़ाइल टैब से भर सकते हैं।\nStart browsing right away. Finish anytime from the Profile tab.",
-                        style: TextStyle(fontSize: 11.5, color: AppColors.muted)),
+                    Text(context.t('profileChoice.skipDesc'), style: const TextStyle(fontSize: 11.5, color: AppColors.muted)),
                   ]),
                 ),
               ),

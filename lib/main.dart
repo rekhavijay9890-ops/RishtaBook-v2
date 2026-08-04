@@ -32,7 +32,13 @@ void main() async {
     ),
   );
 
-  await MobileAds.instance.initialize();
+  // Not awaited: this is a network call to Google's ad SDK. It only needs
+  // to finish before the Wallet tab's "Watch ad" button loads a
+  // RewardedAd - by then the user has navigated at least one screen away
+  // from boot, so it's always ready in practice. Awaiting it here blocked
+  // the whole app from rendering until it finished - the single biggest
+  // contributor to a slow cold boot.
+  MobileAds.instance.initialize();
 
   final languageController = LanguageController();
   await languageController.load();

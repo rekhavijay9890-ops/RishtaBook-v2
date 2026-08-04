@@ -5,6 +5,7 @@ import '../../theme/app_colors.dart';
 import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/credit_service.dart';
+import '../../i18n/strings.dart';
 
 /// Firebase Phone Auth: enter number -> receive SMS OTP -> verify.
 /// Requires the Phone provider enabled in Firebase Console.
@@ -60,7 +61,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   Future<void> _sendOtp() async {
     final digits = _phoneController.text.trim();
     if (digits.length != 10 || !RegExp(r'^[0-9]+$').hasMatch(digits)) {
-      _showSnack("सही 10 अंकों का मोबाइल नंबर डालें / Enter a valid 10-digit number");
+      _showSnack(context.t('phoneAuth.invalidNumber'));
       return;
     }
     setState(() => _loading = true);
@@ -79,7 +80,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         onError: (e) {
           if (!mounted) return;
           setState(() => _loading = false);
-          _showSnack(e.message ?? "OTP भेजने में समस्या आई। / Could not send OTP.");
+          _showSnack(e.message ?? context.t('phoneAuth.sendFailed'));
         },
         onAutoVerified: (credential) async {
           await _completeSignIn(credential);
@@ -87,14 +88,14 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
       );
     } catch (_) {
       if (mounted) setState(() => _loading = false);
-      _showSnack("OTP भेजने में समस्या आई। / Could not send OTP.");
+      if (mounted) _showSnack(context.t('phoneAuth.sendFailed'));
     }
   }
 
   Future<void> _verifyOtp() async {
     final code = _otpController.text.trim();
     if (code.length != 6 || _verificationId == null) {
-      _showSnack("सही OTP डालें / Enter the 6-digit OTP");
+      _showSnack(context.t('phoneAuth.invalidOtp'));
       return;
     }
     setState(() => _loading = true);
@@ -103,8 +104,8 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
       await _completeSignIn(credential);
     } on FirebaseAuthException catch (e) {
       _showSnack(e.code == 'invalid-verification-code'
-          ? "गलत OTP। दोबारा कोशिश करें। / Wrong OTP, try again."
-          : (e.message ?? "सत्यापन विफल। / Verification failed."));
+          ? context.t('phoneAuth.wrongOtp')
+          : (e.message ?? context.t('phoneAuth.verifyFailed')));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -114,7 +115,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_otpSent ? "OTP दर्ज करें / Enter OTP" : "मोबाइल नंबर / Mobile Number"),
+        title: Text(_otpSent ? context.t('phoneAuth.titleOtp') : context.t('phoneAuth.titleNumber')),
         backgroundColor: AppColors.headerBg,
         foregroundColor: Colors.white,
       ),
@@ -126,8 +127,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
           children: [
             const SizedBox(height: 12),
             if (!_otpSent) ...[
-              const Text("हम आपको एक OTP भेजेंगे / We'll send you a one-time code",
-                  style: TextStyle(color: AppColors.muted, fontSize: 13)),
+              Text(context.t('phoneAuth.subtitle'), style: const TextStyle(color: AppColors.muted, fontSize: 13)),
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -145,7 +145,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
                       maxLength: 10,
-                      decoration: const InputDecoration(hintText: "98XXXXXX21", counterText: ''),
+                      decoration: InputDecoration(hintText: context.t('phoneAuth.numberHint'), counterText: ''),
                     ),
                   ),
                 ],
@@ -157,11 +157,11 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                   onPressed: _loading ? null : _sendOtp,
                   child: _loading
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : const Text("OTP भेजें / Send OTP"),
+                      : Text(context.t('phoneAuth.sendOtp')),
                 ),
               ),
             ] else ...[
-              Text("$_phoneDigits पर भेजा गया OTP डालें / Enter the OTP sent to +91 $_phoneDigits",
+              Text(context.t('phoneAuth.otpSentTo', [_phoneDigits]),
                   style: const TextStyle(color: AppColors.muted, fontSize: 13)),
               const SizedBox(height: 16),
               TextField(
@@ -179,14 +179,14 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                   onPressed: _loading ? null : _verifyOtp,
                   child: _loading
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : const Text("सत्यापित करें / Verify"),
+                      : Text(context.t('phoneAuth.verify')),
                 ),
               ),
               const SizedBox(height: 10),
               Center(
                 child: TextButton(
                   onPressed: _loading ? null : () => setState(() => _otpSent = false),
-                  child: const Text("नंबर बदलें / Change number", style: TextStyle(color: AppColors.muted)),
+                  child: Text(context.t('phoneAuth.changeNumber'), style: const TextStyle(color: AppColors.muted)),
                 ),
               ),
             ],

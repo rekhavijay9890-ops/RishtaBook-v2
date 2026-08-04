@@ -5,12 +5,12 @@ import '../../theme/app_colors.dart';
 import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/credit_service.dart';
+import '../../i18n/strings.dart';
 
 /// Short, mandatory step shown right after ANY successful sign-in
 /// (Google, Mobile, or Email) whose profile is missing these fields —
-/// closes the gap where Google sign-in used to skip straight past both
-/// the basic-info step AND the disclaimer/consent that email signup
-/// always required.
+/// closes the gap where Google sign-in used to skip both the basic-info
+/// step AND the disclaimer/consent that email signup always required.
 class BasicDetailsScreen extends StatefulWidget {
   final User user;
   /// The user's existing `users/{uid}` doc, if any — e.g. a pre-redesign
@@ -92,7 +92,7 @@ class _BasicDetailsScreenState extends State<BasicDetailsScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("सहेजने में समस्या आई। / Could not save. Try again."), backgroundColor: AppColors.error));
+            SnackBar(content: Text(context.t('basicDetails.saveError')), backgroundColor: AppColors.error));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -101,18 +101,26 @@ class _BasicDetailsScreenState extends State<BasicDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Gender is stored as a fixed bilingual value regardless of the
+    // display language, so the value used for matching (UserProfile.
+    // isFemale/isMale) and any pre-redesign accounts already using this
+    // format stay consistent - only the label shown to the user changes
+    // with the toggle.
+    const genderMaleValue = "पुरुष / Male";
+    const genderFemaleValue = "स्त्री / Female";
+    const genderOtherValue = "अन्य / Other";
+
     return Scaffold(
       backgroundColor: AppColors.pageBg,
       appBar: AppBar(
-        title: const Text("बुनियादी जानकारी / Basic Details"),
+        title: Text(context.t('basicDetails.title')),
         backgroundColor: AppColors.headerBg,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         actions: [
           TextButton(
             onPressed: () => AuthService().signOut(),
-            child: const Text("गलत अकाउंट? / Wrong account?",
-                style: TextStyle(color: Colors.white70, fontSize: 12)),
+            child: Text(context.t('basicDetails.wrongAccount'), style: const TextStyle(color: Colors.white70, fontSize: 12)),
           ),
         ],
       ),
@@ -123,13 +131,12 @@ class _BasicDetailsScreenState extends State<BasicDetailsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text("बस कुछ ज़रूरी जानकारी / Just a few essentials",
-                  style: TextStyle(color: AppColors.muted, fontSize: 13)),
+              Text(context.t('basicDetails.subtitle'), style: const TextStyle(color: AppColors.muted, fontSize: 13)),
               const SizedBox(height: 18),
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(prefixIcon: Icon(Icons.person_outline, color: AppColors.saffron), hintText: "पूरा नाम / Full Name"),
-                validator: (v) => (v == null || v.trim().isEmpty) ? "पूरा नाम भरना अनिवार्य है" : null,
+                decoration: InputDecoration(prefixIcon: const Icon(Icons.person_outline, color: AppColors.saffron), hintText: context.t('basicDetails.fullNameHint')),
+                validator: (v) => (v == null || v.trim().isEmpty) ? context.t('basicDetails.fullNameRequired') : null,
               ),
               const SizedBox(height: 12),
               Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -137,7 +144,7 @@ class _BasicDetailsScreenState extends State<BasicDetailsScreen> {
                   child: TextFormField(
                     controller: _dobController,
                     readOnly: true,
-                    validator: (v) => (v == null || v.isEmpty) ? "जन्म तिथि चुनें" : null,
+                    validator: (v) => (v == null || v.isEmpty) ? context.t('basicDetails.dobRequired') : null,
                     onTap: () async {
                       final picked = await showDatePicker(
                         context: context,
@@ -151,7 +158,7 @@ class _BasicDetailsScreenState extends State<BasicDetailsScreen> {
                         });
                       }
                     },
-                    decoration: const InputDecoration(prefixIcon: Icon(Icons.calendar_today_outlined, color: AppColors.saffron, size: 20), hintText: "जन्म तिथि / DOB"),
+                    decoration: InputDecoration(prefixIcon: const Icon(Icons.calendar_today_outlined, color: AppColors.saffron, size: 20), hintText: context.t('basicDetails.dobHint')),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -159,11 +166,11 @@ class _BasicDetailsScreenState extends State<BasicDetailsScreen> {
                   child: DropdownButtonFormField<String>(
                     isExpanded: true,
                     value: _gender.isNotEmpty ? _gender : null,
-                    decoration: const InputDecoration(prefixIcon: Icon(Icons.people_outline, color: AppColors.saffron, size: 20), hintText: "लिंग / Gender"),
-                    items: const [
-                      DropdownMenuItem(value: "पुरुष / Male", child: Text("पुरुष / Male")),
-                      DropdownMenuItem(value: "स्त्री / Female", child: Text("स्त्री / Female")),
-                      DropdownMenuItem(value: "अन्य / Other", child: Text("अन्य / Other")),
+                    decoration: InputDecoration(prefixIcon: const Icon(Icons.people_outline, color: AppColors.saffron, size: 20), hintText: context.t('basicDetails.genderHint')),
+                    items: [
+                      DropdownMenuItem(value: genderMaleValue, child: Text(context.t('basicDetails.genderMale'))),
+                      DropdownMenuItem(value: genderFemaleValue, child: Text(context.t('basicDetails.genderFemale'))),
+                      DropdownMenuItem(value: genderOtherValue, child: Text(context.t('basicDetails.genderOther'))),
                     ],
                     onChanged: (v) => setState(() => _gender = v ?? ''),
                   ),
@@ -174,13 +181,13 @@ class _BasicDetailsScreenState extends State<BasicDetailsScreen> {
                 controller: _mobileController,
                 keyboardType: TextInputType.phone,
                 readOnly: widget.user.phoneNumber != null,
-                decoration: const InputDecoration(prefixIcon: Icon(Icons.phone_outlined, color: AppColors.saffron), hintText: "मोबाइल नंबर / Mobile Number"),
-                validator: (v) => (v == null || v.trim().length < 10) ? "सही मोबाइल नंबर डालें" : null,
+                decoration: InputDecoration(prefixIcon: const Icon(Icons.phone_outlined, color: AppColors.saffron), hintText: context.t('basicDetails.mobileHint')),
+                validator: (v) => (v == null || v.trim().length < 10) ? context.t('basicDetails.mobileRequired') : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _referralController,
-                decoration: const InputDecoration(prefixIcon: Icon(Icons.card_giftcard_outlined, color: AppColors.saffron), hintText: "रेफ़रल कोड (वैकल्पिक) / Referral code (optional)"),
+                decoration: InputDecoration(prefixIcon: const Icon(Icons.card_giftcard_outlined, color: AppColors.saffron), hintText: context.t('basicDetails.referralHint')),
               ),
               const SizedBox(height: 16),
               GestureDetector(
@@ -198,19 +205,19 @@ class _BasicDetailsScreenState extends State<BasicDetailsScreen> {
                       onChanged: (v) => setState(() { _consent = v ?? false; if (_consent) _consentError = false; }),
                       activeColor: AppColors.saffron,
                     ),
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        "अस्वीकरण: हमारा कार्य केवल दो परिवारों को जोड़ना है। जाँच-पड़ताल की ज़िम्मेदारी आपकी है। किसी भी धोखाधड़ी के लिए हम उत्तरदायी नहीं हैं।",
-                        style: TextStyle(fontSize: 12.5, color: AppColors.muted),
+                        context.t('basicDetails.disclaimer'),
+                        style: const TextStyle(fontSize: 12.5, color: AppColors.muted),
                       ),
                     ),
                   ]),
                 ),
               ),
               if (_consentError)
-                const Padding(
-                  padding: EdgeInsets.only(left: 12, top: 4),
-                  child: Text("👆 आगे बढ़ने के लिए ऊपर टिक करें अनिवार्य है / You must tick above to continue", style: TextStyle(color: AppColors.error, fontSize: 12, fontWeight: FontWeight.w700)),
+                Padding(
+                  padding: const EdgeInsets.only(left: 12, top: 4),
+                  child: Text(context.t('basicDetails.consentError'), style: const TextStyle(color: AppColors.error, fontSize: 12, fontWeight: FontWeight.w700)),
                 ),
               const SizedBox(height: 20),
               SizedBox(
@@ -219,7 +226,7 @@ class _BasicDetailsScreenState extends State<BasicDetailsScreen> {
                   onPressed: _saving ? null : _save,
                   child: _saving
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : const Text("आगे बढ़ें / Continue"),
+                      : Text(context.t('basicDetails.continue')),
                 ),
               ),
             ],
