@@ -75,24 +75,28 @@ class ChatService {
     });
   }
 
-  /// Total unread messages across ALL matches for this user.
+  /// Total unread messages across ALL matches for this user. Runs the
+  /// per-match subqueries in parallel (Future.wait) rather than one at a
+  /// time - this badge recomputes on every match-list change, and a
+  /// sequential loop meant N round trips back-to-back for N matches,
+  /// adding directly to how long the app feels slow to settle right after
+  /// sign-in.
   Stream<int> totalUnreadStream(String uid) {
     return _db
         .collection('matches')
         .where('participants', arrayContains: uid)
         .snapshots()
         .asyncMap((qs) async {
-      int total = 0;
-      for (final doc in qs.docs) {
+      final counts = await Future.wait<int>(qs.docs.map((doc) async {
         final data = doc.data();
         final lastSeen = (data['lastSeen_$uid'] as Timestamp?)?.toDate() ?? DateTime(2000);
         final msgs = await _messages(doc.id)
             .where('sentAt', isGreaterThan: Timestamp.fromDate(lastSeen))
             .where('senderId', isNotEqualTo: uid)
             .get();
-        total += msgs.docs.length;
-      }
-      return total;
+        return msgs.docs.length;
+      }));
+      return counts.fold<int>(0, (a, b) => a + b);
     });
   }
 }
