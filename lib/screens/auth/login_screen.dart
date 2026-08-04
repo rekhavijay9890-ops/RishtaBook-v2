@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 
 import '../../theme/app_colors.dart';
 import '../../widgets/scallop_header.dart';
@@ -7,6 +8,7 @@ import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/credit_service.dart';
 import '../../services/kundali_service.dart';
+import '../../i18n/language_controller.dart';
 import '../root_shell.dart';
 
 const List<String> kIndianStates = [
@@ -386,31 +388,58 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ScallopHeader(
-                height: 220,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15), shape: BoxShape.circle),
-                        child: const Icon(Icons.favorite, color: Colors.white, size: 42),
+              VideoScallopHeader(
+                height: 260,
+                videoAsset: 'assets/video/signin_bg.mp4',
+                child: Stack(
+                  children: [
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: SafeArea(
+                        bottom: false,
+                        child: Consumer<LanguageController>(
+                          builder: (context, lang, _) => GestureDetector(
+                            onTap: () => lang.toggle(),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.16),
+                                border: Border.all(color: Colors.white.withOpacity(0.3)),
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              child: Text(lang.isHindi ? 'हिं / EN' : 'EN / हिं',
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
+                            ),
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 14),
-                      const Text("RishtaBook",
-                          style: TextStyle(
-                              fontSize: 26, fontWeight: FontWeight.w700,
-                              color: Colors.white, fontFamily: 'serif')),
-                      const SizedBox(height: 4),
-                      Text(
-                          _completingProfile
-                              ? "अपनी प्रोफ़ाइल पूरी करें / Complete your profile"
-                              : (_isLoginMode ? "स्वागत है / Welcome Back" : "नया खाता बनाएँ / Create Account"),
-                          style: const TextStyle(fontSize: 14, color: Colors.white70)),
-                    ],
-                  ),
+                    ),
+                    Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15), shape: BoxShape.circle),
+                            child: const Icon(Icons.favorite, color: Colors.white, size: 42),
+                          ),
+                          const SizedBox(height: 14),
+                          const Text("RishtaBook",
+                              style: TextStyle(
+                                  fontSize: 26, fontWeight: FontWeight.w700,
+                                  color: Colors.white, fontFamily: 'serif')),
+                          const SizedBox(height: 4),
+                          Text(
+                              _completingProfile
+                                  ? "अपनी प्रोफ़ाइल पूरी करें / Complete your profile"
+                                  : (_isLoginMode ? "स्वागत है / Welcome Back" : "नया खाता बनाएँ / Create Account"),
+                              style: const TextStyle(fontSize: 14, color: Colors.white70)),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Padding(
@@ -675,6 +704,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ],
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(bottom: 18),
+                child: Text(
+                  "निर्माता / Created by Vijay Vishvakarma",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 11, color: AppColors.muted),
                 ),
               ),
             ],
