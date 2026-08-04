@@ -244,7 +244,7 @@ class _ResultTile extends StatelessWidget {
           child: Row(children: [
             locked
                 ? Container(width: 46, height: 46, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.borderColor), child: const Center(child: Text('🔒', style: TextStyle(fontSize: 20))))
-                : RbAvatar(initials: profile.fullName.isNotEmpty ? profile.fullName[0].toUpperCase() : '?', size: 46, color: color),
+                : RbAvatar(initials: profile.fullName.isNotEmpty ? profile.fullName[0].toUpperCase() : '?', size: 46, color: color, photoUrl: profile.primaryPhotoUrl),
             const SizedBox(width: 10),
             Expanded(
               child: locked

@@ -1,8 +1,12 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 /// Reads/writes for the `users` collection - registration data,
 /// profile browsing, and the verification status fields.
 class ProfileService {
+  static const int maxPhotos = 10;
+
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   CollectionReference<Map<String, dynamic>> get _users => _db.collection('users');
@@ -49,5 +53,48 @@ class ProfileService {
 
   Stream<QuerySnapshot<Map<String, dynamic>>> pendingVerificationsStream() {
     return _users.where('verificationStatus', isEqualTo: 'pending').snapshots();
+  }
+
+  /// Uploads [file] to this user's own photo folder in Storage and appends
+  /// its download URL to `photoUrls` on the user doc. Throws if the user
+  /// already has [maxPhotos] photos - callers should disable the "add"
+  /// affordance at that point, this is the hard backstop.
+  Future<String> uploadProfilePhoto(String uid, File file) async {
+    final current = await currentPhotoUrls(uid);
+    if (current.length >= maxPhotos) {
+      throw StateError('Maximum $maxPhotos photos reached');
+    }
+    final ref = FirebaseStorage.instance
+        .ref()
+        .child('profile_photos/$uid/${DateTime.now().millisecondsSinceEpoch}.jpg');
+    await ref.putFile(file);
+    final url = await ref.getDownloadURL();
+    await _users.doc(uid).set({'photoUrls': FieldValue.arrayUnion([url])}, SetOptions(merge: true));
+    return url;
+  }
+
+  Future<List<String>> currentPhotoUrls(String uid) async {
+    final doc = await _users.doc(uid).get();
+    return List<String>.from(doc.data()?['photoUrls'] ?? const []);
+  }
+
+  /// Removes [url] from both Storage and the user's `photoUrls` array.
+  /// Best-effort on the Storage delete - an already-missing object (e.g.
+  /// deleted twice) shouldn't block clearing it from Firestore.
+  Future<void> deleteProfilePhoto(String uid, String url) async {
+    try {
+      await FirebaseStorage.instance.refFromURL(url).delete();
+    } catch (_) {}
+    await _users.doc(uid).update({'photoUrls': FieldValue.arrayRemove([url])});
+  }
+
+  /// Reorders so [url] becomes the first (primary/display) photo.
+  Future<void> setPrimaryPhoto(String uid, String url) async {
+    final urls = await currentPhotoUrls(uid);
+    if (!urls.contains(url)) return;
+    urls
+      ..remove(url)
+      ..insert(0, url);
+    await _users.doc(uid).update({'photoUrls': urls});
   }
 }

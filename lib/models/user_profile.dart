@@ -24,7 +24,7 @@ class UserProfile {
   final String nakshatra;
   final String manglik;
   final int credits;
-  final String? photoUrl;
+  final List<String> photoUrls;
 
   const UserProfile({
     required this.uid,
@@ -51,7 +51,7 @@ class UserProfile {
     this.nakshatra = '',
     this.manglik = 'unknown',
     this.credits = 0,
-    this.photoUrl,
+    this.photoUrls = const [],
   });
 
   factory UserProfile.fromMap(String uid, Map<String, dynamic> data) {
@@ -80,9 +80,11 @@ class UserProfile {
       nakshatra: data['nakshatra'] ?? '',
       manglik: data['manglik'] ?? 'unknown',
       credits: (data['credits'] is int) ? data['credits'] as int : (data['credits'] as num?)?.toInt() ?? 0,
-      photoUrl: data['photoUrl'] as String?,
+      photoUrls: List<String>.from(data['photoUrls'] ?? const []),
     );
   }
+
+  String? get primaryPhotoUrl => photoUrls.isNotEmpty ? photoUrls.first : null;
 
   bool get hasKundaliDetails => rashi.isNotEmpty && nakshatra.isNotEmpty;
 
