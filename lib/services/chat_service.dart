@@ -1,9 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'notification_service.dart';
+
 /// Messages inside a single match's chat thread:
 /// `matches/{matchId}/messages/{messageId}`.
 class ChatService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final NotificationService _notificationService = NotificationService();
 
   CollectionReference<Map<String, dynamic>> _messages(String matchId) =>
       _db.collection('matches').doc(matchId).collection('messages');
@@ -28,6 +31,27 @@ class ChatService {
       'lastMessage': imageUrl != null ? '📷 Photo' : text,
       'lastMessageAt': FieldValue.serverTimestamp(),
     });
+    await _notifyRecipient(matchId: matchId, senderId: senderId, preview: imageUrl != null ? '📷 Photo' : text);
+  }
+
+  /// Best-effort: looks up the other participant + the sender's own name to
+  /// leave them a notification. Never blocks/fails the send itself - a
+  /// notification hiccup shouldn't stop a message from going through.
+  Future<void> _notifyRecipient({required String matchId, required String senderId, required String preview}) async {
+    try {
+      final matchDoc = await _db.collection('matches').doc(matchId).get();
+      final participants = List<String>.from(matchDoc.data()?['participants'] ?? const []);
+      final recipientUid = participants.firstWhere((p) => p != senderId, orElse: () => '');
+      if (recipientUid.isEmpty) return;
+      final senderDoc = await _db.collection('users').doc(senderId).get();
+      final senderName = (senderDoc.data()?['fullName'] as String?)?.trim();
+      await _notificationService.notifyNewMessage(
+        recipientUid,
+        senderName: (senderName?.isNotEmpty ?? false) ? senderName! : 'New message',
+        preview: preview,
+        matchId: matchId,
+      );
+    } catch (_) {}
   }
 
   /// Mark this user as having seen all messages in this match up to now.

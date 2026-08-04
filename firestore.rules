@@ -51,6 +51,21 @@ service cloud.firestore {
           request.resource.data.status == 'completed' &&
           request.resource.data.phone == resource.data.phone;
       }
+
+      // In-app notifications (credit added, profile viewed, new message,
+      // interest received/accepted). Only the owner may ever read, mark
+      // read, or delete their own notifications - but the ACTOR who
+      // triggers one (the message sender, the profile viewer, the person
+      // whose interest just got accepted) is a different user than
+      // `userId`, so create is intentionally open to any signed-in user,
+      // same client-trust model as the rest of this app. Bounded to the
+      // well-formed shape NotificationService always writes.
+      match /notifications/{notificationId} {
+        allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null &&
+          request.resource.data.read == false &&
+          request.resource.data.keys().hasAll(['type', 'title', 'body', 'createdAt']);
+      }
     }
 
     match /config/{docId} {
