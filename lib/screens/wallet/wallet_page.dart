@@ -5,8 +5,10 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../config/app_config.dart';
 import '../../models/credit_pack.dart';
+import '../../models/user_profile.dart';
 import '../../services/auth_service.dart';
 import '../../services/credit_service.dart';
+import '../../services/profile_service.dart';
 import '../../i18n/strings.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text.dart';
@@ -24,7 +26,9 @@ class _WalletPageState extends State<WalletPage> {
   final CreditService _creditService = CreditService();
   final AuthService _authService = AuthService();
 
+  final ProfileService _profileService = ProfileService();
   bool _adLoading = false;
+  bool _boosting = false;
   int? _adsRemainingToday;
 
   @override
@@ -41,6 +45,19 @@ class _WalletPageState extends State<WalletPage> {
   void dispose() {
     _razorpay.clear();
     super.dispose();
+  }
+
+  Future<void> _boost() async {
+    setState(() => _boosting = true);
+    final uid = _authService.currentUser?.uid ?? '';
+    final ok = await _creditService.boostProfile(uid);
+    if (mounted) {
+      setState(() => _boosting = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(ok ? context.t('wallet.boostSuccess') : context.t('chat.insufficientCredits')),
+        backgroundColor: ok ? AppColors.success : AppColors.error,
+      ));
+    }
   }
 
   Future<void> _refreshAdsRemaining() async {
@@ -264,6 +281,45 @@ class _WalletPageState extends State<WalletPage> {
                           ),
                         ),
                       ]),
+                    ),
+                    const SizedBox(height: 14),
+                    StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                      stream: _profileService.userProfileStream(uid),
+                      builder: (context, meSnap) {
+                        final me = meSnap.data?.data() != null ? UserProfile.fromMap(uid, meSnap.data!.data()!) : null;
+                        final boosted = me?.isBoosted ?? false;
+                        return Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(colors: [Color(0xFFFFE0E9), AppColors.safLight]),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: AppColors.rose.withOpacity(0.25)),
+                          ),
+                          child: Row(children: [
+                            const Text('🚀', style: TextStyle(fontSize: 26)),
+                            const SizedBox(width: 12),
+                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              Text(context.t('wallet.boostTitle'), style: AppText.headingSmall),
+                              const SizedBox(height: 2),
+                              Text(
+                                boosted ? context.t('wallet.boostActive') : context.t('wallet.boostDesc', [CreditService.boostCost]),
+                                style: AppText.caption,
+                              ),
+                            ])),
+                            if (!boosted)
+                              GestureDetector(
+                                onTap: _boosting ? null : _boost,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                                  decoration: BoxDecoration(color: AppColors.rose, borderRadius: BorderRadius.circular(100)),
+                                  child: _boosting
+                                      ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                      : Text(context.t('wallet.boostCta'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
+                                ),
+                              ),
+                          ]),
+                        );
+                      },
                     ),
                     const SizedBox(height: 14),
                     Container(

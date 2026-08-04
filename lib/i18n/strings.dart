@@ -368,6 +368,73 @@ const Map<String, Map<String, String>> _dict = {
   // ── Match score badge ──
   'match.scoreLabel':  {'hi': '%s%% मेल', 'en': '%s%% Match'},
   'match.sortByScore': {'hi': 'सर्वश्रेष्ठ मेल पहले', 'en': 'Best match first'},
+
+  // ── Mother tongue / income (Phase 2 fields) ──
+  'completeProfile.motherTongueHint': {'hi': 'मातृभाषा', 'en': 'Mother Tongue'},
+  'completeProfile.incomeHint':       {'hi': 'वार्षिक आय', 'en': 'Annual Income'},
+  'income.below3':  {'hi': '₹3 लाख से कम', 'en': 'Below ₹3 Lakh'},
+  'income.3to6':    {'hi': '₹3-6 लाख', 'en': '₹3-6 Lakh'},
+  'income.6to10':   {'hi': '₹6-10 लाख', 'en': '₹6-10 Lakh'},
+  'income.10to20':  {'hi': '₹10-20 लाख', 'en': '₹10-20 Lakh'},
+  'income.above20': {'hi': '₹20 लाख से अधिक', 'en': 'Above ₹20 Lakh'},
+
+  // ── Search: extra filters + saved searches ──
+  'search.motherTongue':   {'hi': 'मातृभाषा', 'en': 'Mother Tongue'},
+  'search.income':         {'hi': 'वार्षिक आय', 'en': 'Annual Income'},
+  'search.saveSearch':     {'hi': 'यह खोज सहेजें', 'en': 'Save this search'},
+  'search.savedSearches':  {'hi': 'सहेजी गई खोजें', 'en': 'Saved Searches'},
+  'search.searchNamePrompt': {'hi': 'खोज का नाम दें', 'en': 'Name this search'},
+  'search.searchSaved':    {'hi': 'खोज सहेजी गई', 'en': 'Search saved'},
+  'search.noSavedSearches':{'hi': 'अभी तक कोई खोज सहेजी नहीं गई।', 'en': 'No saved searches yet.'},
+  'search.deleteSearch':   {'hi': 'हटाएं', 'en': 'Delete'},
+  'search.applySearch':    {'hi': 'लागू करें', 'en': 'Apply'},
+
+  // ── Trust & safety ──
+  'safety.block':          {'hi': 'ब्लॉक करें', 'en': 'Block'},
+  'safety.blockConfirm':   {'hi': 'क्या आप इस प्रोफ़ाइल को ब्लॉक करना चाहते हैं? आपको अब यह प्रोफ़ाइल नहीं दिखेगी।', 'en': 'Block this profile? You will no longer see it in your results.'},
+  'safety.blocked':        {'hi': 'ब्लॉक कर दिया गया', 'en': 'Blocked'},
+  'safety.report':         {'hi': 'रिपोर्ट करें', 'en': 'Report'},
+  'safety.reportTitle':    {'hi': 'इस प्रोफ़ाइल की रिपोर्ट करें', 'en': 'Report this profile'},
+  'safety.reportReasonHint': {'hi': 'कारण चुनें', 'en': 'Select a reason'},
+  'safety.reportDetailsHint': {'hi': 'अतिरिक्त विवरण (वैकल्पिक)', 'en': 'Additional details (optional)'},
+  'safety.reportSubmit':   {'hi': 'रिपोर्ट भेजें', 'en': 'Submit Report'},
+  'safety.reportSent':     {'hi': 'रिपोर्ट भेज दी गई। हम इसकी समीक्षा करेंगे।', 'en': 'Report submitted. We will review it.'},
+  'safety.reason.fakeProfile':   {'hi': 'नकली प्रोफ़ाइल', 'en': 'Fake profile'},
+  'safety.reason.inappropriate': {'hi': 'अनुचित सामग्री', 'en': 'Inappropriate content'},
+  'safety.reason.harassment':    {'hi': 'उत्पीड़न', 'en': 'Harassment'},
+  'safety.reason.other':         {'hi': 'अन्य', 'en': 'Other'},
+  'safety.photosPrivate':        {'hi': 'फ़ोटो निजी रखें', 'en': 'Keep photos private'},
+  'safety.photosPrivateDesc':    {'hi': 'जब तक कोई आपकी रुचि स्वीकार न करे, आपकी फ़ोटो धुंधली दिखेगी।', 'en': 'Your photos stay blurred until someone you match with accepts.'},
+
+  // ── Admin: reports + astrologer requests ──
+  'admin.reportsTab':      {'hi': 'रिपोर्ट्स', 'en': 'Reports'},
+  'admin.astrologerTab':   {'hi': 'ज्योतिषी अनुरोध', 'en': 'Astrologer Requests'},
+  'admin.noOpenReports':   {'hi': 'कोई खुली रिपोर्ट नहीं।', 'en': 'No open reports.'},
+  'admin.resolve':         {'hi': 'सुलझाया गया चिह्नित करें', 'en': 'Mark resolved'},
+  'admin.noAstrologerRequests': {'hi': 'कोई अनुरोध नहीं।', 'en': 'No requests.'},
+  'admin.markContacted':   {'hi': 'संपर्क किया गया चिह्नित करें', 'en': 'Mark contacted'},
+
+  // ── Wallet: boost ──
+  'wallet.boostTitle':     {'hi': 'अपनी प्रोफ़ाइल बूस्ट करें', 'en': 'Boost your profile'},
+  'wallet.boostDesc':      {'hi': '24 घंटे के लिए सबसे ऊपर दिखें · %d क्रेडिट', 'en': 'Appear at the top for 24 hours · %d credits'},
+  'wallet.boostCta':       {'hi': 'बूस्ट करें', 'en': 'Boost'},
+  'wallet.boostBadge':     {'hi': 'बूस्टेड', 'en': 'Boosted'},
+  'wallet.boostActive':    {'hi': 'आपकी प्रोफ़ाइल बूस्टेड है', 'en': 'Your profile is boosted'},
+  'wallet.boostSuccess':   {'hi': 'प्रोफ़ाइल बूस्ट हो गई!', 'en': 'Profile boosted!'},
+
+  // ── Astrologer consultation ──
+  'astrologer.title':      {'hi': 'ज्योतिषी परामर्श', 'en': 'Astrologer Consultation'},
+  'astrologer.subtitle':   {'hi': 'हमारा ज्योतिषी आपसे संपर्क करेगा', 'en': 'Our astrologer will get in touch with you'},
+  'astrologer.nameHint':   {'hi': 'आपका नाम', 'en': 'Your Name'},
+  'astrologer.phoneHint':  {'hi': 'मोबाइल नंबर', 'en': 'Mobile Number'},
+  'astrologer.timeHint':   {'hi': 'संपर्क का पसंदीदा समय', 'en': 'Preferred time to contact'},
+  'astrologer.notesHint':  {'hi': 'कोई विशेष प्रश्न (वैकल्पिक)', 'en': 'Any specific question (optional)'},
+  'astrologer.submit':     {'hi': 'अनुरोध भेजें', 'en': 'Request Callback'},
+  'astrologer.requestSent':{'hi': 'अनुरोध भेज दिया गया! हम जल्द संपर्क करेंगे।', 'en': 'Request sent! We will contact you soon.'},
+  'astrologer.entryButton':{'hi': 'ज्योतिषी से बात करें', 'en': 'Talk to an Astrologer'},
+  'astrologer.myRequests': {'hi': 'आपके अनुरोध', 'en': 'Your Requests'},
+  'astrologer.statusPending':   {'hi': 'प्रतीक्षित', 'en': 'Pending'},
+  'astrologer.statusContacted': {'hi': 'संपर्क किया गया', 'en': 'Contacted'},
 };
 
 extension StringsX on BuildContext {

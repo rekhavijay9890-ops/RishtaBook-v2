@@ -95,6 +95,19 @@ class InterestService {
     }
   }
 
+  /// The other-participant uid from every match this user is part of -
+  /// used to decide whether a private-photo profile should stay blurred
+  /// for this viewer (RbAvatar's `blurred` param) without an extra
+  /// Firestore read per candidate card.
+  Stream<Set<String>> matchedUidsStream(String uid) {
+    return _matches.where('participants', arrayContains: uid).snapshots().map((qs) {
+      return qs.docs
+          .map((doc) => (List<String>.from(doc.data()['participants'] ?? const [])).firstWhere((p) => p != uid, orElse: () => ''))
+          .where((u) => u.isNotEmpty)
+          .toSet();
+    });
+  }
+
   /// All matches (mutual accepts) this user is part of, most recently
   /// active first - this is what the Chats tab lists.
   Stream<QuerySnapshot<Map<String, dynamic>>> matchesStream(String uid) {

@@ -85,6 +85,7 @@ class _ManagePhotosScreenState extends State<ManagePhotosScreen> {
         builder: (context, snapshot) {
           final urls = List<String>.from(snapshot.data?.data()?['photoUrls'] ?? const []);
           final canAddMore = urls.length < ProfileService.maxPhotos;
+          final photosPrivate = snapshot.data?.data()?['photosPrivate'] == true;
 
           return Padding(
             padding: const EdgeInsets.all(16),
@@ -94,6 +95,25 @@ class _ManagePhotosScreenState extends State<ManagePhotosScreen> {
                 Text(
                   context.t('managePhotos.count', ['${urls.length}']),
                   style: const TextStyle(fontSize: 12, color: AppColors.muted, height: 1.4),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.borderColor)),
+                  child: Row(children: [
+                    Expanded(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text(context.t('safety.photosPrivate'), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                        const SizedBox(height: 2),
+                        Text(context.t('safety.photosPrivateDesc'), style: const TextStyle(fontSize: 11, color: AppColors.muted)),
+                      ]),
+                    ),
+                    Switch(
+                      value: photosPrivate,
+                      activeThumbColor: AppColors.saffron,
+                      onChanged: (v) => _profileService.updateUserProfile(widget.uid, {'photosPrivate': v}),
+                    ),
+                  ]),
                 ),
                 const SizedBox(height: 14),
                 Expanded(

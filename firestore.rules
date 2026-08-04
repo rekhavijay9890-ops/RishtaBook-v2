@@ -78,6 +78,12 @@ service cloud.firestore {
           request.resource.data.read == false &&
           request.resource.data.keys().hasAll(['type', 'title', 'body', 'createdAt']);
       }
+
+      // A user's own saved Search filter combinations - fully private,
+      // never written by anyone but the owner.
+      match /savedSearches/{searchId} {
+        allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
+      }
     }
 
     match /config/{docId} {
@@ -134,7 +140,16 @@ service cloud.firestore {
 
     match /reports/{reportId} {
       allow create: if request.auth != null && request.auth.uid == request.resource.data.reporterUid;
-      allow read: if request.auth != null && request.auth.token.email == "rekhavijay9890@gmail.com";
+      allow read, update: if request.auth != null && request.auth.token.email == "rekhavijay9890@gmail.com";
+    }
+
+    // Astrologer consultation callback requests - a user submits their own,
+    // only the admin can list/update them (mark contacted).
+    match /astrologerRequests/{requestId} {
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.uid;
+      allow read: if request.auth != null &&
+        (request.auth.uid == resource.data.uid || request.auth.token.email == "rekhavijay9890@gmail.com");
+      allow update: if request.auth != null && request.auth.token.email == "rekhavijay9890@gmail.com";
     }
 
     function _acceptedInterest(fromUid, toUid) {

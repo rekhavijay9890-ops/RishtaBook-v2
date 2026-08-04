@@ -13,6 +13,8 @@ class MatchCard extends StatefulWidget {
   final String caste;
   final int? kundaliScore;
   final int? matchScorePct;
+  final bool blurred;
+  final bool boosted;
   final bool verified;
   final bool premium;
   final bool liked;
@@ -33,6 +35,8 @@ class MatchCard extends StatefulWidget {
     required this.caste,
     this.kundaliScore,
     this.matchScorePct,
+    this.blurred = false,
+    this.boosted = false,
     this.verified = false,
     this.premium = false,
     this.liked = false,
@@ -67,7 +71,7 @@ class _MatchCardState extends State<MatchCard> {
               padding: const EdgeInsets.all(13),
               child: Row(
                 children: [
-                  RbAvatar(initials: widget.initials, size: 52, color: widget.accentColor, photoUrl: widget.photoUrl),
+                  RbAvatar(initials: widget.initials, size: 52, color: widget.accentColor, photoUrl: widget.photoUrl, blurred: widget.blurred),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -99,6 +103,7 @@ class _MatchCardState extends State<MatchCard> {
               runSpacing: 4,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
+                if (widget.boosted) RbBadge(text: '🚀 ${context.t('wallet.boostBadge')}', color: AppColors.rose),
                 if (widget.matchScorePct != null)
                   RbBadge(text: context.t('match.scoreLabel', ['${widget.matchScorePct}']), color: AppColors.saffron),
                 if (widget.kundaliScore != null)

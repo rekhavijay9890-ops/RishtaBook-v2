@@ -126,14 +126,19 @@ class _HomePageState extends State<HomePage> {
               builder: (context, meSnap) {
                 final me = meSnap.data?.data() != null ? UserProfile.fromMap(uid, meSnap.data!.data()!) : null;
                 final myPrefs = PartnerPreferences.fromMap(meSnap.data?.data()?['preferences'] as Map<String, dynamic>?);
-                return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                final blockedUids = me?.blockedUids ?? const [];
+                return StreamBuilder<Set<String>>(
+                  stream: InterestService().matchedUidsStream(uid),
+                  builder: (context, matchedSnap) {
+                    final matchedUids = matchedSnap.data ?? const <String>{};
+                    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                   stream: _profileService.suggestedProfilesStream(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator(color: AppColors.saffron));
                     }
                     final profiles = (snapshot.data?.docs ?? [])
-                        .where((doc) => doc.id != uid)
+                        .where((doc) => doc.id != uid && !blockedUids.contains(doc.id))
                         .map((doc) => UserProfile.fromMap(doc.id, doc.data()))
                         .toList();
                     if (profiles.isEmpty) {
@@ -142,7 +147,8 @@ class _HomePageState extends State<HomePage> {
                     // Rank by MatchmakingService score against the viewer's own
                     // partner preferences - the actual "matchmaking engine",
                     // computed client-side since the candidate pool here is
-                    // already bounded (see suggestedProfilesStream).
+                    // already bounded (see suggestedProfilesStream). Boosted
+                    // profiles (Wallet -> Boost) always rank first while active.
                     int kundaliFor(UserProfile p) {
                       if (me == null || !me.hasKundaliDetails || !p.hasKundaliDetails) return -1;
                       return KundaliService.compute(
@@ -153,6 +159,7 @@ class _HomePageState extends State<HomePage> {
                       ).total;
                     }
                     profiles.sort((a, b) {
+                      if (a.isBoosted != b.isBoosted) return a.isBoosted ? -1 : 1;
                       final ka = kundaliFor(a), kb = kundaliFor(b);
                       final sa = MatchmakingService.score(a, myPrefs, kundaliScore: ka >= 0 ? ka : null);
                       final sb = MatchmakingService.score(b, myPrefs, kundaliScore: kb >= 0 ? kb : null);
@@ -186,6 +193,8 @@ class _HomePageState extends State<HomePage> {
                               caste: '${p.caste.isNotEmpty ? '${p.caste} · ' : ''}${p.religion}',
                               kundaliScore: score,
                               matchScorePct: matchPct,
+                              blurred: p.photosPrivate && !matchedUids.contains(p.uid),
+                              boosted: p.isBoosted,
                               verified: p.isVerified,
                               initials: p.fullName.isNotEmpty ? p.fullName[0].toUpperCase() : '?',
                               photoUrl: p.primaryPhotoUrl,
@@ -242,6 +251,8 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ],
                     );
+                  },
+                );
                   },
                 );
               },

@@ -41,6 +41,16 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   int _heightCm = 170;
   String _maritalStatus = 'never_married';
   String _education = '';
+  final _motherTongueController = TextEditingController();
+  String _incomeBand = '';
+
+  static const _incomeOptions = [
+    ('below_3', 'income.below3'),
+    ('3_6', 'income.3to6'),
+    ('6_10', 'income.6to10'),
+    ('10_20', 'income.10to20'),
+    ('above_20', 'income.above20'),
+  ];
 
   static const _maritalStatusOptions = [
     ('never_married', 'maritalStatus.neverMarried'),
@@ -114,6 +124,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     _heightCm = (data['heightCm'] as num?)?.toInt() ?? 170;
     _maritalStatus = data['maritalStatus'] ?? 'never_married';
     _education = data['education'] ?? '';
+    _motherTongueController.text = data['motherTongue'] ?? '';
+    _incomeBand = data['incomeBand'] ?? '';
     if (mounted) setState(() => _loading = false);
   }
 
@@ -123,6 +135,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       _religionController, _categoryController, _casteController, _gotraController,
       _villageController, _districtController, _stateController, _occupationController,
       _brothersController, _sistersController, _familyDetailsController, _requirementsController,
+      _motherTongueController,
     ]) {
       c.dispose();
     }
@@ -151,6 +164,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         'heightCm': _heightCm,
         'maritalStatus': _maritalStatus,
         'education': _education,
+        'motherTongue': _motherTongueController.text.trim(),
+        'incomeBand': _incomeBand,
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -279,6 +294,20 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     items: _maritalStatusOptions.map((o) => DropdownMenuItem(value: o.$1, child: Text(context.t(o.$2)))).toList(),
                     onChanged: (v) => setState(() => _maritalStatus = v ?? 'never_married'),
                   ),
+                  const SizedBox(height: 12),
+                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Expanded(child: _field(context.t('completeProfile.motherTongueHint'), _motherTongueController)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        isExpanded: true,
+                        value: _incomeBand.isNotEmpty ? _incomeBand : null,
+                        decoration: InputDecoration(hintText: context.t('completeProfile.incomeHint')),
+                        items: _incomeOptions.map((o) => DropdownMenuItem(value: o.$1, child: Text(context.t(o.$2), overflow: TextOverflow.ellipsis))).toList(),
+                        onChanged: (v) => setState(() => _incomeBand = v ?? ''),
+                      ),
+                    ),
+                  ]),
                   _sectionHeader("👨‍👩‍👧‍👦 ${context.t('completeProfile.familySection')}"),
                   Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Expanded(child: _field(context.t('completeProfile.brothersHint'), _brothersController)),

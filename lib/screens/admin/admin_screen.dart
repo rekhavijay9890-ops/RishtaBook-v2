@@ -6,33 +6,40 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../models/user_profile.dart';
 import '../../services/profile_service.dart';
+import '../../services/moderation_service.dart';
+import '../../services/astrologer_service.dart';
 import '../../theme/app_colors.dart';
+import '../../i18n/strings.dart';
 
 const Color kBrandColor = AppColors.saffron;
 
 /// Only reachable by emails listed in [AppConfig.adminEmails] (see the
-/// admin icon in the dashboard AppBar). Two tabs: pending verification
-/// requests to approve/reject, and a full export-able list of every user.
+/// admin icon in the dashboard AppBar). Tabs: pending verification
+/// requests to approve/reject, a full export-able list of every user,
+/// open safety reports, astrologer consultation requests, and app config.
 class AdminScreen extends StatelessWidget {
   const AdminScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: const Text("व्यवस्थापक डैशबोर्ड"),
           backgroundColor: kBrandColor,
           foregroundColor: Colors.white,
-          bottom: const TabBar(
+          bottom: TabBar(
+            isScrollable: true,
             indicatorColor: Colors.white,
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white70,
             tabs: [
-              Tab(text: "सत्यापन / Verifications"),
-              Tab(text: "सभी उपयोगकर्ता / All Users"),
-              Tab(text: "सेटिंग्स / Settings"),
+              const Tab(text: "सत्यापन / Verifications"),
+              const Tab(text: "सभी उपयोगकर्ता / All Users"),
+              Tab(text: context.t('admin.reportsTab')),
+              Tab(text: context.t('admin.astrologerTab')),
+              const Tab(text: "सेटिंग्स / Settings"),
             ],
           ),
         ),
@@ -40,10 +47,91 @@ class AdminScreen extends StatelessWidget {
           children: [
             _VerificationsTab(),
             _AllUsersTab(),
+            _ReportsTab(),
+            _AstrologerRequestsTab(),
             _SettingsTab(),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ReportsTab extends StatelessWidget {
+  const _ReportsTab();
+  @override
+  Widget build(BuildContext context) {
+    final moderationService = ModerationService();
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: moderationService.openReportsStream(),
+      builder: (context, snap) {
+        final docs = snap.data?.docs ?? [];
+        if (docs.isEmpty) return Center(child: Text(context.t('admin.noOpenReports')));
+        return ListView.builder(
+          padding: const EdgeInsets.all(12),
+          itemCount: docs.length,
+          itemBuilder: (context, i) {
+            final doc = docs[i];
+            final data = doc.data();
+            return Card(
+              margin: const EdgeInsets.only(bottom: 10),
+              child: ListTile(
+                title: Text(context.t('safety.reason.${_reasonKey(data['reason'])}')),
+                subtitle: Text('${data['details'] ?? ''}\nreporter: ${data['reporterUid']} · reported: ${data['reportedUid']}'),
+                isThreeLine: true,
+                trailing: TextButton(
+                  onPressed: () => moderationService.resolveReport(doc.id),
+                  child: Text(context.t('admin.resolve')),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _reasonKey(dynamic reason) {
+    switch (reason) {
+      case 'fake_profile': return 'fakeProfile';
+      case 'inappropriate': return 'inappropriate';
+      case 'harassment': return 'harassment';
+      default: return 'other';
+    }
+  }
+}
+
+class _AstrologerRequestsTab extends StatelessWidget {
+  const _AstrologerRequestsTab();
+  @override
+  Widget build(BuildContext context) {
+    final astrologerService = AstrologerService();
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: astrologerService.pendingRequestsStream(),
+      builder: (context, snap) {
+        final docs = snap.data?.docs ?? [];
+        if (docs.isEmpty) return Center(child: Text(context.t('admin.noAstrologerRequests')));
+        return ListView.builder(
+          padding: const EdgeInsets.all(12),
+          itemCount: docs.length,
+          itemBuilder: (context, i) {
+            final doc = docs[i];
+            final data = doc.data();
+            return Card(
+              margin: const EdgeInsets.only(bottom: 10),
+              child: ListTile(
+                title: Text('${data['name']} · ${data['phone']}'),
+                subtitle: Text('${context.t('astrologer.timeHint')}: ${data['preferredTime']}\n${data['notes'] ?? ''}'),
+                isThreeLine: true,
+                trailing: TextButton(
+                  onPressed: () => astrologerService.markContacted(doc.id),
+                  child: Text(context.t('admin.markContacted')),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
