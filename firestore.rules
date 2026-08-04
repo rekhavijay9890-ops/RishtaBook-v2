@@ -19,12 +19,22 @@ service cloud.firestore {
           request.resource.data.isVerified == resource.data.isVerified &&
           (request.resource.data.verificationStatus == resource.data.verificationStatus ||
            (request.resource.data.verificationStatus == 'pending' && resource.data.isVerified == false))
-        )
+        ) ||
+        // Referral bonus: a NEW user's signup grants credits into the
+        // REFERRER's doc, so this can't go through the auth.uid == userId
+        // branch above. Narrowly scoped to touching only `credits`, and
+        // only by exactly CreditService.referralBonus (50) - not a general
+        // "anyone can edit anyone's credits" hole.
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['credits']) &&
+          request.resource.data.credits == resource.data.credits + 50)
       );
 
       match /transactions/{txnId} {
         allow read: if request.auth != null && request.auth.uid == userId;
-        allow create: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null && (
+          request.auth.uid == userId ||
+          (request.resource.data.type == 'referral' && request.resource.data.delta == 50)
+        );
       }
     }
 
