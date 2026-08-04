@@ -13,12 +13,24 @@ service cloud.firestore {
       // Note: `credits` is still a client-trusted field (no Cloud Functions
       // in this project yet) — see CreditService's class doc for the
       // production hardening this needs before real money is involved.
+      //
+      // The self-update branch compares against the CURRENT value with a
+      // safe fallback (_currentBool/_currentStr below) instead of a raw
+      // resource.data.isVerified == ... equality - a doc that ever ended
+      // up with a missing/null isVerified (pre-redesign account,
+      // interrupted write, etc.) would otherwise fail that check on EVERY
+      // future write forever, permanently blocking onboarding for that
+      // user. This still prevents a user from granting themselves verified
+      // status or setting an admin-only status value, while letting a
+      // verified user keep editing their profile (isVerified must stay
+      // whatever it already was) and letting a broken doc recover.
       allow update: if request.auth != null && (
         request.auth.token.email == "rekhavijay9890@gmail.com" ||
         (request.auth.uid == userId &&
-          request.resource.data.isVerified == resource.data.isVerified &&
-          (request.resource.data.verificationStatus == resource.data.verificationStatus ||
-           (request.resource.data.verificationStatus == 'pending' && resource.data.isVerified == false))
+          request.resource.data.isVerified == _currentBool(resource.data, 'isVerified') &&
+          (request.resource.data.verificationStatus == 'none' ||
+           request.resource.data.verificationStatus == 'pending' ||
+           request.resource.data.verificationStatus == _currentStr(resource.data, 'verificationStatus', 'none'))
         ) ||
         // Referral bonus: a NEW user's signup grants credits into the
         // REFERRER's doc, so this can't go through the auth.uid == userId
@@ -128,6 +140,16 @@ service cloud.firestore {
     function _acceptedInterest(fromUid, toUid) {
       return exists(/databases/$(database)/documents/interests/$(fromUid + '_' + toUid)) &&
         get(/databases/$(database)/documents/interests/$(fromUid + '_' + toUid)).data.status == 'accepted';
+    }
+
+    // Safe field readers used by the users/{userId} self-update rule so a
+    // doc missing a field (rather than having it explicitly set) doesn't
+    // permanently fail every future equality check against it.
+    function _currentBool(data, key) {
+      return (key in data) ? data[key] : false;
+    }
+    function _currentStr(data, key, fallback) {
+      return (key in data) ? data[key] : fallback;
     }
 
     // Mirrors CreditService.getReferralBonusAmount() so the client and the

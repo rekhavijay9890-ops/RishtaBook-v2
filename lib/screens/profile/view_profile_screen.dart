@@ -5,6 +5,7 @@ import '../../models/user_profile.dart';
 import '../../theme/app_colors.dart';
 import '../../services/auth_service.dart';
 import '../../services/notification_service.dart';
+import '../../i18n/strings.dart';
 
 const Color kBrandColor = AppColors.saffron;
 
@@ -58,7 +59,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("प्रोफ़ाइल विवरण / Profile Details"),
+        title: Text(context.t('viewProfile.title')),
         backgroundColor: kBrandColor,
         foregroundColor: Colors.white,
       ),
@@ -92,34 +93,34 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
             ],
           ),
           const SizedBox(height: 24),
-          _Section(title: "व्यक्तिगत जानकारी / Personal Info", children: [
-            _Row(Icons.calendar_today, "जन्म तिथि / Date of Birth", profile.dob),
-            _Row(Icons.people, "लिंग / Ling", profile.gender),
-            _Row(Icons.menu_book, "धर्म / Dharm", profile.religion),
-            _Row(Icons.groups, "वर्ग / Varg", profile.category),
-            if (profile.caste.isNotEmpty) _Row(Icons.account_tree, "जाति / Caste", profile.caste),
+          _Section(title: context.t('viewProfile.personalInfo'), children: [
+            _Row(Icons.calendar_today, context.t('viewProfile.dob'), profile.dob),
+            _Row(Icons.people, context.t('viewProfile.gender'), profile.gender),
+            _Row(Icons.menu_book, context.t('viewProfile.religion'), profile.religion),
+            _Row(Icons.groups, context.t('viewProfile.category'), profile.category),
+            if (profile.caste.isNotEmpty) _Row(Icons.account_tree, context.t('viewProfile.caste'), profile.caste),
             if (profile.gotra.isNotEmpty) _Row(Icons.spa, "Gotra", profile.gotra),
           ]),
-          _Section(title: "पता / Address", children: [
-            _Row(Icons.home, "Address / Pata", profile.location),
+          _Section(title: context.t('viewProfile.address'), children: [
+            _Row(Icons.home, context.t('viewProfile.address'), profile.location),
           ]),
-          _Section(title: "व्यवसाय & Family / Peshaa aur Parivar", children: [
-            _Row(Icons.work, "व्यवसाय / Kaam", profile.occupation),
+          _Section(title: context.t('viewProfile.occupationSection'), children: [
+            _Row(Icons.work, context.t('viewProfile.occupation'), profile.occupation),
             if (profile.brothers.isNotEmpty)
-              _Row(Icons.person, "भाई", profile.brothers),
+              _Row(Icons.person, context.t('viewProfile.brothers'), profile.brothers),
             if (profile.sisters.isNotEmpty)
-              _Row(Icons.person, "बहन", profile.sisters),
-            _Row(Icons.family_restroom, "परिवार की जानकारी", profile.familyDetails),
+              _Row(Icons.person, context.t('viewProfile.sisters'), profile.sisters),
+            _Row(Icons.family_restroom, context.t('viewProfile.familyDetails'), profile.familyDetails),
           ]),
-          _Section(title: "जीवनसाथी की प्राथमिकता", children: [
-            _Row(Icons.list_alt, "जीवनसाथी में चाहिए", profile.requirements),
+          _Section(title: context.t('viewProfile.preferenceSection'), children: [
+            _Row(Icons.list_alt, context.t('viewProfile.requirements'), profile.requirements),
           ]),
           if (profile.hasKundaliDetails)
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.star_border),
-                label: const Text("कुंडली मिलान देखें / View Kundali Match"),
+                label: Text(context.t('viewProfile.viewKundali')),
                 onPressed: () => Navigator.pushNamed(context, '/kundali', arguments: {
                   'otherUid': profile.uid,
                   'otherName': profile.fullName,
@@ -184,7 +185,7 @@ class _Row extends StatelessWidget {
               children: [
                 Text(label, style: const TextStyle(fontSize: 11.5, color: Colors.grey)),
                 const SizedBox(height: 2),
-                Text(value.isEmpty ? "उपलब्ध नहीं / Not Available" : value,
+                Text(value.isEmpty ? context.t('viewProfile.notAvailable') : value,
                     style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w500)),
               ],
             ),

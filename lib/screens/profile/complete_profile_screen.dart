@@ -4,6 +4,7 @@ import '../../theme/app_colors.dart';
 import '../../config/constants.dart';
 import '../../services/profile_service.dart';
 import '../../services/kundali_service.dart';
+import '../../i18n/strings.dart';
 
 /// The extended profile fields (religion, caste, address, family, kundali)
 /// beyond what [BasicDetailsScreen] collects. Reached either right after
@@ -37,6 +38,36 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   String _rashi = '';
   String _nakshatra = '';
   String _manglik = 'no';
+
+  // Dropdowns store a fixed bilingual value (unchanged regardless of
+  // display language) so existing saved profiles and any other code
+  // reading these fields stay consistent - only the label shown to the
+  // user switches with the toggle. See _religionOptions/_categoryOptions/
+  // _occupationOptions below for the value<->label pairing.
+  static const _religionOptions = [
+    ('हिन्दू / Hindu', 'completeProfile.religion.hindu'),
+    ('मुस्लिम / Muslim', 'completeProfile.religion.muslim'),
+    ('सिख / Sikh', 'completeProfile.religion.sikh'),
+    ('ईसाई / Christian', 'completeProfile.religion.christian'),
+    ('बौद्ध / Buddhist', 'completeProfile.religion.buddhist'),
+    ('जैन / Jain', 'completeProfile.religion.jain'),
+    ('अन्य / Other', 'completeProfile.religion.other'),
+  ];
+  static const _categoryOptions = [
+    ('सामान्य / General', 'completeProfile.category.general'),
+    ('OBC', null),
+    ('SC', null),
+    ('ST', null),
+    ('अन्य / Other', 'completeProfile.category.other'),
+  ];
+  static const _occupationOptions = [
+    ('नौकरी / Job', 'completeProfile.occupation.job'),
+    ('व्यापार / Business', 'completeProfile.occupation.business'),
+    ('खेती / Farming', 'completeProfile.occupation.farming'),
+    ('स्वरोजगार / Self Employed', 'completeProfile.occupation.selfEmployed'),
+    ('विद्यार्थी / Student', 'completeProfile.occupation.student'),
+    ('अन्य / Other', 'completeProfile.occupation.other'),
+  ];
 
   @override
   void initState() {
@@ -99,13 +130,13 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("प्रोफ़ाइल सहेजी गई / Profile saved"), backgroundColor: AppColors.success));
+            SnackBar(content: Text(context.t('completeProfile.saved')), backgroundColor: AppColors.success));
         Navigator.pop(context);
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("सहेजने में समस्या आई। / Could not save."), backgroundColor: AppColors.error));
+            SnackBar(content: Text(context.t('completeProfile.saveError')), backgroundColor: AppColors.error));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -116,12 +147,33 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     return TextFormField(controller: controller, maxLines: maxLines, decoration: InputDecoration(hintText: hint));
   }
 
-  Widget _dropdown(String hint, List<String> items, TextEditingController controller) {
+  Widget _bilingualDropdown(String hint, List<(String, String?)> options, TextEditingController controller) {
+    final values = options.map((o) => o.$1).toList();
     return DropdownButtonFormField<String>(
       isExpanded: true,
-      value: controller.text.isNotEmpty && items.contains(controller.text) ? controller.text : null,
+      value: controller.text.isNotEmpty && values.contains(controller.text) ? controller.text : null,
       decoration: InputDecoration(hintText: hint),
-      items: items.map((v) => DropdownMenuItem(value: v, child: Text(v, overflow: TextOverflow.ellipsis))).toList(),
+      items: options.map((o) {
+        final label = o.$2 != null ? context.t(o.$2!) : o.$1;
+        return DropdownMenuItem(value: o.$1, child: Text(label, overflow: TextOverflow.ellipsis));
+      }).toList(),
+      onChanged: (v) => setState(() => controller.text = v ?? ''),
+    );
+  }
+
+  /// Value stored/matched is always the Hindi name (kIndianStates.$1) so
+  /// existing saved profiles keep working - only the label shown switches
+  /// with the toggle.
+  Widget _stateDropdown(String hint, TextEditingController controller) {
+    final values = kIndianStates.map((s) => s.$1).toList();
+    return DropdownButtonFormField<String>(
+      isExpanded: true,
+      value: controller.text.isNotEmpty && values.contains(controller.text) ? controller.text : null,
+      decoration: InputDecoration(hintText: hint),
+      items: kIndianStates.map((s) {
+        final label = context.isHindi ? s.$1 : s.$2;
+        return DropdownMenuItem(value: s.$1, child: Text(label, overflow: TextOverflow.ellipsis));
+      }).toList(),
       onChanged: (v) => setState(() => controller.text = v ?? ''),
     );
   }
@@ -136,7 +188,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     return Scaffold(
       backgroundColor: AppColors.pageBg,
       appBar: AppBar(
-        title: const Text("प्रोफ़ाइल पूरी करें / Complete Profile"),
+        title: Text(context.t('completeProfile.title')),
         backgroundColor: AppColors.headerBg,
         foregroundColor: Colors.white,
       ),
@@ -147,45 +199,45 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _sectionHeader("🛕 धर्म एवं समाज / Religion & Community"),
+                  _sectionHeader("🛕 ${context.t('completeProfile.religionSection')}"),
                   Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Expanded(child: _dropdown("धर्म / Religion", const ["हिन्दू / Hindu", "मुस्लिम / Muslim", "सिख / Sikh", "ईसाई / Christian", "बौद्ध / Buddhist", "जैन / Jain", "अन्य / Other"], _religionController)),
+                    Expanded(child: _bilingualDropdown(context.t('completeProfile.religionHint'), _religionOptions, _religionController)),
                     const SizedBox(width: 12),
-                    Expanded(child: _dropdown("वर्ग / Category", const ["सामान्य / General", "OBC", "SC", "ST", "अन्य / Other"], _categoryController)),
+                    Expanded(child: _bilingualDropdown(context.t('completeProfile.categoryHint'), _categoryOptions, _categoryController)),
                   ]),
                   const SizedBox(height: 12),
                   Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Expanded(child: _field("जाति / Caste", _casteController)),
+                    Expanded(child: _field(context.t('completeProfile.casteHint'), _casteController)),
                     const SizedBox(width: 12),
-                    Expanded(child: _field("गोत्र / Gotra", _gotraController)),
+                    Expanded(child: _field(context.t('completeProfile.gotraHint'), _gotraController)),
                   ]),
-                  _sectionHeader("📍 पता / Address"),
+                  _sectionHeader("📍 ${context.t('completeProfile.addressSection')}"),
                   Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Expanded(child: _field("गाँव / Village or Town", _villageController)),
+                    Expanded(child: _field(context.t('completeProfile.villageHint'), _villageController)),
                     const SizedBox(width: 12),
-                    Expanded(child: _field("जिला / District", _districtController)),
+                    Expanded(child: _field(context.t('completeProfile.districtHint'), _districtController)),
                   ]),
                   const SizedBox(height: 12),
-                  _dropdown("राज्य / State", kIndianStates, _stateController),
-                  _sectionHeader("💼 व्यवसाय / Occupation"),
-                  _dropdown("व्यवसाय / Occupation", const ["नौकरी / Job", "व्यापार / Business", "खेती / Farming", "स्वरोजगार / Self Employed", "विद्यार्थी / Student", "अन्य / Other"], _occupationController),
-                  _sectionHeader("👨‍👩‍👧‍👦 पारिवारिक जानकारी / Family Details"),
+                  _stateDropdown(context.t('completeProfile.stateHint'), _stateController),
+                  _sectionHeader("💼 ${context.t('completeProfile.occupationSection')}"),
+                  _bilingualDropdown(context.t('completeProfile.occupationHint'), _occupationOptions, _occupationController),
+                  _sectionHeader("👨‍👩‍👧‍👦 ${context.t('completeProfile.familySection')}"),
                   Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Expanded(child: _field("भाइयों की संख्या / No. of Brothers", _brothersController)),
+                    Expanded(child: _field(context.t('completeProfile.brothersHint'), _brothersController)),
                     const SizedBox(width: 12),
-                    Expanded(child: _field("बहनों की संख्या / No. of Sisters", _sistersController)),
+                    Expanded(child: _field(context.t('completeProfile.sistersHint'), _sistersController)),
                   ]),
                   const SizedBox(height: 12),
-                  _field("पारिवारिक विवरण / Family Details", _familyDetailsController, maxLines: 2),
-                  _sectionHeader("💑 जीवनसाथी की अपेक्षाएँ / Partner Preference"),
-                  _field("कोई विशेष शर्त / Any preference", _requirementsController, maxLines: 2),
-                  _sectionHeader("⭐ कुंडली (वैकल्पिक) / Kundali (optional)"),
+                  _field(context.t('completeProfile.familyDetailsHint'), _familyDetailsController, maxLines: 2),
+                  _sectionHeader("💑 ${context.t('completeProfile.preferenceSection')}"),
+                  _field(context.t('completeProfile.requirementsHint'), _requirementsController, maxLines: 2),
+                  _sectionHeader("⭐ ${context.t('completeProfile.kundaliSection')}"),
                   Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         isExpanded: true,
                         value: _rashi.isNotEmpty ? _rashi : null,
-                        decoration: const InputDecoration(hintText: "राशि / Rashi"),
+                        decoration: InputDecoration(hintText: context.t('completeProfile.rashiHint')),
                         items: KundaliService.rashis.map((r) => DropdownMenuItem(value: r, child: Text(r, overflow: TextOverflow.ellipsis))).toList(),
                         onChanged: (v) => setState(() => _rashi = v ?? ''),
                       ),
@@ -195,7 +247,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       child: DropdownButtonFormField<String>(
                         isExpanded: true,
                         value: _nakshatra.isNotEmpty ? _nakshatra : null,
-                        decoration: const InputDecoration(hintText: "नक्षत्र / Nakshatra"),
+                        decoration: InputDecoration(hintText: context.t('completeProfile.nakshatraHint')),
                         items: KundaliService.nakshatras.map((n) => DropdownMenuItem(value: n, child: Text(n, overflow: TextOverflow.ellipsis))).toList(),
                         onChanged: (v) => setState(() => _nakshatra = v ?? ''),
                       ),
@@ -204,10 +256,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     value: _manglik,
-                    decoration: const InputDecoration(hintText: "मांगलिक / Manglik"),
-                    items: const [
-                      DropdownMenuItem(value: 'no', child: Text('नहीं / No')),
-                      DropdownMenuItem(value: 'yes', child: Text('हाँ / Yes')),
+                    decoration: InputDecoration(hintText: context.t('completeProfile.manglikHint')),
+                    items: [
+                      DropdownMenuItem(value: 'no', child: Text(context.t('kundali.no'))),
+                      DropdownMenuItem(value: 'yes', child: Text(context.t('kundali.yes'))),
                     ],
                     onChanged: (v) => setState(() => _manglik = v ?? 'no'),
                   ),
@@ -218,7 +270,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       onPressed: _saving ? null : _save,
                       child: _saving
                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text("सहेजें / Save"),
+                          : Text(context.t('common.save')),
                     ),
                   ),
                 ],

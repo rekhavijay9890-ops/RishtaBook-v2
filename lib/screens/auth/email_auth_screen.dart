@@ -3,10 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../theme/app_colors.dart';
 import '../../services/auth_service.dart';
+import '../../services/profile_service.dart';
+import '../../services/credit_service.dart';
+import '../../i18n/strings.dart';
 
-/// Email/password sign-in only - kept for accounts created before Google
-/// and Mobile became the standard entry points on [AuthLandingScreen].
-/// There is no sign-up here on purpose; new accounts use Google or Mobile.
+/// Email/password sign-in, with a "Create Account" mode for genuinely new
+/// signups by email (the third entry point alongside Google and Mobile).
 class EmailAuthScreen extends StatefulWidget {
   const EmailAuthScreen({super.key});
   @override
@@ -16,10 +18,13 @@ class EmailAuthScreen extends StatefulWidget {
 class _EmailAuthScreenState extends State<EmailAuthScreen> {
   final _formKey = GlobalKey<FormState>();
   final _authService = AuthService();
+  final _profileService = ProfileService();
+  final _creditService = CreditService();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _loading = false;
   bool _obscure = true;
+  bool _signUpMode = false;
 
   @override
   void dispose() {
@@ -40,15 +45,51 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
       await _authService.signIn(_emailController.text.trim(), _passwordController.text.trim());
       // AuthGate reacts to the auth-state change on its own.
     } on FirebaseAuthException catch (e) {
-      String friendly = "साइन-इन में समस्या आई। / Sign-in failed.";
+      String friendly = context.t('emailAuth.signInFailed');
       if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
-        friendly = "ईमेल या पासवर्ड गलत है। / Wrong email or password.";
+        friendly = context.t('emailAuth.wrongCreds');
       } else if (e.code == 'network-request-failed') {
-        friendly = "इंटरनेट कनेक्शन जाँचें। / Check your internet connection.";
+        friendly = context.t('emailAuth.networkError');
       }
       _showSnack(friendly);
     } catch (_) {
-      _showSnack("कुछ गलत हो गया। / Something went wrong.");
+      _showSnack(context.t('common.error'));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _signUp() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    setState(() => _loading = true);
+    try {
+      final credential = await _authService.register(_emailController.text.trim(), _passwordController.text.trim());
+      final uid = credential.user!.uid;
+      await _profileService.createUserProfile(uid, {
+        'uid': uid,
+        'fullName': '',
+        'email': _emailController.text.trim(),
+        'verificationStatus': 'none',
+        'isVerified': false,
+        'credits': CreditService.signupBonus,
+        'createdAt': DateTime.now(),
+      });
+      await _creditService.grantSignupBonus(uid);
+      // AuthGate reacts to the auth-state change on its own.
+    } on FirebaseAuthException catch (e) {
+      String friendly = context.t('emailAuth.signUpFailed');
+      if (e.code == 'email-already-in-use') {
+        friendly = context.t('emailAuth.emailInUse');
+      } else if (e.code == 'weak-password') {
+        friendly = context.t('emailAuth.weakPassword');
+      } else if (e.code == 'invalid-email') {
+        friendly = context.t('emailAuth.invalidEmail');
+      } else if (e.code == 'network-request-failed') {
+        friendly = context.t('emailAuth.networkError');
+      }
+      _showSnack(friendly);
+    } catch (_) {
+      _showSnack(context.t('common.error'));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -59,10 +100,10 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("पासवर्ड रीसेट करें / Reset Password"),
-        content: TextField(controller: ctrl, decoration: const InputDecoration(hintText: "ईमेल / Email ID")),
+        title: Text(context.t('emailAuth.resetTitle')),
+        content: TextField(controller: ctrl, decoration: InputDecoration(hintText: context.t('emailAuth.emailHint'))),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("रद्द करें / Cancel")),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.t('common.cancel'))),
           ElevatedButton(
             onPressed: () async {
               if (ctrl.text.isEmpty) return;
@@ -70,14 +111,14 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                 await _authService.sendPasswordResetEmail(ctrl.text.trim());
                 if (context.mounted) {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text("पासवर्ड रीसेट लिंक भेज दिया गया है!"), backgroundColor: AppColors.success));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(context.t('emailAuth.resetSent')), backgroundColor: AppColors.success));
                 }
               } catch (_) {
-                if (context.mounted) _showSnack("त्रुटि: ईमेल नहीं मिला या गलत है।");
+                if (context.mounted) _showSnack(context.t('emailAuth.resetError'));
               }
             },
-            child: const Text("लिंक भेजें / Send Link"),
+            child: Text(context.t('emailAuth.sendLink')),
           ),
         ],
       ),
@@ -88,7 +129,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("ईमेल से साइन-इन / Sign in with Email"),
+        title: Text(_signUpMode ? context.t('emailAuth.createAccount') : context.t('emailAuth.title')),
         backgroundColor: AppColors.headerBg,
         foregroundColor: Colors.white,
       ),
@@ -103,8 +144,8 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
               const SizedBox(height: 8),
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(prefixIcon: Icon(Icons.email_outlined, color: AppColors.saffron), hintText: "ईमेल / Email ID"),
-                validator: (v) => (v == null || v.trim().isEmpty) ? "ईमेल भरना अनिवार्य है" : null,
+                decoration: InputDecoration(prefixIcon: const Icon(Icons.email_outlined, color: AppColors.saffron), hintText: context.t('emailAuth.emailHint')),
+                validator: (v) => (v == null || v.trim().isEmpty) ? context.t('emailAuth.emailRequired') : null,
               ),
               const SizedBox(height: 14),
               TextFormField(
@@ -112,26 +153,35 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                 obscureText: _obscure,
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.lock_outline, color: AppColors.saffron),
-                  hintText: "पासवर्ड / Password",
+                  hintText: context.t('emailAuth.passwordHint'),
                   suffixIcon: IconButton(
                     icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility, color: AppColors.ghost),
                     onPressed: () => setState(() => _obscure = !_obscure),
                   ),
                 ),
-                validator: (v) => (v == null || v.isEmpty) ? "पासवर्ड भरना अनिवार्य है" : null,
+                validator: (v) => (v == null || v.isEmpty) ? context.t('emailAuth.passwordRequired') : null,
               ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(onPressed: _showForgotPasswordDialog, child: const Text("पासवर्ड भूल गए? / Forgot Password?")),
-              ),
+              if (!_signUpMode)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(onPressed: _showForgotPasswordDialog, child: Text(context.t('emailAuth.forgotPassword'))),
+                ),
               const SizedBox(height: 10),
               SizedBox(
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: _loading ? null : _signIn,
+                  onPressed: _loading ? null : (_signUpMode ? _signUp : _signIn),
                   child: _loading
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : const Text("साइन-इन करें / Sign In"),
+                      : Text(_signUpMode ? context.t('emailAuth.signUpButton') : context.t('emailAuth.signInButton')),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: TextButton(
+                  onPressed: _loading ? null : () => setState(() => _signUpMode = !_signUpMode),
+                  child: Text(_signUpMode ? context.t('emailAuth.haveAccount') : context.t('emailAuth.noAccount'),
+                      style: const TextStyle(color: AppColors.muted, fontSize: 12.5)),
                 ),
               ),
             ],

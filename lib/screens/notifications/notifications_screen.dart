@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../theme/app_colors.dart';
 import '../../services/auth_service.dart';
 import '../../services/notification_service.dart';
+import '../../i18n/strings.dart';
 
 /// Full list of every in-app notification (credit added, profile viewed,
 /// new message, interest received/accepted) for the signed-in user, newest
@@ -43,13 +44,38 @@ class NotificationsScreen extends StatelessWidget {
     }
   }
 
-  String _timeAgo(DateTime? dt) {
+  String _timeAgo(BuildContext context, DateTime? dt) {
     if (dt == null) return '';
     final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1) return 'अभी / now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}मि / ${diff.inMinutes}m';
-    if (diff.inHours < 24) return '${diff.inHours}घं / ${diff.inHours}h';
-    return '${diff.inDays}दिन / ${diff.inDays}d';
+    if (diff.inMinutes < 1) return context.t('notifications.now');
+    if (diff.inMinutes < 60) return context.t('notifications.minutesAgo', [diff.inMinutes]);
+    if (diff.inHours < 24) return context.t('notifications.hoursAgo', [diff.inHours]);
+    return context.t('notifications.daysAgo', [diff.inDays]);
+  }
+
+  /// Rebuilds the title/body in the currently selected language from
+  /// `type` + `meta`, falling back to the stored bilingual strings for a
+  /// `message` notification (sender name + message preview are
+  /// user-generated content, not translatable) or an unrecognized type.
+  (String, String) _localized(BuildContext context, Map<String, dynamic> data) {
+    final type = data['type'] as String? ?? '';
+    final meta = Map<String, dynamic>.from(data['meta'] ?? const {});
+    switch (type) {
+      case 'credit':
+        return (context.t('notifications.credit.title'),
+            context.t('notifications.credit.body', [meta['amount'] ?? '', meta['label'] ?? '']));
+      case 'profile_view':
+        return (context.t('notifications.profileView.title'),
+            context.t('notifications.profileView.body', [meta['viewerName'] ?? '']));
+      case 'interest_received':
+        return (context.t('notifications.interestReceived.title'),
+            context.t('notifications.interestReceived.body', [meta['fromName'] ?? '']));
+      case 'interest_accepted':
+        return (context.t('notifications.interestAccepted.title'),
+            context.t('notifications.interestAccepted.body', [meta['byName'] ?? '']));
+      default:
+        return (data['title'] as String? ?? '', data['body'] as String? ?? '');
+    }
   }
 
   @override
@@ -60,13 +86,13 @@ class NotificationsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.pageBg,
       appBar: AppBar(
-        title: const Text("सूचनाएं / Notifications"),
+        title: Text(context.t('notifications.title')),
         backgroundColor: AppColors.headerBg,
         foregroundColor: Colors.white,
         actions: [
           TextButton(
             onPressed: () => notificationService.markAllRead(uid),
-            child: const Text("सब पढ़ा हुआ / Mark all read", style: TextStyle(color: Colors.white70, fontSize: 12)),
+            child: Text(context.t('notifications.markAllRead'), style: const TextStyle(color: Colors.white70, fontSize: 12)),
           ),
         ],
       ),
@@ -82,7 +108,7 @@ class NotificationsScreen extends StatelessWidget {
               child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                 const Icon(Icons.notifications_none_rounded, size: 56, color: AppColors.ghost),
                 const SizedBox(height: 10),
-                const Text("अभी कोई सूचना नहीं / No notifications yet", style: TextStyle(color: AppColors.muted, fontSize: 13)),
+                Text(context.t('notifications.empty'), style: const TextStyle(color: AppColors.muted, fontSize: 13)),
               ]),
             );
           }
@@ -94,8 +120,7 @@ class NotificationsScreen extends StatelessWidget {
               final doc = docs[i];
               final data = doc.data();
               final type = data['type'] as String? ?? '';
-              final title = data['title'] as String? ?? '';
-              final body = data['body'] as String? ?? '';
+              final (title, body) = _localized(context, data);
               final read = data['read'] == true;
               final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
               final color = _colorFor(type);
@@ -127,7 +152,7 @@ class NotificationsScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                      Text(_timeAgo(createdAt), style: const TextStyle(fontSize: 10, color: AppColors.ghost)),
+                      Text(_timeAgo(context, createdAt), style: const TextStyle(fontSize: 10, color: AppColors.ghost)),
                       if (!read) ...[
                         const SizedBox(height: 6),
                         Container(width: 7, height: 7, decoration: BoxDecoration(shape: BoxShape.circle, color: color)),
