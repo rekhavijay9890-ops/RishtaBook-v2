@@ -8,7 +8,9 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'theme/app_theme.dart';
 import 'i18n/language_controller.dart';
 import 'services/auth_service.dart';
-import 'screens/auth/login_screen.dart';
+import 'screens/auth/auth_landing_screen.dart';
+import 'screens/auth/basic_details_screen.dart';
+import 'screens/auth/profile_choice_screen.dart';
 import 'screens/root_shell.dart';
 import 'screens/admin/admin_screen.dart';
 import 'screens/wallet/wallet_page.dart';
@@ -86,11 +88,23 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// Decides Login vs. the main app shell from live auth + profile state.
-/// A user who is authenticated but whose profile is missing required
-/// fields (e.g. a first Google sign-in, which only sets fullName/email)
-/// is routed to the registration form in "complete your profile" mode
-/// instead of being dropped back on a login form they can't use.
+/// Decides Sign-in vs. Basic details vs. Complete-or-skip vs. the main app
+/// shell from live auth + profile state — a StreamBuilder on the user doc
+/// (not a one-shot get()) so every stage transitions automatically as soon
+/// as the previous screen writes to Firestore, with no manual navigation
+/// wired between them.
+///
+/// Stages, in order:
+/// 1. Not signed in -> AuthLandingScreen (Google / Mobile OTP / email).
+/// 2. Signed in but missing name/DOB/gender/mobile or never accepted the
+///    disclaimer -> BasicDetailsScreen. This applies to brand-new sign-ups
+///    AND to any pre-redesign account that predates consent capture, so
+///    every user ends up having explicitly agreed to it - closing the gap
+///    where Google sign-in used to skip it entirely.
+/// 3. Basic details done, but never made the complete-vs-skip choice ->
+///    ProfileChoiceScreen. Skipped automatically for legacy accounts that
+///    clearly already filled in the old extended form (religion is set).
+/// 4. Otherwise -> RootShell.
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
@@ -103,22 +117,31 @@ class AuthGate extends StatelessWidget {
           return const _Loading();
         }
         final user = snapshot.data;
-        if (user == null) return const LoginScreen();
+        if (user == null) return const AuthLandingScreen();
 
-        return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-          future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
+        return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
           builder: (context, profileSnap) {
             if (profileSnap.connectionState == ConnectionState.waiting) {
               return const _Loading();
             }
             final data = profileSnap.data?.data();
-            final complete = data != null &&
+
+            final basicComplete = data != null &&
                 (data['fullName'] ?? '').toString().trim().isNotEmpty &&
                 (data['gender'] ?? '').toString().trim().isNotEmpty &&
-                (data['religion'] ?? '').toString().trim().isNotEmpty;
+                (data['age'] ?? '').toString().trim().isNotEmpty &&
+                (data['mobile'] ?? '').toString().trim().isNotEmpty &&
+                data['disclaimerAccepted'] == true;
+            if (!basicComplete) return BasicDetailsScreen(user: user, existingData: data);
 
-            if (complete) return const RootShell();
-            return LoginScreen(completingProfileFor: user);
+            final legacyComplete = (data['religion'] ?? '').toString().trim().isNotEmpty;
+            final choiceMade = data['onboardingChoiceMade'] == true;
+            if (!choiceMade && !legacyComplete) {
+              return ProfileChoiceScreen(uid: user.uid, fullName: (data['fullName'] ?? '').toString());
+            }
+
+            return const RootShell();
           },
         );
       },

@@ -40,6 +40,41 @@ class AuthService {
     return _auth.sendPasswordResetEmail(email: email);
   }
 
+  /// Starts Firebase Phone Auth for [phoneNumber] (E.164 format, e.g.
+  /// "+919812345678"). Requires the Phone provider to be enabled in
+  /// Firebase Console -> Authentication -> Sign-in method, and (for a
+  /// smooth flow on real Android devices, via Play Integrity) the app's
+  /// SHA-256 fingerprint registered alongside the SHA-1 already added for
+  /// Google Sign-In.
+  ///
+  /// [onCodeSent] fires once an SMS has been dispatched, with the
+  /// verification id needed by [signInWithSmsCode]. [onAutoVerified] fires
+  /// instead if Android auto-detects the code without the user typing it
+  /// (uncommon but handled). [onError] fires for a bad number, quota, etc.
+  Future<void> verifyPhoneNumber({
+    required String phoneNumber,
+    required void Function(String verificationId) onCodeSent,
+    required void Function(FirebaseAuthException e) onError,
+    required void Function(UserCredential credential) onAutoVerified,
+  }) {
+    return _auth.verifyPhoneNumber(
+      phoneNumber: phoneNumber,
+      timeout: const Duration(seconds: 60),
+      verificationCompleted: (credential) async {
+        final result = await _auth.signInWithCredential(credential);
+        onAutoVerified(result);
+      },
+      verificationFailed: onError,
+      codeSent: (verificationId, resendToken) => onCodeSent(verificationId),
+      codeAutoRetrievalTimeout: (_) {},
+    );
+  }
+
+  Future<UserCredential> signInWithSmsCode(String verificationId, String smsCode) {
+    final credential = PhoneAuthProvider.credential(verificationId: verificationId, smsCode: smsCode);
+    return _auth.signInWithCredential(credential);
+  }
+
   Future<void> signOut() async {
     await _googleSignIn.signOut();
     await _auth.signOut();

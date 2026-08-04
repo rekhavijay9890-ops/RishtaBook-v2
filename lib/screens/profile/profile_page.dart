@@ -11,7 +11,7 @@ import '../../theme/app_text.dart';
 import '../../widgets/rb_avatar.dart';
 import '../../widgets/rb_section_label.dart';
 import '../../widgets/referral_cta_card.dart';
-import '../auth/login_screen.dart';
+import 'complete_profile_screen.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -84,8 +84,9 @@ class ProfilePage extends StatelessWidget {
     if (user == null) return Center(child: Text(context.t('common.error')));
 
     Future<void> logout() async {
+      // AuthGate reacts to the auth-state change on its own - no explicit
+      // navigation needed here.
       await authService.signOut();
-      if (context.mounted) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const LoginScreen()), (r) => false);
     }
 
     return Scaffold(
@@ -195,6 +196,15 @@ class ProfilePage extends StatelessWidget {
                           style: const TextStyle(fontSize: 11, color: Color(0xFF8B6914)),
                         ),
                       ]),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity, height: 48,
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.edit_outlined, color: AppColors.saffron),
+                      label: Text(context.isHindi ? "प्रोफ़ाइल संपादित करें" : "Edit Profile"),
+                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CompleteProfileScreen(uid: user.uid))),
                     ),
                   ),
                   const SizedBox(height: 10),
