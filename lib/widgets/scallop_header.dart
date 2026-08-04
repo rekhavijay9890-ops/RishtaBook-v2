@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-import 'video_background.dart';
 
 /// The app's signature shape: a scalloped arch, borrowed from the
 /// bordered edge of a wedding invitation card.
@@ -58,32 +57,6 @@ class ScallopHeader extends StatelessWidget {
         ),
         padding: const EdgeInsets.only(bottom: 22),
         child: child,
-      ),
-    );
-  }
-}
-
-/// Same scalloped shape as [ScallopHeader], but with a looping video
-/// playing behind [child] instead of the flat gradient — used on the
-/// sign-in screen for a warmer, more alive first impression.
-class VideoScallopHeader extends StatelessWidget {
-  final double height;
-  final String videoAsset;
-  final Widget child;
-
-  const VideoScallopHeader({super.key, required this.height, required this.videoAsset, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipPath(
-      clipper: const ScallopClipper(),
-      child: SizedBox(
-        width: double.infinity,
-        height: height,
-        child: VideoBackground(
-          asset: videoAsset,
-          child: Padding(padding: const EdgeInsets.only(bottom: 22), child: child),
-        ),
       ),
     );
   }

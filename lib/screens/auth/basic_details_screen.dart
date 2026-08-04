@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../theme/app_colors.dart';
+import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/credit_service.dart';
 
@@ -107,6 +108,13 @@ class _BasicDetailsScreenState extends State<BasicDetailsScreen> {
         backgroundColor: AppColors.headerBg,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
+        actions: [
+          TextButton(
+            onPressed: () => AuthService().signOut(),
+            child: const Text("गलत अकाउंट? / Wrong account?",
+                style: TextStyle(color: Colors.white70, fontSize: 12)),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -175,23 +183,34 @@ class _BasicDetailsScreenState extends State<BasicDetailsScreen> {
                 decoration: const InputDecoration(prefixIcon: Icon(Icons.card_giftcard_outlined, color: AppColors.saffron), hintText: "रेफ़रल कोड (वैकल्पिक) / Referral code (optional)"),
               ),
               const SizedBox(height: 16),
-              Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Checkbox(
-                  value: _consent,
-                  onChanged: (v) => setState(() { _consent = v ?? false; if (_consent) _consentError = false; }),
-                  activeColor: AppColors.saffron,
-                ),
-                const Expanded(
-                  child: Text(
-                    "अस्वीकरण: हमारा कार्य केवल दो परिवारों को जोड़ना है। जाँच-पड़ताल की ज़िम्मेदारी आपकी है। किसी भी धोखाधड़ी के लिए हम उत्तरदायी नहीं हैं।",
-                    style: TextStyle(fontSize: 12.5, color: AppColors.muted),
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => setState(() { _consent = !_consent; if (_consent) _consentError = false; }),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: _consentError ? AppColors.error : Colors.transparent, width: 1.2),
                   ),
+                  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Checkbox(
+                      value: _consent,
+                      onChanged: (v) => setState(() { _consent = v ?? false; if (_consent) _consentError = false; }),
+                      activeColor: AppColors.saffron,
+                    ),
+                    const Expanded(
+                      child: Text(
+                        "अस्वीकरण: हमारा कार्य केवल दो परिवारों को जोड़ना है। जाँच-पड़ताल की ज़िम्मेदारी आपकी है। किसी भी धोखाधड़ी के लिए हम उत्तरदायी नहीं हैं।",
+                        style: TextStyle(fontSize: 12.5, color: AppColors.muted),
+                      ),
+                    ),
+                  ]),
                 ),
-              ]),
+              ),
               if (_consentError)
                 const Padding(
-                  padding: EdgeInsets.only(left: 12),
-                  child: Text("अस्वीकरण स्वीकार करना अनिवार्य है / You must accept to continue", style: TextStyle(color: AppColors.error, fontSize: 12)),
+                  padding: EdgeInsets.only(left: 12, top: 4),
+                  child: Text("👆 आगे बढ़ने के लिए ऊपर टिक करें अनिवार्य है / You must tick above to continue", style: TextStyle(color: AppColors.error, fontSize: 12, fontWeight: FontWeight.w700)),
                 ),
               const SizedBox(height: 20),
               SizedBox(
