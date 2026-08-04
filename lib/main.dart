@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'theme/app_theme.dart';
 import 'i18n/language_controller.dart';
@@ -27,6 +28,8 @@ void main() async {
       projectId: "rishtabook-60663",
     ),
   );
+
+  await MobileAds.instance.initialize();
 
   final languageController = LanguageController();
   await languageController.load();

@@ -19,6 +19,8 @@ class CreditService {
   static const int profileUnlockCost = 20;
   static const int referralBonus = 50;
   static const int freeSearchPreviewCount = 3;
+  static const int adRewardAmount = 10;
+  static const int maxAdRewardsPerDay = 5;
 
   DocumentReference<Map<String, dynamic>> _userDoc(String uid) => _db.collection('users').doc(uid);
 
@@ -141,4 +143,45 @@ class CreditService {
   /// but must be replaced by a verified server-side grant before launch.
   Future<void> completePurchase(String uid, {required int credits, required String label}) =>
       grant(uid, amount: credits, type: 'purchase', label: label);
+
+  String _todayKey() {
+    final n = DateTime.now().toUtc();
+    return '${n.year.toString().padLeft(4, '0')}-${n.month.toString().padLeft(2, '0')}-${n.day.toString().padLeft(2, '0')}';
+  }
+
+  int _adRewardsUsedToday(Map<String, dynamic>? data) {
+    if (data == null) return 0;
+    if (data['adRewardsDate'] != _todayKey()) return 0;
+    return (data['adRewardsCountToday'] as num?)?.toInt() ?? 0;
+  }
+
+  /// How many rewarded ads this user can still watch today (resets at UTC
+  /// midnight). Check this before showing the "Watch ad" button as enabled.
+  Future<int> adRewardsRemainingToday(String uid) async {
+    final doc = await _userDoc(uid).get();
+    return (maxAdRewardsPerDay - _adRewardsUsedToday(doc.data())).clamp(0, maxAdRewardsPerDay);
+  }
+
+  /// Grants [adRewardAmount] credits after a rewarded ad finishes playing
+  /// (call this from the ad SDK's onUserEarnedReward callback, not before).
+  /// This writes to the caller's OWN doc, so it's covered by the normal
+  /// "you can edit your own profile" rule — no firestore.rules change needed.
+  /// Returns false if today's daily cap is already reached.
+  Future<bool> grantAdReward(String uid) async {
+    final today = _todayKey();
+    final ok = await _db.runTransaction<bool>((txn) async {
+      final snap = await txn.get(_userDoc(uid));
+      final used = _adRewardsUsedToday(snap.data());
+      if (used >= maxAdRewardsPerDay) return false;
+      final current = (snap.data()?['credits'] as num?)?.toInt() ?? 0;
+      txn.update(_userDoc(uid), {
+        'credits': current + adRewardAmount,
+        'adRewardsDate': today,
+        'adRewardsCountToday': used + 1,
+      });
+      return true;
+    });
+    if (ok) await _logTxn(uid, type: 'ad_reward', delta: adRewardAmount, label: 'Watched ad');
+    return ok;
+  }
 }

@@ -19,4 +19,12 @@ class AppConfig {
   /// success callback still needs server-side signature verification
   /// before this goes anywhere near real money.
   static const String razorpayKeyId = "rzp_test_1234567890abcd";
+
+  /// TODO: replace with your own AdMob rewarded ad unit id once you have an
+  /// AdMob account — this is Google's public TEST rewarded ad unit id, safe
+  /// to ship as-is (it always fills with a real, working Google test ad,
+  /// it just never pays out real revenue). The matching test APPLICATION_ID
+  /// is set in android/app/src/main/AndroidManifest.xml — replace both
+  /// together, they're a pair.
+  static const String admobRewardedAdUnitId = "ca-app-pub-3940256099942544/5224354917";
 }

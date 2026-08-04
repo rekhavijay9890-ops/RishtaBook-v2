@@ -26,6 +26,7 @@ dependencies:
   provider: ^6.1.2
   shared_preferences: ^2.3.3
   razorpay_flutter: ^1.4.0
+  google_mobile_ads: ^7.0.0
 
 dev_dependencies:
   flutter_test:
