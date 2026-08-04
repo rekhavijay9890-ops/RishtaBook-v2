@@ -14,6 +14,7 @@ import '../../theme/app_colors.dart';
 import '../../widgets/rb_section_label.dart';
 import '../../widgets/wallet_strip.dart';
 import '../../widgets/match_card.dart';
+import '../../widgets/referral_cta_card.dart';
 import '../profile/view_profile_screen.dart';
 import '../root_shell.dart';
 
@@ -142,11 +143,12 @@ class _HomePageState extends State<HomePage> {
                           stream: _creditService.creditsStream(uid),
                           builder: (context, creditSnap) {
                             return Padding(
-                              padding: const EdgeInsets.only(bottom: 18),
+                              padding: const EdgeInsets.only(bottom: 12),
                               child: WalletStrip(credits: creditSnap.data ?? 0, onTap: () => Navigator.pushNamed(context, '/wallet')),
                             );
                           },
                         ),
+                        const Padding(padding: EdgeInsets.only(bottom: 18), child: ReferralCtaCard()),
                         RbSectionLabel(title: context.t('home.suggested')),
                         ...profiles.map((p) {
                           int? score;

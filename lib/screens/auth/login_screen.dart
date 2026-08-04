@@ -187,6 +187,11 @@ class _LoginScreenState extends State<LoginScreen> {
         if (referralCode.isNotEmpty && referralCode != uid) {
           try {
             await _creditService.grantReferralBonus(referralCode, friendName: _nameController.text.trim());
+            // Best-effort: if the referrer logged this phone number via
+            // "Invite & Earn" → add by mobile, flip that invite from
+            // pending to completed. No-ops silently if they shared a
+            // link/code instead, or the numbers don't match.
+            await _creditService.tryCompleteManualInvite(referralCode, phone: _mobileController.text.trim());
           } catch (_) {
             // Invalid/unknown referral code — signup still succeeds.
           }

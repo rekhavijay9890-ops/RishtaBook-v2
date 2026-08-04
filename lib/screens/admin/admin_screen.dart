@@ -19,7 +19,7 @@ class AdminScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: const Text("व्यवस्थापक डैशबोर्ड"),
@@ -32,6 +32,7 @@ class AdminScreen extends StatelessWidget {
             tabs: [
               Tab(text: "सत्यापन / Verifications"),
               Tab(text: "सभी उपयोगकर्ता / All Users"),
+              Tab(text: "सेटिंग्स / Settings"),
             ],
           ),
         ),
@@ -39,9 +40,92 @@ class AdminScreen extends StatelessWidget {
           children: [
             _VerificationsTab(),
             _AllUsersTab(),
+            _SettingsTab(),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Admin-tunable app config (`config/app` in Firestore) — currently just
+/// the referral credit bonus, read by CreditService.getReferralBonusAmount
+/// and mirrored by the matching firestore.rules check so client and rule
+/// always agree on the live value.
+class _SettingsTab extends StatefulWidget {
+  const _SettingsTab();
+  @override
+  State<_SettingsTab> createState() => _SettingsTabState();
+}
+
+class _SettingsTabState extends State<_SettingsTab> {
+  final _controller = TextEditingController();
+  bool _saving = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save(int current) async {
+    final value = int.tryParse(_controller.text.trim());
+    if (value == null || value <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("सही संख्या डालें / Enter a valid number"), backgroundColor: Colors.red));
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      await FirebaseFirestore.instance.collection('config').doc('app').set({'referralBonus': value}, SetOptions(merge: true));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("सहेजा गया / Saved"), backgroundColor: Colors.green));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("त्रुटि / Error: $e"), backgroundColor: Colors.red));
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance.collection('config').doc('app').snapshots(),
+      builder: (context, snap) {
+        final current = (snap.data?.data()?['referralBonus'] as num?)?.toInt() ?? 50;
+        if (_controller.text.isEmpty) _controller.text = '$current';
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("रेफ़रल क्रेडिट बोनस / Referral credit bonus",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              const SizedBox(height: 6),
+              Text("हर सफल रेफ़रल पर उपयोगकर्ता को मिलने वाले क्रेडिट। अभी: $current",
+                  style: const TextStyle(color: Colors.grey, fontSize: 13)),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _controller,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(border: OutlineInputBorder(), labelText: "Credits"),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _saving ? null : () => _save(current),
+                child: _saving
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Text("सहेजें / Save"),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -23,19 +23,39 @@ service cloud.firestore {
         // Referral bonus: a NEW user's signup grants credits into the
         // REFERRER's doc, so this can't go through the auth.uid == userId
         // branch above. Narrowly scoped to touching only `credits`, and
-        // only by exactly CreditService.referralBonus (50) - not a general
-        // "anyone can edit anyone's credits" hole.
+        // only by exactly the admin-configured referral bonus (config/app,
+        // falls back to 50) - not a general "anyone can edit anyone's
+        // credits" hole.
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['credits']) &&
-          request.resource.data.credits == resource.data.credits + 50)
+          request.resource.data.credits == resource.data.credits + _referralBonusAmount())
       );
 
       match /transactions/{txnId} {
         allow read: if request.auth != null && request.auth.uid == userId;
         allow create: if request.auth != null && (
           request.auth.uid == userId ||
-          (request.resource.data.type == 'referral' && request.resource.data.delta == 50)
+          (request.resource.data.type == 'referral' && request.resource.data.delta == _referralBonusAmount())
         );
       }
+
+      // A user's own log of "friends I've invited by mobile number" - see
+      // CreditService.logManualInvite / tryCompleteManualInvite.
+      match /referralInvites/{inviteId} {
+        allow read, create: if request.auth != null && request.auth.uid == userId;
+        // The REFERRED person (not the invite owner) flips it from
+        // 'invited' to 'completed' once they've signed up with this
+        // referrer's code - narrowly scoped to just that one transition,
+        // nothing else about the invite may change.
+        allow update: if request.auth != null &&
+          resource.data.status == 'invited' &&
+          request.resource.data.status == 'completed' &&
+          request.resource.data.phone == resource.data.phone;
+      }
+    }
+
+    match /config/{docId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.token.email == "rekhavijay9890@gmail.com";
     }
 
     match /interests/{interestId} {
@@ -93,6 +113,16 @@ service cloud.firestore {
     function _acceptedInterest(fromUid, toUid) {
       return exists(/databases/$(database)/documents/interests/$(fromUid + '_' + toUid)) &&
         get(/databases/$(database)/documents/interests/$(fromUid + '_' + toUid)).data.status == 'accepted';
+    }
+
+    // Mirrors CreditService.getReferralBonusAmount() so the client and the
+    // rule that validates a referral credit write always agree on today's
+    // admin-configured amount.
+    function _referralBonusAmount() {
+      return exists(/databases/$(database)/documents/config/app) &&
+        'referralBonus' in get(/databases/$(database)/documents/config/app).data
+        ? get(/databases/$(database)/documents/config/app).data.referralBonus
+        : 50;
     }
   }
 }

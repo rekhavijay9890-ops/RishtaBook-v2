@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../models/user_profile.dart';
 import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
-import '../../services/credit_service.dart';
 import '../../services/kundali_service.dart';
 import '../../i18n/strings.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text.dart';
 import '../../widgets/rb_avatar.dart';
 import '../../widgets/rb_section_label.dart';
+import '../../widgets/referral_cta_card.dart';
 import '../auth/login_screen.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -74,14 +73,6 @@ class ProfilePage extends StatelessWidget {
           ]),
         );
       }),
-    );
-  }
-
-  void _share(BuildContext context, String uid) {
-    Share.share(
-      context.isHindi
-          ? 'RishtaBook पर मेरे साथ जुड़ें! मेरा रेफ़रल कोड: $uid'
-          : 'Join me on RishtaBook! My referral code: $uid',
     );
   }
 
@@ -207,27 +198,7 @@ class ProfilePage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.borderColor)),
-                    child: Row(children: [
-                      const Text('🎁', style: TextStyle(fontSize: 22)),
-                      const SizedBox(width: 10),
-                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(context.t('profile.referFriend'), style: AppText.headingSmall),
-                        const SizedBox(height: 2),
-                        Text(context.t('profile.referDesc', [CreditService.referralBonus]), style: AppText.caption),
-                      ])),
-                      GestureDetector(
-                        onTap: () => _share(context, user.uid),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-                          decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppColors.saffron, AppColors.safDark]), borderRadius: BorderRadius.circular(100)),
-                          child: Text(context.t('common.share'), style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w700)),
-                        ),
-                      ),
-                    ]),
-                  ),
+                  const ReferralCtaCard(),
                   const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity, height: 48,
