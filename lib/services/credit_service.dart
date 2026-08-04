@@ -60,8 +60,12 @@ class CreditService {
     return ok;
   }
 
+  /// Uses `.update()`, not `.set(merge:true)`, deliberately: it must fail
+  /// (and be caught by the caller) rather than silently create a phantom
+  /// profile doc when [uid] doesn't already exist - the referral path
+  /// calls this with a user-typed uid that may be invalid or fake.
   Future<void> grant(String uid, {required int amount, required String type, required String label}) async {
-    await _userDoc(uid).set({'credits': FieldValue.increment(amount)}, SetOptions(merge: true));
+    await _userDoc(uid).update({'credits': FieldValue.increment(amount)});
     await _logTxn(uid, type: type, delta: amount, label: label);
   }
 
