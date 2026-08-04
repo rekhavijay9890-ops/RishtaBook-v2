@@ -13,12 +13,13 @@ class AppConfig {
   static bool isAdmin(String? email) =>
       email != null && adminEmails.contains(email.toLowerCase());
 
-  /// TODO: replace with your live/test Razorpay key id from the Razorpay
-  /// dashboard. This id alone is safe to ship in the client (it's not a
-  /// secret), but see CreditService's class doc — crediting on the
-  /// success callback still needs server-side signature verification
-  /// before this goes anywhere near real money.
-  static const String razorpayKeyId = "rzp_test_1234567890abcd";
+  /// Razorpay TEST MODE key id — safe to ship in the client (it's not a
+  /// secret, unlike the Key Secret, which must never appear here). See
+  /// CreditService's class doc — crediting on the success callback still
+  /// needs server-side signature verification before this goes anywhere
+  /// near real money. Switch to a live key only once ready to charge real
+  /// cards, and only after that server-side verification exists.
+  static const String razorpayKeyId = "rzp_test_TKnAAwgRET7i6X";
 
   /// TODO: replace with your own AdMob rewarded ad unit id once you have an
   /// AdMob account — this is Google's public TEST rewarded ad unit id, safe
