@@ -16,6 +16,7 @@ class MatchCard extends StatefulWidget {
   final bool premium;
   final bool liked;
   final String initials;
+  final String? photoUrl;
   final Color accentColor;
   final VoidCallback onLike;
   final VoidCallback onChat;
@@ -34,6 +35,7 @@ class MatchCard extends StatefulWidget {
     this.premium = false,
     this.liked = false,
     required this.initials,
+    this.photoUrl,
     this.accentColor = AppColors.saffron,
     required this.onLike,
     required this.onChat,
@@ -63,7 +65,7 @@ class _MatchCardState extends State<MatchCard> {
               padding: const EdgeInsets.all(13),
               child: Row(
                 children: [
-                  RbAvatar(initials: widget.initials, size: 52, color: widget.accentColor),
+                  RbAvatar(initials: widget.initials, size: 52, color: widget.accentColor, photoUrl: widget.photoUrl),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(

@@ -171,6 +171,7 @@ class _HomePageState extends State<HomePage> {
                               kundaliScore: score,
                               verified: p.isVerified,
                               initials: p.fullName.isNotEmpty ? p.fullName[0].toUpperCase() : '?',
+                              photoUrl: p.primaryPhotoUrl,
                               accentColor: p.isFemale ? AppColors.rose : (p.isMale ? AppColors.teal : AppColors.saffron),
                               liked: _liked.contains(p.uid),
                               onOpen: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ViewProfileScreen(profile: p))),

@@ -12,6 +12,7 @@ import '../../widgets/rb_avatar.dart';
 import '../../widgets/rb_section_label.dart';
 import '../../widgets/referral_cta_card.dart';
 import 'complete_profile_screen.dart';
+import 'manage_photos_screen.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -116,7 +117,24 @@ class ProfilePage extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 6, 16, 20),
                     child: Row(children: [
-                      RbAvatar(initials: profile.fullName.isNotEmpty ? profile.fullName[0].toUpperCase() : '?', size: 64),
+                      GestureDetector(
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ManagePhotosScreen(uid: user.uid))),
+                        child: Stack(children: [
+                          RbAvatar(
+                            initials: profile.fullName.isNotEmpty ? profile.fullName[0].toUpperCase() : '?',
+                            size: 64,
+                            photoUrl: profile.primaryPhotoUrl,
+                          ),
+                          Positioned(
+                            bottom: 0, right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: const BoxDecoration(color: AppColors.saffron, shape: BoxShape.circle),
+                              child: const Icon(Icons.camera_alt, size: 12, color: Colors.white),
+                            ),
+                          ),
+                        ]),
+                      ),
                       const SizedBox(width: 14),
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Text(profile.fullName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white)),
@@ -196,6 +214,15 @@ class ProfilePage extends StatelessWidget {
                           style: const TextStyle(fontSize: 11, color: Color(0xFF8B6914)),
                         ),
                       ]),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity, height: 48,
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.photo_camera_outlined, color: AppColors.saffron),
+                      label: Text(context.isHindi ? "फ़ोटो प्रबंधित करें (${profile.photoUrls.length}/10)" : "Manage Photos (${profile.photoUrls.length}/10)"),
+                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ManagePhotosScreen(uid: user.uid))),
                     ),
                   ),
                   const SizedBox(height: 10),

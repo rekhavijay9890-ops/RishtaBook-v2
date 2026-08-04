@@ -35,11 +35,17 @@ class ViewProfileScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         children: [
           Center(
-            child: CircleAvatar(
-              radius: 46,
-              backgroundColor: avatarColor.withOpacity(0.12),
-              child: Icon(avatarIcon, size: 50, color: avatarColor),
-            ),
+            child: profile.primaryPhotoUrl != null
+                ? CircleAvatar(
+                    radius: 46,
+                    backgroundColor: avatarColor.withOpacity(0.12),
+                    backgroundImage: NetworkImage(profile.primaryPhotoUrl!),
+                  )
+                : CircleAvatar(
+                    radius: 46,
+                    backgroundColor: avatarColor.withOpacity(0.12),
+                    child: Icon(avatarIcon, size: 50, color: avatarColor),
+                  ),
           ),
           const SizedBox(height: 14),
           Row(
