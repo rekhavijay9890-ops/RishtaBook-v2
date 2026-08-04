@@ -55,7 +55,12 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
       });
       await _creditService.grantSignupBonus(uid);
     }
-    // AuthGate reacts to the auth-state change on its own.
+    // PhoneAuthScreen is reached via Navigator.push on top of
+    // AuthLandingScreen, so AuthGate rebuilding its own content in
+    // response to the auth-state change isn't enough - this screen would
+    // just keep sitting on top of the stack, covering the updated content,
+    // unless it pops back to reveal it.
+    if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   Future<void> _sendOtp() async {
