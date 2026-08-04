@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
+import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../i18n/strings.dart';
 import '../profile/complete_profile_screen.dart';
@@ -44,13 +45,26 @@ class _ProfileChoiceScreenState extends State<ProfileChoiceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.pageBg,
+      // Like BasicDetailsScreen, this isn't pushed via Navigator - AuthGate
+      // swaps it in directly - so there's no previous route to pop to.
+      // The back arrow signs out instead, same escape hatch as before.
+      appBar: AppBar(
+        backgroundColor: AppColors.pageBg,
+        foregroundColor: AppColors.ink,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: context.t('basicDetails.wrongAccount'),
+          onPressed: () => AuthService().signOut(),
+        ),
+      ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 20),
+              const SizedBox(height: 4),
               Row(children: [
                 Container(
                   width: 44, height: 44,

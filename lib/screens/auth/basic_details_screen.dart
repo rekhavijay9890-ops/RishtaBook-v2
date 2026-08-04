@@ -116,13 +116,16 @@ class _BasicDetailsScreenState extends State<BasicDetailsScreen> {
         title: Text(context.t('basicDetails.title')),
         backgroundColor: AppColors.headerBg,
         foregroundColor: Colors.white,
-        automaticallyImplyLeading: false,
-        actions: [
-          TextButton(
-            onPressed: () => AuthService().signOut(),
-            child: Text(context.t('basicDetails.wrongAccount'), style: const TextStyle(color: Colors.white70, fontSize: 12)),
-          ),
-        ],
+        // This screen isn't pushed via Navigator - AuthGate swaps it in
+        // directly after sign-in - so there's no previous route to pop
+        // back to. The only meaningful "back" here is leaving this
+        // account entirely, so the back arrow signs out instead of
+        // popping, landing the user back on AuthLandingScreen.
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: context.t('basicDetails.wrongAccount'),
+          onPressed: () => AuthService().signOut(),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
