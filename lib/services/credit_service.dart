@@ -23,6 +23,8 @@ class CreditService {
   static const int freeSearchPreviewCount = 3;
   static const int adRewardAmount = 10;
   static const int maxAdRewardsPerDay = 5;
+  static const int boostCost = 50;
+  static const Duration boostDuration = Duration(hours: 24);
 
   DocumentReference<Map<String, dynamic>> _userDoc(String uid) => _db.collection('users').doc(uid);
 
@@ -241,6 +243,20 @@ class CreditService {
       return true;
     });
     if (ok) await _logTxn(uid, type: 'ad_reward', delta: adRewardAmount, label: 'Watched ad');
+    return ok;
+  }
+
+  /// Spends [boostCost] credits to set `boostedUntil` [boostDuration] from
+  /// now on the caller's own doc - Home ranks boosted profiles ahead of
+  /// everyone else regardless of match score while still active. Returns
+  /// false if the balance is too low.
+  Future<bool> boostProfile(String uid) async {
+    final ok = await spend(uid, amount: boostCost, type: 'boost', label: 'Profile boost (24h)');
+    if (ok) {
+      await _userDoc(uid).update({
+        'boostedUntil': Timestamp.fromDate(DateTime.now().add(boostDuration)),
+      });
+    }
     return ok;
   }
 }

@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 /// Typed wrapper around a `users/{uid}` Firestore document.
 class UserProfile {
   final String uid;
@@ -28,6 +30,11 @@ class UserProfile {
   final int? heightCm;
   final String maritalStatus;
   final String education;
+  final String motherTongue;
+  final String incomeBand;
+  final bool photosPrivate;
+  final List<String> blockedUids;
+  final DateTime? boostedUntil;
 
   const UserProfile({
     required this.uid,
@@ -58,6 +65,11 @@ class UserProfile {
     this.heightCm,
     this.maritalStatus = '',
     this.education = '',
+    this.motherTongue = '',
+    this.incomeBand = '',
+    this.photosPrivate = false,
+    this.blockedUids = const [],
+    this.boostedUntil,
   });
 
   factory UserProfile.fromMap(String uid, Map<String, dynamic> data) {
@@ -90,8 +102,15 @@ class UserProfile {
       heightCm: (data['heightCm'] as num?)?.toInt(),
       maritalStatus: data['maritalStatus'] ?? '',
       education: data['education'] ?? '',
+      motherTongue: data['motherTongue'] ?? '',
+      incomeBand: data['incomeBand'] ?? '',
+      photosPrivate: data['photosPrivate'] == true,
+      blockedUids: List<String>.from(data['blockedUids'] ?? const []),
+      boostedUntil: (data['boostedUntil'] as Timestamp?)?.toDate(),
     );
   }
+
+  bool get isBoosted => boostedUntil != null && boostedUntil!.isAfter(DateTime.now());
 
   String? get primaryPhotoUrl => photoUrls.isNotEmpty ? photoUrls.first : null;
 

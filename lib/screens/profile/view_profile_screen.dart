@@ -5,6 +5,7 @@ import '../../models/user_profile.dart';
 import '../../theme/app_colors.dart';
 import '../../services/auth_service.dart';
 import '../../services/notification_service.dart';
+import '../../services/moderation_service.dart';
 import '../../i18n/strings.dart';
 
 const Color kBrandColor = AppColors.saffron;
@@ -22,11 +23,85 @@ class ViewProfileScreen extends StatefulWidget {
 
 class _ViewProfileScreenState extends State<ViewProfileScreen> {
   UserProfile get profile => widget.profile;
+  final _moderationService = ModerationService();
 
   @override
   void initState() {
     super.initState();
     _logView();
+  }
+
+  Future<void> _confirmBlock() async {
+    final myUid = AuthService().currentUser?.uid;
+    if (myUid == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.t('safety.block')),
+        content: Text(context.t('safety.blockConfirm')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.t('common.cancel'))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(context.t('safety.block')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await _moderationService.blockUser(myUid, profile.uid);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('safety.blocked')), backgroundColor: AppColors.success));
+      Navigator.pop(context);
+    }
+  }
+
+  void _openReportSheet() {
+    final myUid = AuthService().currentUser?.uid;
+    if (myUid == null) return;
+    String reason = 'fake_profile';
+    final detailsCtrl = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.cardBg,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => StatefulBuilder(builder: (context, setSheetState) {
+        return Padding(
+          padding: EdgeInsets.only(left: 20, right: 20, top: 20, bottom: MediaQuery.of(context).viewInsets.bottom + 20),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Text(context.t('safety.reportTitle'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 14),
+            DropdownButtonFormField<String>(
+              value: reason,
+              decoration: InputDecoration(hintText: context.t('safety.reportReasonHint')),
+              items: [
+                DropdownMenuItem(value: 'fake_profile', child: Text(context.t('safety.reason.fakeProfile'))),
+                DropdownMenuItem(value: 'inappropriate', child: Text(context.t('safety.reason.inappropriate'))),
+                DropdownMenuItem(value: 'harassment', child: Text(context.t('safety.reason.harassment'))),
+                DropdownMenuItem(value: 'other', child: Text(context.t('safety.reason.other'))),
+              ],
+              onChanged: (v) => setSheetState(() => reason = v ?? 'fake_profile'),
+            ),
+            const SizedBox(height: 12),
+            TextField(controller: detailsCtrl, maxLines: 3, decoration: InputDecoration(hintText: context.t('safety.reportDetailsHint'))),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+              onPressed: () async {
+                await _moderationService.fileReport(myUid, reportedUid: profile.uid, reason: reason, details: detailsCtrl.text.trim());
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('safety.reportSent')), backgroundColor: AppColors.success));
+                }
+              },
+              child: Text(context.t('safety.reportSubmit')),
+            ),
+          ]),
+        );
+      }),
+    );
   }
 
   /// Fire-and-forget: lets the viewed person know someone looked at their
@@ -62,6 +137,16 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
         title: Text(context.t('viewProfile.title')),
         backgroundColor: kBrandColor,
         foregroundColor: Colors.white,
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (v) => v == 'block' ? _confirmBlock() : _openReportSheet(),
+            itemBuilder: (context) => [
+              PopupMenuItem(value: 'report', child: Text(context.t('safety.report'))),
+              PopupMenuItem(value: 'block', child: Text(context.t('safety.block'))),
+            ],
+          ),
+        ],
       ),
       backgroundColor: AppColors.pageBg,
       body: ListView(
