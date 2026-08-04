@@ -170,7 +170,7 @@ const Map<String, Map<String, String>> _dict = {
   'authLanding.welcome':         {'hi': 'स्वागत है', 'en': 'Welcome'},
   'authLanding.continueGoogle':  {'hi': 'Google से जारी रखें', 'en': 'Continue with Google'},
   'authLanding.continueMobile':  {'hi': 'मोबाइल नंबर से जारी रखें', 'en': 'Continue with Mobile'},
-  'authLanding.signInEmail':     {'hi': 'ईमेल से साइन-इन करें', 'en': 'Sign in with email instead'},
+  'authLanding.signInEmail':     {'hi': 'ईमेल से साइन-इन / नया खाता बनाएं', 'en': 'Sign in or sign up with email'},
   'authLanding.terms':           {'hi': 'जारी रखकर आप हमारी नियम व शर्तें स्वीकार करते हैं।', 'en': 'By continuing you agree to our Terms & Privacy Policy.'},
   'authLanding.credit':          {'hi': 'निर्माता: विजय विश्वकर्मा', 'en': 'Created by Vijay Vishvakarma'},
   'authLanding.googleFailed':    {'hi': 'Google साइन-इन में समस्या आई।', 'en': 'Google sign-in failed.'},
@@ -213,6 +213,7 @@ const Map<String, Map<String, String>> _dict = {
   'emailAuth.weakPassword':    {'hi': 'पासवर्ड कम से कम 6 अक्षर का होना चाहिए।', 'en': 'Password should be at least 6 characters.'},
   'emailAuth.invalidEmail':    {'hi': 'सही ईमेल पता डालें।', 'en': 'Enter a valid email address.'},
   'emailAuth.signUpFailed':    {'hi': 'खाता बनाने में समस्या आई।', 'en': 'Could not create account.'},
+  'emailAuth.providerDisabled': {'hi': 'ईमेल साइन-इन अभी चालू नहीं है। कृपया Google या मोबाइल नंबर से जारी रखें।', 'en': 'Email sign-in is not enabled yet. Please continue with Google or Mobile instead.'},
 
   // ── Basic details ──
   'basicDetails.title':            {'hi': 'बुनियादी जानकारी', 'en': 'Basic Details'},

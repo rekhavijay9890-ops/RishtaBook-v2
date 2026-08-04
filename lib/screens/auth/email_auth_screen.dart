@@ -50,6 +50,8 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
         friendly = context.t('emailAuth.wrongCreds');
       } else if (e.code == 'network-request-failed') {
         friendly = context.t('emailAuth.networkError');
+      } else if (e.code == 'operation-not-allowed') {
+        friendly = context.t('emailAuth.providerDisabled');
       }
       _showSnack(friendly);
     } catch (_) {
@@ -86,6 +88,11 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
         friendly = context.t('emailAuth.invalidEmail');
       } else if (e.code == 'network-request-failed') {
         friendly = context.t('emailAuth.networkError');
+      } else if (e.code == 'operation-not-allowed') {
+        // The Email/Password provider isn't enabled in Firebase Console ->
+        // Authentication -> Sign-in method. Every signup attempt fails
+        // with this exact code until that's turned on.
+        friendly = context.t('emailAuth.providerDisabled');
       }
       _showSnack(friendly);
     } catch (_) {
