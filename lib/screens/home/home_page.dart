@@ -124,7 +124,7 @@ class _HomePageState extends State<HomePage> {
               builder: (context, meSnap) {
                 final me = meSnap.data?.data() != null ? UserProfile.fromMap(uid, meSnap.data!.data()!) : null;
                 return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                  stream: _profileService.allProfilesStream(),
+                  stream: _profileService.suggestedProfilesStream(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator(color: AppColors.saffron));

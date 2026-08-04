@@ -34,6 +34,17 @@ class ProfileService {
     return _users.snapshots();
   }
 
+  /// Bounded version of [allProfilesStream] for the Home tab's "suggested
+  /// matches" list, which only ever shows a handful of cards - fetching
+  /// every field of every user in the whole app on every Home render (what
+  /// allProfilesStream does, unbounded) is the single biggest contributor
+  /// to a slow first load right after sign-in, especially over a weak
+  /// connection. Search still uses allProfilesStream since it genuinely
+  /// needs to filter across everyone.
+  Stream<QuerySnapshot<Map<String, dynamic>>> suggestedProfilesStream({int limit = 20}) {
+    return _users.limit(limit).snapshots();
+  }
+
   Stream<QuerySnapshot<Map<String, dynamic>>> recentJoinsStream({int limit = 5}) {
     return _users.orderBy('createdAt', descending: true).limit(limit).snapshots();
   }
