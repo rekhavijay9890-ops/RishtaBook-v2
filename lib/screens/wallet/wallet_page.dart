@@ -177,7 +177,9 @@ class _WalletPageState extends State<WalletPage> {
             ),
           ),
           Expanded(
-            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            child: SafeArea(
+              top: false,
+              child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: _creditService.transactionsStream(uid),
               builder: (context, txnSnap) {
                 final txns = txnSnap.data?.docs ?? [];
@@ -387,6 +389,7 @@ class _WalletPageState extends State<WalletPage> {
                   ],
                 );
               },
+            ),
             ),
           ),
         ],

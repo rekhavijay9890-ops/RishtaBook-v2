@@ -152,7 +152,9 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
         foregroundColor: Colors.white,
       ),
       backgroundColor: AppColors.pageBg,
-      body: SingleChildScrollView(
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
@@ -204,6 +206,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

@@ -89,7 +89,9 @@ class _ReferralScreenState extends State<ReferralScreen> {
           ),
         ),
         Expanded(
-          child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          child: SafeArea(
+            top: false,
+            child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
             stream: _profileService.userProfileStream(uid),
             builder: (context, profileSnap) {
               if (!profileSnap.hasData) return const Center(child: CircularProgressIndicator());
@@ -209,6 +211,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                 },
               );
             },
+            ),
           ),
         ),
       ]),

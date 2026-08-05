@@ -24,7 +24,9 @@ class KundaliPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.pageBg,
-      body: FutureBuilder<List<DocumentSnapshot<Map<String, dynamic>>>>(
+      body: SafeArea(
+        top: false,
+        child: FutureBuilder<List<DocumentSnapshot<Map<String, dynamic>>>>(
         future: Future.wait([profileService.getUserProfile(uid), profileService.getUserProfile(otherUid)]),
         builder: (context, snap) {
           if (!snap.hasData) {
@@ -111,6 +113,7 @@ class KundaliPage extends StatelessWidget {
             ),
           ]);
         },
+        ),
       ),
     );
   }

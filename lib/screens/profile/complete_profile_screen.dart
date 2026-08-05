@@ -233,7 +233,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.saffron))
-          : SingleChildScrollView(
+          : SafeArea(
+              top: false,
+              child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -361,6 +363,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     ),
                   ),
                 ],
+              ),
               ),
             ),
     );

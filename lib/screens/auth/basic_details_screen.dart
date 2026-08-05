@@ -130,7 +130,9 @@ class _BasicDetailsScreenState extends State<BasicDetailsScreen> {
           onPressed: () => AuthService().signOut(),
         ),
       ),
-      body: SingleChildScrollView(
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
@@ -237,6 +239,7 @@ class _BasicDetailsScreenState extends State<BasicDetailsScreen> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );
