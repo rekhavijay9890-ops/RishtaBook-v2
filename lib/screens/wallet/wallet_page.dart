@@ -160,7 +160,7 @@ class _WalletPageState extends State<WalletPage> {
                     Text(context.t('wallet.title'), style: AppText.headerTitle),
                   ]),
                   const SizedBox(height: 18),
-                  Text(context.t('wallet.available'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.ghost, letterSpacing: 0.5)),
+                  Text(context.t('wallet.available'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white70, letterSpacing: 0.5)),
                   const SizedBox(height: 4),
                   StreamBuilder<int>(
                     stream: _creditService.creditsStream(uid),
@@ -168,7 +168,7 @@ class _WalletPageState extends State<WalletPage> {
                       final credits = snap.data ?? 0;
                       return Column(children: [
                         Text('$credits', style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -2)),
-                        Text(context.t('wallet.remaining', [credits ~/ CreditService.chatUnlockCost]), style: const TextStyle(fontSize: 11, color: AppColors.ghost)),
+                        Text(context.t('wallet.remaining', [credits ~/ CreditService.chatUnlockCost]), style: const TextStyle(fontSize: 11, color: Colors.white70)),
                       ]);
                     },
                   ),
