@@ -15,7 +15,12 @@ const Color kBrandColor = AppColors.saffron;
 /// Home tab card).
 class ViewProfileScreen extends StatefulWidget {
   final UserProfile profile;
-  const ViewProfileScreen({super.key, required this.profile});
+  /// Optional - passed by Home/Search, which have already computed these
+  /// against the viewer's own preferences. Null when opened from a place
+  /// that hasn't computed a score (e.g. straight from a chat thread).
+  final int? matchScorePct;
+  final int? kundaliScore;
+  const ViewProfileScreen({super.key, required this.profile, this.matchScorePct, this.kundaliScore});
 
   @override
   State<ViewProfileScreen> createState() => _ViewProfileScreenState();
@@ -177,6 +182,19 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
               ],
             ],
           ),
+          if (widget.matchScorePct != null || widget.kundaliScore != null || profile.isVerified) ...[
+            const SizedBox(height: 16),
+            Row(children: [
+              if (widget.kundaliScore != null)
+                Expanded(child: _StatCard(value: '${widget.kundaliScore}/36', label: context.t('kundali.title'))),
+              if (widget.matchScorePct != null) ...[
+                if (widget.kundaliScore != null) const SizedBox(width: 8),
+                Expanded(child: _StatCard(value: '${widget.matchScorePct}%', label: context.t('match.title'))),
+              ],
+              if (widget.matchScorePct != null || widget.kundaliScore != null) const SizedBox(width: 8),
+              Expanded(child: _StatCard(value: profile.isVerified ? '✓' : '—', label: context.t('common.verified'))),
+            ]),
+          ],
           const SizedBox(height: 24),
           _Section(title: context.t('viewProfile.personalInfo'), children: [
             _Row(Icons.calendar_today, context.t('viewProfile.dob'), profile.dob),
@@ -214,6 +232,29 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  final String value;
+  final String label;
+  const _StatCard({required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.borderColor),
+      ),
+      child: Column(children: [
+        Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: kBrandColor)),
+        const SizedBox(height: 2),
+        Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 9.5, color: AppColors.muted)),
+      ]),
     );
   }
 }

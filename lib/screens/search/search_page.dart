@@ -31,6 +31,8 @@ class _SearchPageState extends State<SearchPage> {
   String? _religion, _category, _gender, _occupation, _state, _motherTongue, _income;
   final _searchCtrl = TextEditingController();
   bool _sortByMatch = false;
+  bool _verifiedOnly = false;
+  bool _nearMe = false;
 
   bool get _hasFilters =>
       _religion != null || _category != null || _gender != null || _occupation != null ||
@@ -41,7 +43,7 @@ class _SearchPageState extends State<SearchPage> {
         'occupation': _occupation, 'state': _state, 'motherTongue': _motherTongue, 'income': _income,
       };
 
-  List<UserProfile> _apply(List<UserProfile> profiles) {
+  List<UserProfile> _apply(List<UserProfile> profiles, {String? myState}) {
     final q = _searchCtrl.text.trim().toLowerCase();
     return profiles.where((p) {
       if (_religion != null && !p.religion.contains(_religion!)) return false;
@@ -51,6 +53,8 @@ class _SearchPageState extends State<SearchPage> {
       if (_state != null && p.state != _state) return false;
       if (_motherTongue != null && p.motherTongue != _motherTongue) return false;
       if (_income != null && p.incomeBand != _income) return false;
+      if (_verifiedOnly && !p.isVerified) return false;
+      if (_nearMe && myState != null && myState.isNotEmpty && p.state != myState) return false;
       if (q.isNotEmpty &&
           !p.fullName.toLowerCase().contains(q) &&
           !p.location.toLowerCase().contains(q) &&
@@ -200,6 +204,21 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
+  Widget _quickFilterChip(String label, bool active, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: active ? Colors.white : Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(color: Colors.white.withOpacity(active ? 1 : 0.2)),
+        ),
+        child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: active ? AppColors.saffron : Colors.white)),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final uid = _authService.currentUser?.uid ?? '';
@@ -274,6 +293,16 @@ class _SearchPageState extends State<SearchPage> {
                       ),
                     ]),
                   ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      _quickFilterChip(context.t('search.quick.bestMatch'), _sortByMatch, () => setState(() => _sortByMatch = !_sortByMatch)),
+                      const SizedBox(width: 8),
+                      _quickFilterChip(context.t('search.quick.verified'), _verifiedOnly, () => setState(() => _verifiedOnly = !_verifiedOnly)),
+                      const SizedBox(width: 8),
+                      _quickFilterChip(context.t('search.quick.nearMe'), _nearMe, () => setState(() => _nearMe = !_nearMe)),
+                    ],
+                  ),
                 ]),
               ),
             ),
@@ -285,6 +314,7 @@ class _SearchPageState extends State<SearchPage> {
                 final unlockedUids = List<String>.from(meSnap.data?.data()?['unlockedProfileUids'] ?? []);
                 final blockedUids = List<String>.from(meSnap.data?.data()?['blockedUids'] ?? []);
                 final myPrefs = PartnerPreferences.fromMap(meSnap.data?.data()?['preferences'] as Map<String, dynamic>?);
+                final myState = meSnap.data?.data()?['state'] as String?;
                 return StreamBuilder<Set<String>>(
                   stream: InterestService().matchedUidsStream(uid),
                   builder: (context, matchedSnap) {
@@ -299,7 +329,7 @@ class _SearchPageState extends State<SearchPage> {
                             .where((doc) => doc.id != uid && !blockedUids.contains(doc.id))
                             .map((doc) => UserProfile.fromMap(doc.id, doc.data()))
                             .toList();
-                        final results = _apply(all);
+                        final results = _apply(all, myState: myState);
                         if (_sortByMatch) {
                           results.sort((a, b) =>
                               MatchmakingService.score(b, myPrefs).compareTo(MatchmakingService.score(a, myPrefs)));
@@ -336,7 +366,7 @@ class _SearchPageState extends State<SearchPage> {
                                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('chat.insufficientCredits'))));
                                     }
                                   },
-                                  onOpen: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ViewProfileScreen(profile: results[i]))),
+                                  onOpen: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ViewProfileScreen(profile: results[i], matchScorePct: MatchmakingService.score(results[i], myPrefs)))),
                                   onChat: () => Navigator.pushNamed(context, '/root'),
                                 ),
                               ),

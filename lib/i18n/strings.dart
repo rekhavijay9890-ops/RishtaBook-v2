@@ -42,6 +42,16 @@ const Map<String, Map<String, String>> _dict = {
   'home.noMatch':        {'hi': 'इन फ़िल्टर से कोई प्रोफ़ाइल नहीं मिली।', 'en': 'No profiles match these filters.'},
   'home.wallet.remaining': {'hi': '≈ %d चैट शेष', 'en': '≈ %d chats remaining'},
   'home.addCredits':     {'hi': 'क्रेडिट जोड़ें +', 'en': 'Add credits +'},
+  'home.stat.interests': {'hi': 'रुचियाँ', 'en': 'Interests'},
+  'home.stat.credits':   {'hi': 'क्रेडिट', 'en': 'Credits'},
+  'home.stat.unread':    {'hi': 'अपठित', 'en': 'Unread'},
+  'home.stat.boostOn':   {'hi': 'सक्रिय', 'en': 'Active'},
+  'home.stat.boostOff':  {'hi': 'बूस्ट करें', 'en': 'Boost'},
+  'home.topMatches':     {'hi': 'शीर्ष रिश्ते', 'en': 'Top matches'},
+  'home.moreMatches':    {'hi': 'और रिश्ते', 'en': 'More matches'},
+  'search.quick.bestMatch': {'hi': '⭐ सर्वश्रेष्ठ मेल', 'en': '⭐ Best match'},
+  'search.quick.verified':  {'hi': '✓ केवल सत्यापित', 'en': '✓ Verified only'},
+  'search.quick.nearMe':    {'hi': '📍 मेरे पास', 'en': '📍 Near me'},
 
   // ── Search ──
   'search.title':        {'hi': 'अपना जीवनसाथी खोजें', 'en': 'Find your match'},
@@ -368,6 +378,7 @@ const Map<String, Map<String, String>> _dict = {
   // ── Match score badge ──
   'match.scoreLabel':  {'hi': '%s%% मेल', 'en': '%s%% Match'},
   'match.sortByScore': {'hi': 'सर्वश्रेष्ठ मेल पहले', 'en': 'Best match first'},
+  'match.title':       {'hi': 'मेल', 'en': 'Match'},
 
   // ── Mother tongue / income (Phase 2 fields) ──
   'completeProfile.motherTongueHint': {'hi': 'मातृभाषा', 'en': 'Mother Tongue'},
