@@ -7,6 +7,7 @@ import '../../models/partner_preferences.dart';
 import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/interest_service.dart';
+import '../../services/chat_service.dart';
 import '../../services/credit_service.dart';
 import '../../services/kundali_service.dart';
 import '../../services/matchmaking_service.dart';
@@ -14,7 +15,8 @@ import '../../i18n/strings.dart';
 import '../../i18n/language_controller.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/rb_section_label.dart';
-import '../../widgets/wallet_strip.dart';
+import '../../widgets/rb_stat_strip.dart';
+import '../../widgets/top_matches_carousel.dart';
 import '../../widgets/match_card.dart';
 import '../../widgets/referral_cta_card.dart';
 import '../profile/view_profile_screen.dart';
@@ -30,6 +32,8 @@ class _HomePageState extends State<HomePage> {
   final ProfileService _profileService = ProfileService();
   final AuthService _authService = AuthService();
   final CreditService _creditService = CreditService();
+  final InterestService _interestService = InterestService();
+  final ChatService _chatService = ChatService();
   final Set<String> _liked = {};
 
   static const _filterOptions = ['Religion', 'Caste', 'City', 'Age', 'Education', 'Manglik'];
@@ -165,21 +169,73 @@ class _HomePageState extends State<HomePage> {
                       final sb = MatchmakingService.score(b, myPrefs, kundaliScore: kb >= 0 ? kb : null);
                       return sb.compareTo(sa);
                     });
+                    final topEntries = profiles.take(5).toList();
+                    final restProfiles = profiles.skip(5).toList();
+
                     return ListView(
                       padding: const EdgeInsets.all(16),
                       children: [
                         StreamBuilder<int>(
                           stream: _creditService.creditsStream(uid),
                           builder: (context, creditSnap) {
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: WalletStrip(credits: creditSnap.data ?? 0, onTap: () => Navigator.pushNamed(context, '/wallet')),
+                            return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                              stream: _interestService.receivedInterestsStream(uid),
+                              builder: (context, interestSnap) {
+                                return StreamBuilder<int>(
+                                  stream: _chatService.totalUnreadStream(uid),
+                                  builder: (context, unreadSnap) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(bottom: 16),
+                                      child: RbStatStrip(stats: [
+                                        RbStat(
+                                          value: '${interestSnap.data?.docs.length ?? 0}',
+                                          label: context.t('home.stat.interests'),
+                                          onTap: () => Navigator.pushNamed(context, '/root'),
+                                        ),
+                                        RbStat(
+                                          value: '${creditSnap.data ?? 0}',
+                                          label: context.t('home.stat.credits'),
+                                          onTap: () => Navigator.pushNamed(context, '/wallet'),
+                                        ),
+                                        RbStat(
+                                          value: '${unreadSnap.data ?? 0}',
+                                          label: context.t('home.stat.unread'),
+                                          onTap: () => Navigator.pushNamed(context, '/root'),
+                                        ),
+                                        RbStat(
+                                          value: (me?.isBoosted ?? false) ? '🚀' : '—',
+                                          label: (me?.isBoosted ?? false) ? context.t('home.stat.boostOn') : context.t('home.stat.boostOff'),
+                                          onTap: () => Navigator.pushNamed(context, '/wallet'),
+                                        ),
+                                      ]),
+                                    );
+                                  },
+                                );
+                              },
                             );
                           },
                         ),
                         const Padding(padding: EdgeInsets.only(bottom: 18), child: ReferralCtaCard()),
-                        RbSectionLabel(title: context.t('home.suggested')),
-                        ...profiles.map((p) {
+                        if (topEntries.isNotEmpty) ...[
+                          RbSectionLabel(title: context.t('home.topMatches')),
+                          const SizedBox(height: 4),
+                          TopMatchesCarousel(
+                            entries: topEntries.map((p) {
+                              final k = kundaliFor(p);
+                              final score = k >= 0 ? k : null;
+                              final matchPct = MatchmakingService.score(p, myPrefs, kundaliScore: score);
+                              return TopMatchEntry(
+                                profile: p,
+                                matchScorePct: matchPct,
+                                blurred: p.photosPrivate && !matchedUids.contains(p.uid),
+                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ViewProfileScreen(profile: p, matchScorePct: matchPct, kundaliScore: score))),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 18),
+                        ],
+                        RbSectionLabel(title: restProfiles.isEmpty ? context.t('home.suggested') : context.t('home.moreMatches')),
+                        ...(restProfiles.isEmpty ? topEntries : restProfiles).map((p) {
                           final k = kundaliFor(p);
                           final score = k >= 0 ? k : null;
                           final matchPct = MatchmakingService.score(p, myPrefs, kundaliScore: score);
@@ -200,7 +256,7 @@ class _HomePageState extends State<HomePage> {
                               photoUrl: p.primaryPhotoUrl,
                               accentColor: p.isFemale ? AppColors.rose : (p.isMale ? AppColors.teal : AppColors.saffron),
                               liked: _liked.contains(p.uid),
-                              onOpen: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ViewProfileScreen(profile: p))),
+                              onOpen: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ViewProfileScreen(profile: p, matchScorePct: matchPct, kundaliScore: score))),
                               onKundali: () {
                                 if (score == null) {
                                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('kundali.needDetails'))));
