@@ -46,6 +46,7 @@ class _AuthLandingScreenState extends State<AuthLandingScreen> {
           'isVerified': false,
           'credits': CreditService.signupBonus,
           'createdAt': DateTime.now(),
+          'referralCode': CreditService.generateReferralCode(),
         });
         await _creditService.grantSignupBonus(uid);
       }

@@ -78,11 +78,14 @@ class _BasicDetailsScreenState extends State<BasicDetailsScreen> {
         'isVerified': false,
       });
 
-      final referralCode = _referralController.text.trim();
-      if (referralCode.isNotEmpty && referralCode != widget.user.uid) {
+      final enteredCode = _referralController.text.trim();
+      if (enteredCode.isNotEmpty) {
         try {
-          await _creditService.grantReferralBonus(referralCode, friendName: _nameController.text.trim());
-          await _creditService.tryCompleteManualInvite(referralCode, phone: _mobileController.text.trim());
+          final referrerUid = await _profileService.findUidByReferralCode(enteredCode);
+          if (referrerUid != null && referrerUid != widget.user.uid) {
+            await _creditService.grantReferralBonus(referrerUid, friendName: _nameController.text.trim());
+            await _creditService.tryCompleteManualInvite(referrerUid, phone: _mobileController.text.trim());
+          }
         } catch (_) {
           // Invalid/unknown referral code — this step still succeeds.
         }

@@ -322,22 +322,26 @@ class _WalletPageState extends State<WalletPage> {
                       },
                     ),
                     const SizedBox(height: 14),
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(colors: [AppColors.roseLight, AppColors.safLight]),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.saffron.withOpacity(0.2)),
+                    GestureDetector(
+                      onTap: () => Navigator.pushNamed(context, '/referral'),
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(colors: [AppColors.roseLight, AppColors.safLight]),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.saffron.withOpacity(0.2)),
+                        ),
+                        child: Row(children: [
+                          const Text('👥', style: TextStyle(fontSize: 26)),
+                          const SizedBox(width: 12),
+                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text(context.t('wallet.referTitle'), style: AppText.headingSmall),
+                            const SizedBox(height: 2),
+                            Text(context.t('wallet.referDesc', [CreditService.referralBonus]), style: AppText.caption),
+                          ])),
+                          const Icon(Icons.chevron_right, color: AppColors.muted),
+                        ]),
                       ),
-                      child: Row(children: [
-                        const Text('👥', style: TextStyle(fontSize: 26)),
-                        const SizedBox(width: 12),
-                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text(context.t('wallet.referTitle'), style: AppText.headingSmall),
-                          const SizedBox(height: 2),
-                          Text(context.t('wallet.referDesc', [CreditService.referralBonus]), style: AppText.caption),
-                        ])),
-                      ]),
                     ),
                     const SizedBox(height: 18),
                     RbSectionLabel(title: context.t('wallet.history')),
