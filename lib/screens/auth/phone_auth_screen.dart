@@ -126,7 +126,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         foregroundColor: Colors.white,
       ),
       backgroundColor: AppColors.pageBg,
-      body: Padding(
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -197,6 +199,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               ),
             ],
           ],
+        ),
         ),
       ),
     );

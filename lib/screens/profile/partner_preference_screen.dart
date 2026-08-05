@@ -124,7 +124,9 @@ class _PartnerPreferenceScreenState extends State<PartnerPreferenceScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.saffron))
-          : ListView(
+          : SafeArea(
+              top: false,
+              child: ListView(
               padding: const EdgeInsets.all(20),
               children: [
                 Text(context.t('partnerPref.subtitle'), style: const TextStyle(fontSize: 12, color: AppColors.muted)),
@@ -228,6 +230,7 @@ class _PartnerPreferenceScreenState extends State<PartnerPreferenceScreen> {
                   ),
                 ),
               ],
+              ),
             ),
     );
   }

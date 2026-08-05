@@ -70,7 +70,9 @@ class _AstrologerRequestScreenState extends State<AstrologerRequestScreen> {
         backgroundColor: AppColors.headerBg,
         foregroundColor: Colors.white,
       ),
-      body: SingleChildScrollView(
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -143,6 +145,7 @@ class _AstrologerRequestScreenState extends State<AstrologerRequestScreen> {
               },
             ),
           ],
+        ),
         ),
       ),
     );
