@@ -287,7 +287,7 @@ class _SearchPageState extends State<SearchPage> {
                             border: InputBorder.none,
                             filled: false,
                             hintText: context.t('search.hint'),
-                            hintStyle: const TextStyle(color: Color(0xFF888888), fontSize: 12),
+                            hintStyle: const TextStyle(color: Colors.white70, fontSize: 12),
                           ),
                         ),
                       ),

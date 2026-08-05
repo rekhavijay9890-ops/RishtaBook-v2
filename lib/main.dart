@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -6,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'theme/app_theme.dart';
+import 'theme/app_colors.dart';
 import 'i18n/language_controller.dart';
 import 'services/auth_service.dart';
 import 'screens/auth/auth_landing_screen.dart';
@@ -22,6 +24,17 @@ import 'models/user_profile.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Most screens (the 5 root tabs especially) use a plain Container header
+  // instead of a real AppBar, so AppTheme's appBarTheme.systemOverlayStyle
+  // never applies to them - set the OS's own on-screen nav bar colour here
+  // instead so it always matches the app's white bottomNavigationBar and
+  // never looks like it's clashing with/overlapping the tab bar above it.
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    systemNavigationBarColor: AppColors.cardBg,
+    systemNavigationBarIconBrightness: Brightness.dark,
+    systemNavigationBarDividerColor: AppColors.borderColor,
+  ));
 
   await Firebase.initializeApp(
     options: const FirebaseOptions(

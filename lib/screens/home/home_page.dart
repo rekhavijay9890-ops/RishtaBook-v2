@@ -83,10 +83,10 @@ class _HomePageState extends State<HomePage> {
                               RichText(
                                 text: const TextSpan(children: [
                                   TextSpan(text: 'Rishta', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.5)),
-                                  TextSpan(text: 'Book', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.saffron, letterSpacing: -0.5)),
+                                  TextSpan(text: 'Book', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFFFFD877), letterSpacing: -0.5)),
                                 ]),
                               ),
-                              Text(context.t('app.tagline'), style: const TextStyle(fontSize: 10, color: AppColors.ghost)),
+                              Text(context.t('app.tagline'), style: const TextStyle(fontSize: 10, color: Colors.white70)),
                             ],
                           ),
                         ),
@@ -116,7 +116,7 @@ class _HomePageState extends State<HomePage> {
                       child: Row(children: [
                         const Text('🔍', style: TextStyle(fontSize: 14)),
                         const SizedBox(width: 10),
-                        Text(context.t('home.searchHint'), style: const TextStyle(fontSize: 13, color: Color(0xFF888888))),
+                        Text(context.t('home.searchHint'), style: const TextStyle(fontSize: 13, color: Colors.white70)),
                       ]),
                     ),
                   ),

@@ -28,6 +28,13 @@ class AppTheme {
           systemOverlayStyle: SystemUiOverlayStyle(
             statusBarColor: AppColors.headerBg,
             statusBarIconBrightness: Brightness.light,
+            // Without this, the OS's own on-screen nav bar keeps its
+            // platform-default colour (often black/transparent), which can
+            // visually clash with - and look like it's overlapping - the
+            // app's own white bottomNavigationBar right above it.
+            systemNavigationBarColor: AppColors.cardBg,
+            systemNavigationBarIconBrightness: Brightness.dark,
+            systemNavigationBarDividerColor: AppColors.borderColor,
           ),
         ),
         cardTheme: CardThemeData(

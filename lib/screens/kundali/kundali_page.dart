@@ -166,7 +166,7 @@ class KundaliPage extends StatelessWidget {
                 RbAvatar(initials: me.fullName.isNotEmpty ? me.fullName[0].toUpperCase() : '?', size: 52),
                 const SizedBox(height: 6),
                 Text(me.fullName, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white), overflow: TextOverflow.ellipsis),
-                Text('${me.rashi} · ${me.nakshatra}', style: const TextStyle(fontSize: 10, color: AppColors.ghost), overflow: TextOverflow.ellipsis),
+                Text('${me.rashi} · ${me.nakshatra}', style: const TextStyle(fontSize: 10, color: Colors.white70), overflow: TextOverflow.ellipsis),
               ])),
               Column(children: [
                 Container(
@@ -178,13 +178,13 @@ class KundaliPage extends StatelessWidget {
                   ])),
                 ),
                 const SizedBox(height: 4),
-                Text(context.t('kundali.gunMilan'), style: const TextStyle(fontSize: 9, color: AppColors.ghost, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+                Text(context.t('kundali.gunMilan'), style: const TextStyle(fontSize: 9, color: Colors.white70, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
               ]),
               Expanded(child: Column(children: [
                 RbAvatar(initials: other.fullName.isNotEmpty ? other.fullName[0].toUpperCase() : '?', size: 52, color: AppColors.teal),
                 const SizedBox(height: 6),
                 Text(other.fullName, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white), overflow: TextOverflow.ellipsis),
-                Text('${other.rashi} · ${other.nakshatra}', style: const TextStyle(fontSize: 10, color: AppColors.ghost), overflow: TextOverflow.ellipsis),
+                Text('${other.rashi} · ${other.nakshatra}', style: const TextStyle(fontSize: 10, color: Colors.white70), overflow: TextOverflow.ellipsis),
               ])),
             ]),
           ]),
