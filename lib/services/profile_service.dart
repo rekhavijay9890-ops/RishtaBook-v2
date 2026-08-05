@@ -34,6 +34,14 @@ class ProfileService {
     return _users.snapshots();
   }
 
+  /// Resolves a short referral code (see CreditService.generateReferralCode)
+  /// to the referrer's uid. Returns null if no user has that code.
+  Future<String?> findUidByReferralCode(String code) async {
+    final q = await _users.where('referralCode', isEqualTo: code).limit(1).get();
+    if (q.docs.isEmpty) return null;
+    return q.docs.first.id;
+  }
+
   /// Bounded version of [allProfilesStream] for the Home tab's "suggested
   /// matches" list, which only ever shows a handful of cards - fetching
   /// every field of every user in the whole app on every Home render (what

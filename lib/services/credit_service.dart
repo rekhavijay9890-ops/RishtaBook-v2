@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'notification_service.dart';
@@ -160,6 +162,16 @@ class CreditService {
   }
 
   static String normalizePhone(String phone) => phone.replaceAll(RegExp(r'[^0-9]'), '');
+
+  /// Short, human-typeable referral code (e.g. "RB4X9K2P") generated once
+  /// at signup and stored on the user doc — much friendlier to read aloud
+  /// or type than the raw Firebase Auth uid it used to be.
+  static const String _codeChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I
+  static String generateReferralCode() {
+    final rnd = Random.secure();
+    final code = List.generate(6, (_) => _codeChars[rnd.nextInt(_codeChars.length)]).join();
+    return 'RB$code';
+  }
 
   /// Records that [uid] intends to invite [phone] — shown in their "Your
   /// invites" list as pending. Does NOT send anything itself; the caller

@@ -52,6 +52,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         'isVerified': false,
         'credits': CreditService.signupBonus,
         'createdAt': DateTime.now(),
+        'referralCode': CreditService.generateReferralCode(),
       });
       await _creditService.grantSignupBonus(uid);
     }

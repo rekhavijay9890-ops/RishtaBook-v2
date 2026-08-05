@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../services/auth_service.dart';
 import '../../services/credit_service.dart';
+import '../../services/profile_service.dart';
 import '../../i18n/strings.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text.dart';
@@ -19,6 +20,7 @@ class ReferralScreen extends StatefulWidget {
 class _ReferralScreenState extends State<ReferralScreen> {
   final _authService = AuthService();
   final _creditService = CreditService();
+  final _profileService = ProfileService();
   final _mobileController = TextEditingController();
   bool _sending = false;
 
@@ -28,7 +30,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
     super.dispose();
   }
 
-  Future<void> _sendInvite(String uid, int bonus) async {
+  Future<void> _sendInvite(String uid, String referralCode, int bonus) async {
     final phone = _mobileController.text.trim();
     if (phone.length < 10 || !RegExp(r'^[0-9]+$').hasMatch(CreditService.normalizePhone(phone))) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('referral.invalidMobile'))));
@@ -41,7 +43,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('referral.inviteLogged')), backgroundColor: AppColors.success));
       }
-      final message = context.t('referral.smsMessage', [uid]);
+      final message = context.t('referral.smsMessage', [referralCode]);
       final uri = Uri(scheme: 'sms', path: phone, queryParameters: {'body': message});
       await launchUrl(uri);
     } catch (_) {
@@ -51,8 +53,19 @@ class _ReferralScreenState extends State<ReferralScreen> {
     }
   }
 
-  void _shareLink(String uid) {
-    Share.share(context.t('referral.smsMessage', [uid]));
+  void _shareLink(String referralCode) {
+    Share.share(context.t('referral.smsMessage', [referralCode]));
+  }
+
+  /// Existing users who signed up before referral codes were friendly
+  /// short strings only have the raw uid on record — generate and persist
+  /// a real code for them the first time they open this screen.
+  Future<String> _ensureReferralCode(String uid, Map<String, dynamic>? data) async {
+    final existing = data?['referralCode'] as String?;
+    if (existing != null && existing.isNotEmpty) return existing;
+    final code = CreditService.generateReferralCode();
+    await _profileService.updateUserProfile(uid, {'referralCode': code});
+    return code;
   }
 
   @override
@@ -76,27 +89,35 @@ class _ReferralScreenState extends State<ReferralScreen> {
           ),
         ),
         Expanded(
-          child: FutureBuilder<int>(
-            future: _creditService.getReferralBonusAmount(),
-            builder: (context, bonusSnap) {
-              final bonus = bonusSnap.data ?? CreditService.referralBonus;
-              return ListView(
-                padding: const EdgeInsets.all(14),
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [AppColors.saffron, AppColors.safDark]),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(context.t('referral.yourCode'), style: const TextStyle(fontSize: 11, color: Colors.white70, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 6),
-                      SelectableText(uid, style: const TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
-                      const SizedBox(height: 10),
-                      Text(context.t('referral.bonusInfo', [bonus]), style: const TextStyle(fontSize: 12, color: Colors.white70)),
-                    ]),
-                  ),
+          child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+            stream: _profileService.userProfileStream(uid),
+            builder: (context, profileSnap) {
+              if (!profileSnap.hasData) return const Center(child: CircularProgressIndicator());
+              return FutureBuilder<String>(
+                future: _ensureReferralCode(uid, profileSnap.data!.data()),
+                builder: (context, codeSnap) {
+                  final referralCode = codeSnap.data ?? '…';
+                  return FutureBuilder<int>(
+                    future: _creditService.getReferralBonusAmount(),
+                    builder: (context, bonusSnap) {
+                      final bonus = bonusSnap.data ?? CreditService.referralBonus;
+                      return ListView(
+                        padding: const EdgeInsets.all(14),
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(colors: [AppColors.saffron, AppColors.safDark]),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              Text(context.t('referral.yourCode'), style: const TextStyle(fontSize: 11, color: Colors.white70, fontWeight: FontWeight.w600)),
+                              const SizedBox(height: 6),
+                              SelectableText(referralCode, style: const TextStyle(fontSize: 22, color: Colors.white, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
+                              const SizedBox(height: 10),
+                              Text(context.t('referral.bonusInfo', [bonus]), style: const TextStyle(fontSize: 12, color: Colors.white70)),
+                            ]),
+                          ),
                   const SizedBox(height: 18),
                   RbSectionLabel(title: context.t('referral.addByMobile')),
                   Row(children: [
@@ -116,7 +137,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                           ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                           : const Icon(Icons.sms_outlined),
                       label: Text(context.t('referral.sendInvite')),
-                      onPressed: _sending ? null : () => _sendInvite(uid, bonus),
+                      onPressed: _sending ? null : () => _sendInvite(uid, referralCode, bonus),
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -131,7 +152,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                     child: OutlinedButton.icon(
                       icon: const Icon(Icons.share_outlined),
                       label: Text(context.t('referral.shareLink')),
-                      onPressed: () => _shareLink(uid),
+                      onPressed: () => _shareLink(referralCode),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -182,6 +203,10 @@ class _ReferralScreenState extends State<ReferralScreen> {
                     },
                   ),
                 ],
+                      );
+                    },
+                  );
+                },
               );
             },
           ),
