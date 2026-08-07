@@ -4,5 +4,9 @@
   },
   "storage": {
     "rules": "storage.rules"
+  },
+  "hosting": {
+    "public": "web-admin",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
   }
 }

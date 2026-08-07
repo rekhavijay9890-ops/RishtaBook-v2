@@ -43,9 +43,11 @@ service cloud.firestore {
       );
 
       match /transactions/{txnId} {
-        allow read: if request.auth != null && request.auth.uid == userId;
+        allow read: if request.auth != null &&
+          (request.auth.uid == userId || request.auth.token.email == "rekhavijay9890@gmail.com");
         allow create: if request.auth != null && (
           request.auth.uid == userId ||
+          request.auth.token.email == "rekhavijay9890@gmail.com" ||
           (request.resource.data.type == 'referral' && request.resource.data.delta == _referralBonusAmount())
         );
       }
