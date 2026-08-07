@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -116,7 +117,25 @@ class _ReferralScreenState extends State<ReferralScreen> {
                             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                               Text(context.t('referral.yourCode'), style: const TextStyle(fontSize: 11, color: Colors.white70, fontWeight: FontWeight.w600)),
                               const SizedBox(height: 6),
-                              SelectableText(referralCode, style: const TextStyle(fontSize: 22, color: Colors.white, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
+                              Row(children: [
+                                SelectableText(referralCode, style: const TextStyle(fontSize: 22, color: Colors.white, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: codeSnap.hasData
+                                      ? () {
+                                          Clipboard.setData(ClipboardData(text: referralCode));
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text(context.t('referral.codeCopied')), backgroundColor: AppColors.success),
+                                          );
+                                        }
+                                      : null,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.18), borderRadius: BorderRadius.circular(8)),
+                                    child: const Icon(Icons.copy_rounded, size: 16, color: Colors.white),
+                                  ),
+                                ),
+                              ]),
                               const SizedBox(height: 10),
                               Text(context.t('referral.bonusInfo', [bonus]), style: const TextStyle(fontSize: 12, color: Colors.white70)),
                             ]),

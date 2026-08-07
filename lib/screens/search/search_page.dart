@@ -87,7 +87,10 @@ class _SearchPageState extends State<SearchPage> {
           );
         }
         return SingleChildScrollView(
-          padding: EdgeInsets.only(left: 20, right: 20, top: 20, bottom: MediaQuery.of(context).viewInsets.bottom + 20),
+          padding: EdgeInsets.only(
+            left: 20, right: 20, top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 20,
+          ),
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Text(context.t('search.filters'), style: AppText.headingLarge),
             const SizedBox(height: 16),
