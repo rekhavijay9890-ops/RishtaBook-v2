@@ -8,7 +8,7 @@
   :root {
     --bg: #FAF7FD; --surface: #FFFFFF; --ink: #2B2438; --muted: #6B5E7B; --ghost: #8A7B99;
     --border: #EBE1F7; --accent: #7C4DBF; --accent-dark: #5A3690; --accent-light: #F1E9FB;
-    --success: #1E7A4C; --error: #B3261E;
+    --success: #1E7A4C; --error: #B3261E; --gold: #B07A1E;
   }
   * { box-sizing: border-box; }
   body {
@@ -20,7 +20,6 @@
     padding: 16px 24px; display: flex; align-items: center; justify-content: space-between;
   }
   .topbar h1 { font-size: 18px; margin: 0; font-weight: 800; }
-  .topbar .sub { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 2px; }
   .topbar button {
     background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff;
     padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px;
@@ -49,18 +48,23 @@
   .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
   #loginError { color: var(--error); font-size: 12.5px; margin-top: 12px; min-height: 16px; }
 
-  #dashboard { display: none; padding: 20px 24px 60px; max-width: 1200px; margin: 0 auto; }
+  #dashboard { display: none; padding: 20px 24px 60px; max-width: 1400px; margin: 0 auto; }
   .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
   .toolbar input[type="search"] {
     flex: 1; min-width: 220px; padding: 10px 14px; border: 1.5px solid var(--border);
     border-radius: 100px; font-size: 13px; background: var(--surface);
   }
   .toolbar input[type="search"]:focus { outline: none; border-color: var(--accent); }
+  .toolbar select {
+    padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 100px;
+    font-size: 13px; background: var(--surface); color: var(--ink);
+  }
   .stat-row { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
   .stat-card {
     background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    padding: 12px 18px; min-width: 120px;
+    padding: 12px 18px; min-width: 120px; cursor: pointer;
   }
+  .stat-card.active { border-color: var(--accent); background: var(--accent-light); }
   .stat-card .v { font-size: 20px; font-weight: 800; color: var(--accent); }
   .stat-card .l { font-size: 11px; color: var(--ghost); margin-top: 2px; }
 
@@ -68,31 +72,38 @@
   thead th {
     text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px;
     color: var(--ghost); padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--accent-light);
+    white-space: nowrap;
   }
   tbody td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; }
   tbody tr:hover { background: var(--accent-light); }
+  tbody tr.pending-row { background: #FBF0DC55; }
   .pill {
-    display: inline-block; padding: 2px 8px; border-radius: 100px; font-size: 11px; font-weight: 700;
+    display: inline-block; padding: 2px 8px; border-radius: 100px; font-size: 11px; font-weight: 700; white-space: nowrap;
   }
   .pill-verified { background: #E0F5F2; color: #0F7C6E; }
-  .pill-pending { background: #FBF0DC; color: #B07A1E; }
+  .pill-pending { background: #FBF0DC; color: var(--gold); }
+  .pill-rejected { background: #FBE3E3; color: var(--error); }
   .pill-none { background: var(--border); color: var(--ghost); }
-  .credits { font-weight: 800; color: var(--accent); }
+  .credits { font-weight: 800; color: var(--accent); white-space: nowrap; }
+  .row-actions { white-space: nowrap; }
   .row-actions button {
     padding: 5px 10px; font-size: 11.5px; border-radius: 6px; border: 1px solid var(--accent);
-    background: #fff; color: var(--accent); cursor: pointer; font-weight: 700;
+    background: #fff; color: var(--accent); cursor: pointer; font-weight: 700; margin: 2px;
   }
   .row-actions button:hover { background: var(--accent-light); }
+  .row-actions button.approve { border-color: var(--success); color: var(--success); }
+  .row-actions button.reject { border-color: var(--error); color: var(--error); }
   #tableWrap { overflow-x: auto; }
   .empty { text-align: center; padding: 40px; color: var(--ghost); }
 
   .modal-backdrop {
     display: none; position: fixed; inset: 0; background: rgba(43,36,56,0.45);
-    align-items: center; justify-content: center; z-index: 50;
+    align-items: center; justify-content: center; z-index: 50; padding: 20px;
   }
   .modal {
-    background: #fff; border-radius: 14px; padding: 24px; width: 320px;
+    background: #fff; border-radius: 14px; padding: 24px; width: 320px; max-height: 90vh; overflow-y: auto;
   }
+  .modal.wide { width: 520px; }
   .modal h3 { margin: 0 0 4px; font-size: 15px; }
   .modal p { margin: 0 0 16px; font-size: 12.5px; color: var(--muted); }
   .modal label { font-size: 11.5px; color: var(--muted); font-weight: 700; display: block; margin-bottom: 4px; }
@@ -102,6 +113,11 @@
   }
   .modal-actions { display: flex; gap: 8px; }
   .modal-actions button { flex: 1; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin-bottom: 8px; }
+  .detail-item .l { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--ghost); font-weight: 700; }
+  .detail-item .v { font-size: 13.5px; margin-top: 2px; word-break: break-word; }
+  .detail-full { grid-column: 1 / -1; }
+  .detail-section { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent); font-weight: 800; margin: 16px 0 8px; }
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
     background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 100px; font-size: 13px;
@@ -127,14 +143,22 @@
   <div class="stat-row" id="statRow"></div>
   <div class="toolbar">
     <input type="search" id="searchBox" placeholder="Search name, mobile, email, city..." oninput="renderTable()" />
+    <select id="statusFilter" onchange="renderTable()">
+      <option value="">All statuses</option>
+      <option value="pending">Pending verification</option>
+      <option value="verified">Verified</option>
+      <option value="rejected">Rejected</option>
+      <option value="none">Not requested</option>
+    </select>
     <button class="btn btn-outline" style="width:auto;" onclick="downloadCsv()">⬇ Download CSV</button>
   </div>
   <div id="tableWrap">
     <table>
       <thead>
         <tr>
-          <th>Name</th><th>Mobile</th><th>Email</th><th>Religion / Caste</th>
-          <th>Location</th><th>Verified</th><th>Credits</th><th></th>
+          <th>Name</th><th>Age/DOB</th><th>Gender</th><th>Mobile</th><th>Email</th>
+          <th>Religion / Caste</th><th>Location</th><th>Occupation</th>
+          <th>Status</th><th>Credits</th><th>Photos</th><th></th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
@@ -152,10 +176,14 @@
     <label>Reason (shown to the user)</label>
     <input type="text" id="grantLabel" placeholder="e.g. Customer support goodwill" />
     <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeGrantModal()">Cancel</button>
+      <button class="btn btn-outline" onclick="closeModal('grantModal')">Cancel</button>
       <button class="btn btn-primary" onclick="submitGrant()">Grant</button>
     </div>
   </div>
+</div>
+
+<div class="modal-backdrop" id="detailsModal">
+  <div class="modal wide" id="detailsModalBody"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -167,7 +195,8 @@
   // Same Firebase project as the RishtaBook app (lib/main.dart) — this
   // config is public-by-design (Firebase's equivalent of a client id, not
   // a secret); real access control is enforced by firestore.rules, which
-  // only lets ADMIN_EMAIL below write credits/transactions for other users.
+  // only lets ADMIN_EMAIL below write credits/transactions/verification
+  // decisions for other users.
   const firebaseConfig = {
     apiKey: "AIzaSyBlScDXJDv6P6kcR6c5FUyWxT_LAyucduE",
     authDomain: "rishtabook-60663.firebaseapp.com",
@@ -184,6 +213,7 @@
 
   let allUsers = [];
   let grantTargetUid = null;
+  let statusPreset = '';
 
   function showToast(msg) {
     const t = document.getElementById('toast');
@@ -231,17 +261,36 @@
     }, err => showToast('Failed to load users: ' + err.message));
   }
 
+  function verStatus(u) {
+    if (u.isVerified) return 'verified';
+    if (u.verificationStatus === 'pending') return 'pending';
+    if (u.verificationStatus === 'rejected') return 'rejected';
+    return 'none';
+  }
+
   function renderStats() {
     const total = allUsers.length;
     const verified = allUsers.filter(u => u.isVerified).length;
-    const pending = allUsers.filter(u => u.verificationStatus === 'pending').length;
+    const pending = allUsers.filter(u => u.verificationStatus === 'pending' && !u.isVerified).length;
     const totalCredits = allUsers.reduce((s, u) => s + (Number(u.credits) || 0), 0);
-    document.getElementById('statRow').innerHTML = `
-      <div class="stat-card"><div class="v">${total}</div><div class="l">Total users</div></div>
-      <div class="stat-card"><div class="v">${verified}</div><div class="l">Verified</div></div>
-      <div class="stat-card"><div class="v">${pending}</div><div class="l">Pending verification</div></div>
-      <div class="stat-card"><div class="v">${totalCredits}</div><div class="l">Credits in circulation</div></div>
-    `;
+    const cards = [
+      { v: total, l: 'Total users', filter: '' },
+      { v: verified, l: 'Verified', filter: 'verified' },
+      { v: pending, l: 'Pending verification', filter: 'pending' },
+      { v: totalCredits, l: 'Credits in circulation', filter: '' },
+    ];
+    document.getElementById('statRow').innerHTML = cards.map(c => `
+      <div class="stat-card${statusPreset === c.filter && c.filter ? ' active' : ''}" ${c.filter ? `onclick="setStatusFilter('${c.filter}')"` : ''}>
+        <div class="v">${c.v}</div><div class="l">${c.l}</div>
+      </div>
+    `).join('');
+  }
+
+  function setStatusFilter(v) {
+    statusPreset = v;
+    document.getElementById('statusFilter').value = v;
+    renderStats();
+    renderTable();
   }
 
   function esc(s) {
@@ -251,32 +300,137 @@
   function matches(u, q) {
     if (!q) return true;
     q = q.toLowerCase();
-    return [u.fullName, u.mobile, u.email, u.location, u.village, u.district, u.state]
+    return [u.fullName, u.mobile, u.email, u.location, u.village, u.district, u.state, u.caste, u.occupation]
       .some(f => (f || '').toString().toLowerCase().includes(q));
+  }
+
+  function statusPill(u) {
+    const s = verStatus(u);
+    if (s === 'verified') return '<span class="pill pill-verified">Verified</span>';
+    if (s === 'pending') return '<span class="pill pill-pending">Pending</span>';
+    if (s === 'rejected') return '<span class="pill pill-rejected">Rejected</span>';
+    return '<span class="pill pill-none">—</span>';
   }
 
   function renderTable() {
     const q = document.getElementById('searchBox').value.trim();
-    const rows = allUsers.filter(u => matches(u, q));
+    const statusVal = document.getElementById('statusFilter').value;
+    const rows = allUsers.filter(u => matches(u, q) && (!statusVal || verStatus(u) === statusVal));
     const body = document.getElementById('tableBody');
     document.getElementById('emptyState').style.display = rows.length ? 'none' : 'block';
     body.innerHTML = rows.map(u => {
-      const verPill = u.isVerified
-        ? '<span class="pill pill-verified">Verified</span>'
-        : u.verificationStatus === 'pending'
-          ? '<span class="pill pill-pending">Pending</span>'
-          : '<span class="pill pill-none">—</span>';
-      return `<tr>
+      const isPending = verStatus(u) === 'pending';
+      const nameEsc = esc(u.fullName || u.email || u.uid).replace(/'/g, "\\'");
+      return `<tr class="${isPending ? 'pending-row' : ''}">
         <td>${esc(u.fullName || 'N/A')}</td>
+        <td>${esc(u.age || '—')}</td>
+        <td>${esc(u.gender || '—')}</td>
         <td>${esc(u.mobile || '—')}</td>
         <td>${esc(u.email || '—')}</td>
         <td>${esc(u.religion || '—')}${u.caste ? ' · ' + esc(u.caste) : ''}</td>
         <td>${esc(u.location || [u.village, u.district, u.state].filter(Boolean).join(', '))}</td>
-        <td>${verPill}</td>
+        <td>${esc(u.occupation || '—')}</td>
+        <td>${statusPill(u)}</td>
         <td class="credits">${Number(u.credits) || 0}</td>
-        <td class="row-actions"><button onclick="openGrantModal('${u.uid}','${esc(u.fullName || u.email || u.uid).replace(/'/g, "\\'")}')">Grant credits</button></td>
+        <td>${(u.photoUrls || []).length}/10</td>
+        <td class="row-actions">
+          <button onclick="openDetails('${u.uid}')">Details</button>
+          ${isPending ? `<button class="approve" onclick="decideVerification('${u.uid}', true, '${nameEsc}')">Approve</button>
+          <button class="reject" onclick="decideVerification('${u.uid}', false, '${nameEsc}')">Reject</button>` : ''}
+          <button onclick="openGrantModal('${u.uid}','${nameEsc}')">Grant credits</button>
+        </td>
       </tr>`;
     }).join('');
+  }
+
+  // Mirrors ProfileService.setVerificationDecision in the Flutter app -
+  // same fields, same write, so the app and this dashboard always agree.
+  async function decideVerification(uid, approve, name) {
+    try {
+      await db.collection('users').doc(uid).update({
+        verificationStatus: approve ? 'approved' : 'rejected',
+        isVerified: approve,
+      });
+      showToast(`${name}: verification ${approve ? 'approved' : 'rejected'}`);
+    } catch (e) {
+      showToast('Failed: ' + e.message);
+    }
+  }
+
+  function fmtDate(v) {
+    if (!v) return '—';
+    if (v.toDate) v = v.toDate();
+    if (v instanceof Date) return v.toLocaleDateString();
+    return String(v);
+  }
+
+  function detailField(label, value) {
+    return `<div class="detail-item"><div class="l">${esc(label)}</div><div class="v">${esc(value || '—')}</div></div>`;
+  }
+
+  function openDetails(uid) {
+    const u = allUsers.find(x => x.uid === uid);
+    if (!u) return;
+    const body = document.getElementById('detailsModalBody');
+    body.innerHTML = `
+      <h3>${esc(u.fullName || 'N/A')}</h3>
+      <p>${esc(u.uid)}</p>
+      <div class="detail-section">Basics</div>
+      <div class="detail-grid">
+        ${detailField('Age / DOB', u.age)}
+        ${detailField('Gender', u.gender)}
+        ${detailField('Mobile', u.mobile)}
+        ${detailField('Email', u.email)}
+        ${detailField('Marital status', u.maritalStatus)}
+        ${detailField('Height (cm)', u.heightCm)}
+        ${detailField('Mother tongue', u.motherTongue)}
+        ${detailField('Education', u.education)}
+      </div>
+      <div class="detail-section">Community</div>
+      <div class="detail-grid">
+        ${detailField('Religion', u.religion)}
+        ${detailField('Category', u.category)}
+        ${detailField('Caste', u.caste)}
+        ${detailField('Gotra', u.gotra)}
+        ${detailField('Manglik', u.manglik)}
+        ${detailField('Rashi', u.rashi)}
+        ${detailField('Nakshatra', u.nakshatra)}
+        ${detailField('Income band', u.incomeBand)}
+      </div>
+      <div class="detail-section">Location & Work</div>
+      <div class="detail-grid">
+        ${detailField('Village', u.village)}
+        ${detailField('District', u.district)}
+        ${detailField('State', u.state)}
+        ${detailField('Occupation', u.occupation)}
+        ${detailField('Brothers', u.brothers)}
+        ${detailField('Sisters', u.sisters)}
+      </div>
+      <div class="detail-section">About</div>
+      <div class="detail-grid">
+        <div class="detail-item detail-full">${detailField('Family details', u.familyDetails)}</div>
+        <div class="detail-item detail-full">${detailField('Requirements', u.requirements)}</div>
+      </div>
+      <div class="detail-section">Account</div>
+      <div class="detail-grid">
+        ${detailField('Credits', Number(u.credits) || 0)}
+        ${detailField('Photos', (u.photoUrls || []).length + '/10')}
+        ${detailField('Photos private', u.photosPrivate ? 'Yes' : 'No')}
+        ${detailField('Verification status', u.verificationStatus)}
+        ${detailField('Boosted until', fmtDate(u.boostedUntil))}
+        ${detailField('Blocked users', (u.blockedUids || []).length)}
+        ${detailField('Referral code', u.referralCode)}
+        ${detailField('Joined', fmtDate(u.createdAt))}
+      </div>
+      <div class="modal-actions" style="margin-top:16px;">
+        <button class="btn btn-outline" onclick="closeModal('detailsModal')">Close</button>
+      </div>
+    `;
+    document.getElementById('detailsModal').style.display = 'flex';
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
   }
 
   function openGrantModal(uid, name) {
@@ -285,10 +439,6 @@
     document.getElementById('grantAmount').value = '';
     document.getElementById('grantLabel').value = '';
     document.getElementById('grantModal').style.display = 'flex';
-  }
-  function closeGrantModal() {
-    document.getElementById('grantModal').style.display = 'none';
-    grantTargetUid = null;
   }
 
   async function submitGrant() {
@@ -312,21 +462,30 @@
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       });
       showToast(`Granted ${amount} credits`);
-      closeGrantModal();
+      closeModal('grantModal');
     } catch (e) {
       showToast('Failed: ' + e.message);
     }
   }
 
   function downloadCsv() {
-    const headers = ['Full Name','DOB','Gender','Mobile','Email','Religion','Caste','Category','Location','Occupation','Verified','Verification Status','Credits'];
+    const headers = [
+      'Full Name','Age/DOB','Gender','Mobile','Email','Religion','Caste','Category','Gotra',
+      'Manglik','Rashi','Nakshatra','Village','District','State','Occupation','Education',
+      'Marital Status','Height (cm)','Mother Tongue','Income Band','Brothers','Sisters',
+      'Family Details','Requirements','Verified','Verification Status','Credits','Photos',
+      'Photos Private','Referral Code','Boosted Until','Joined','UID',
+    ];
     const escCsv = v => '"' + (v ?? '').toString().replace(/"/g, '""') + '"';
     const rows = [headers.map(escCsv).join(',')];
     allUsers.forEach(u => {
       rows.push([
-        u.fullName, u.dob, u.gender, u.mobile, u.email, u.religion, u.caste, u.category,
-        u.location || [u.village, u.district, u.state].filter(Boolean).join(', '),
-        u.occupation, u.isVerified ? 'Yes' : 'No', u.verificationStatus, u.credits || 0,
+        u.fullName, u.age, u.gender, u.mobile, u.email, u.religion, u.caste, u.category, u.gotra,
+        u.manglik, u.rashi, u.nakshatra, u.village, u.district, u.state, u.occupation, u.education,
+        u.maritalStatus, u.heightCm, u.motherTongue, u.incomeBand, u.brothers, u.sisters,
+        u.familyDetails, u.requirements, u.isVerified ? 'Yes' : 'No', u.verificationStatus,
+        u.credits || 0, (u.photoUrls || []).length, u.photosPrivate ? 'Yes' : 'No',
+        u.referralCode, fmtDate(u.boostedUntil), fmtDate(u.createdAt), u.uid,
       ].map(escCsv).join(','));
     });
     const blob = new Blob([rows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
