@@ -145,7 +145,7 @@ class ProfilePage extends StatelessWidget {
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Text(profile.fullName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white)),
                         const SizedBox(height: 2),
-                        Text('${profile.occupation} · ${profile.location}', style: const TextStyle(fontSize: 11, color: AppColors.ghost)),
+                        Text('${profile.occupation} · ${profile.location}', style: const TextStyle(fontSize: 11, color: Colors.white70)),
                         const SizedBox(height: 8),
                         Wrap(spacing: 6, children: [
                           if (profile.isVerified)
