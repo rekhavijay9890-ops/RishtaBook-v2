@@ -113,7 +113,8 @@ class ProfilePage extends StatelessWidget {
           return ListView(
             children: [
               Container(
-                decoration: const BoxDecoration(gradient: AppColors.headerGradient),
+                width: double.infinity,
+            decoration: const BoxDecoration(gradient: AppColors.headerGradient),
                 child: SafeArea(
                   bottom: false,
                   child: Padding(
