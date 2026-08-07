@@ -133,7 +133,8 @@ class _ChatPageState extends State<ChatPage> {
 
   Widget _header() {
     return Container(
-      decoration: const BoxDecoration(gradient: AppColors.headerGradient),
+      width: double.infinity,
+            decoration: const BoxDecoration(gradient: AppColors.headerGradient),
       child: SafeArea(
         bottom: false,
         child: Padding(

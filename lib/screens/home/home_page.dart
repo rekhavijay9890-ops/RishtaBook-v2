@@ -84,6 +84,7 @@ class _HomePageState extends State<HomePage> {
       body: Column(
         children: [
           Container(
+            width: double.infinity,
             decoration: const BoxDecoration(gradient: AppColors.headerGradient),
             child: SafeArea(
               bottom: false,
