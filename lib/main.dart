@@ -27,6 +27,16 @@ import 'models/user_profile.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // No screen in this app (bottom nav, forms, headers) is laid out
+  // responsively for landscape - e.g. the sign-in screen uses Spacers
+  // sized for portrait height and overflows once the viewport shrinks in
+  // landscape. Lock to portrait rather than chase every screen's overflow
+  // individually.
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
   // Most screens (the 5 root tabs especially) use a plain Container header
   // instead of a real AppBar, so AppTheme's appBarTheme.systemOverlayStyle
   // never applies to them - set the OS's own on-screen nav bar colour here
