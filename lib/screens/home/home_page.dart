@@ -14,6 +14,7 @@ import '../../services/matchmaking_service.dart';
 import '../../i18n/strings.dart';
 import '../../i18n/language_controller.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_text.dart';
 import '../../widgets/rb_section_label.dart';
 import '../../widgets/rb_stat_strip.dart';
 import '../../widgets/top_matches_carousel.dart';
@@ -37,6 +38,13 @@ class _HomePageState extends State<HomePage> {
   final Set<String> _liked = {};
 
   static const _filterOptions = ['Religion', 'Caste', 'City', 'Age', 'Education', 'Manglik'];
+
+  String _greetingKey() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'home.greeting.morning';
+    if (hour < 17) return 'home.greeting.afternoon';
+    return 'home.greeting.evening';
+  }
 
   Future<void> _sendInterest(BuildContext context, String myUid, UserProfile p) async {
     setState(() => _liked.add(p.uid));
@@ -193,6 +201,15 @@ class _HomePageState extends State<HomePage> {
                     return ListView(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                       children: [
+                        if (me != null && me.fullName.isNotEmpty) ...[
+                          Text(
+                            '${context.t(_greetingKey())}, ${me.fullName.split(' ').first} 👋',
+                            style: AppText.displayMedium,
+                          ),
+                          const SizedBox(height: 3),
+                          Text(context.t('home.greetingSub'), style: AppText.bodyMedium),
+                          const SizedBox(height: 14),
+                        ],
                         StreamBuilder<int>(
                           stream: _creditService.creditsStream(uid),
                           builder: (context, creditSnap) {
