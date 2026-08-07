@@ -106,7 +106,7 @@ class _AuthLandingScreenState extends State<AuthLandingScreen> {
                 child: const Icon(Icons.favorite, color: Colors.white, size: 42),
               ),
               const SizedBox(height: 14),
-              const Text("RishtaBook", style: TextStyle(fontSize: 32, fontWeight: FontWeight.w700, color: Colors.white, fontFamily: 'serif')),
+              const Text("RishtaBook", style: TextStyle(fontSize: 38, fontWeight: FontWeight.w800, color: Colors.white, fontFamily: 'serif', letterSpacing: 0.3)),
               const SizedBox(height: 4),
               Text(context.t('authLanding.welcome'), style: const TextStyle(fontSize: 14, color: Colors.white70)),
               const Spacer(flex: 4),
