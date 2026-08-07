@@ -5,6 +5,7 @@ import '../../models/user_profile.dart';
 import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/kundali_service.dart';
+import '../../services/credit_service.dart';
 import '../../i18n/strings.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text.dart';
@@ -220,6 +221,25 @@ class ProfilePage extends StatelessWidget {
                           style: const TextStyle(fontSize: 11, color: Color(0xFF8B6914)),
                         ),
                       ]),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity, height: 48,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.saffron),
+                      icon: const Icon(Icons.account_balance_wallet_outlined, color: Colors.white),
+                      label: StreamBuilder<int>(
+                        stream: CreditService().creditsStream(user.uid),
+                        builder: (context, creditSnap) {
+                          final credits = creditSnap.data ?? 0;
+                          return Text(
+                            '${context.t('wallet.title')} · $credits ${context.isHindi ? "क्रेडिट" : "credits"}',
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                          );
+                        },
+                      ),
+                      onPressed: () => Navigator.pushNamed(context, '/wallet'),
                     ),
                   ),
                   const SizedBox(height: 10),
