@@ -5,9 +5,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 
 import 'theme/app_theme.dart';
 import 'theme/app_colors.dart';
+import 'config/app_config.dart';
 import 'i18n/language_controller.dart';
 import 'services/auth_service.dart';
 import 'screens/auth/auth_landing_screen.dart';
@@ -44,6 +46,13 @@ void main() async {
       projectId: "rishtabook-60663",
       storageBucket: "rishtabook-60663.firebasestorage.app",
     ),
+  );
+
+  // Storage-only: profile photos live in Supabase Storage (see AppConfig
+  // doc), everything else (auth, all app data) stays on Firebase/Firestore.
+  await Supabase.initialize(
+    url: AppConfig.supabaseUrl,
+    anonKey: AppConfig.supabaseAnonKey,
   );
 
   // Not awaited: this is a network call to Google's ad SDK. It only needs

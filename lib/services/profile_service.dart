@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../config/app_config.dart';
 
 /// Reads/writes for the `users` collection - registration data,
 /// profile browsing, and the verification status fields.
@@ -74,20 +76,20 @@ class ProfileService {
     return _users.where('verificationStatus', isEqualTo: 'pending').snapshots();
   }
 
-  /// Uploads [file] to this user's own photo folder in Storage and appends
-  /// its download URL to `photoUrls` on the user doc. Throws if the user
-  /// already has [maxPhotos] photos - callers should disable the "add"
-  /// affordance at that point, this is the hard backstop.
+  /// Uploads [file] to this user's own photo folder in Supabase Storage
+  /// (see AppConfig doc - Storage-only swap off Firebase Storage) and
+  /// appends its public URL to `photoUrls` on the user doc. Throws if the
+  /// user already has [maxPhotos] photos - callers should disable the
+  /// "add" affordance at that point, this is the hard backstop.
   Future<String> uploadProfilePhoto(String uid, File file) async {
     final current = await currentPhotoUrls(uid);
     if (current.length >= maxPhotos) {
       throw StateError('Maximum $maxPhotos photos reached');
     }
-    final ref = FirebaseStorage.instance
-        .ref()
-        .child('profile_photos/$uid/${DateTime.now().millisecondsSinceEpoch}.jpg');
-    await ref.putFile(file);
-    final url = await ref.getDownloadURL();
+    final path = '$uid/${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final storage = Supabase.instance.client.storage.from(AppConfig.supabasePhotosBucket);
+    await storage.upload(path, file);
+    final url = storage.getPublicUrl(path);
     await _users.doc(uid).set({'photoUrls': FieldValue.arrayUnion([url])}, SetOptions(merge: true));
     return url;
   }
@@ -97,12 +99,18 @@ class ProfileService {
     return List<String>.from(doc.data()?['photoUrls'] ?? const []);
   }
 
-  /// Removes [url] from both Storage and the user's `photoUrls` array.
-  /// Best-effort on the Storage delete - an already-missing object (e.g.
-  /// deleted twice) shouldn't block clearing it from Firestore.
+  /// Removes [url] from both Supabase Storage and the user's `photoUrls`
+  /// array. Best-effort on the Storage delete - an already-missing object
+  /// (e.g. deleted twice, or a URL from before the Supabase swap) shouldn't
+  /// block clearing it from Firestore.
   Future<void> deleteProfilePhoto(String uid, String url) async {
     try {
-      await FirebaseStorage.instance.refFromURL(url).delete();
+      const marker = '/object/public/${AppConfig.supabasePhotosBucket}/';
+      final idx = url.indexOf(marker);
+      if (idx != -1) {
+        final path = url.substring(idx + marker.length);
+        await Supabase.instance.client.storage.from(AppConfig.supabasePhotosBucket).remove([path]);
+      }
     } catch (_) {}
     await _users.doc(uid).update({'photoUrls': FieldValue.arrayRemove([url])});
   }
