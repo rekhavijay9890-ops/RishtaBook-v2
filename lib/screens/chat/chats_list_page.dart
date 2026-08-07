@@ -72,6 +72,7 @@ class ChatsListPage extends StatelessWidget {
                             onTap: () => Navigator.pushNamed(context, '/chat', arguments: {
                               'matchId': match.id,
                               'otherUserName': name,
+                              'otherUserId': otherUid,
                               'currentUserId': uid,
                             }),
                           ),

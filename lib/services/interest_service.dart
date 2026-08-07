@@ -31,11 +31,15 @@ class InterestService {
 
   Future<bool> hasExistingInterest(String fromUid, String toUid) async {
     final forward = await _interests.doc(_interestId(fromUid, toUid)).get();
-    if (forward.exists && forward.data()?['status'] != 'rejected') return true;
+    if (forward.exists && !_reopenable(forward.data()?['status'])) return true;
     final backward = await _interests.doc(_interestId(toUid, fromUid)).get();
-    if (backward.exists && backward.data()?['status'] != 'rejected') return true;
+    if (backward.exists && !_reopenable(backward.data()?['status'])) return true;
     return false;
   }
+
+  /// 'rejected' and 'withdrawn' are both dead ends the original sender can
+  /// re-open by sending again - see sendInterest's doc comment.
+  bool _reopenable(Object? status) => status == 'rejected' || status == 'withdrawn';
 
   /// A previously rejected interest can be re-sent — this just resets the
   /// same document back to pending rather than blocking forever.
@@ -54,6 +58,14 @@ class InterestService {
       'createdAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
     await _notificationService.notifyInterestReceived(toUid, fromName: fromName);
+  }
+
+  /// Un-like: cancels an interest the caller sent that's still pending
+  /// (the receiver hasn't accepted/rejected it yet). A no-op if it's
+  /// already been responded to - see firestore.rules, which only allows
+  /// this transition from 'pending'.
+  Future<void> withdrawInterest(String fromUid, String toUid) {
+    return _interests.doc(_interestId(fromUid, toUid)).update({'status': 'withdrawn'});
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> receivedInterestsStream(String uid) {

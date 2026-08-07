@@ -42,6 +42,9 @@ service cloud.firestore {
           request.resource.data.credits == resource.data.credits + _referralBonusAmount())
       );
 
+      // Delete Account: only the account owner may delete their own doc.
+      allow delete: if request.auth != null && request.auth.uid == userId;
+
       match /transactions/{txnId} {
         allow read: if request.auth != null &&
           (request.auth.uid == userId || request.auth.token.email == "rekhavijay9890@gmail.com");
@@ -102,21 +105,31 @@ service cloud.firestore {
         && request.resource.data.fromUid != request.resource.data.toUid;
 
       // Only the receiver can accept/reject a pending interest (closes the
-      // self-accept hole), and only the original sender may reset a
-      // rejected interest back to pending to try again later.
+      // self-accept hole); the original sender may reset a rejected OR
+      // withdrawn interest back to pending to try again later, or withdraw
+      // (unlike) a still-pending one they sent.
       allow update: if request.auth != null &&
         request.resource.data.fromUid == resource.data.fromUid &&
         request.resource.data.toUid == resource.data.toUid &&
         (
           (request.auth.uid == resource.data.toUid && resource.data.status == 'pending') ||
-          (request.auth.uid == resource.data.fromUid && resource.data.status == 'rejected' &&
-            request.resource.data.status == 'pending')
+          (request.auth.uid == resource.data.fromUid &&
+            (resource.data.status == 'rejected' || resource.data.status == 'withdrawn') &&
+            request.resource.data.status == 'pending') ||
+          (request.auth.uid == resource.data.fromUid && resource.data.status == 'pending' &&
+            request.resource.data.status == 'withdrawn')
         );
     }
 
     match /matches/{matchId} {
+      // `resource == null` covers the "does a match exist yet" read a chat
+      // screen does before one has been created — without it, Firestore
+      // rejects the read with permission-denied (not "not found") since
+      // `resource.data` can't be evaluated on a null resource, which used
+      // to make the chat icon silently fail for any two people who haven't
+      // matched yet.
       allow read, update: if request.auth != null &&
-        request.auth.uid in resource.data.participants;
+        (resource == null || request.auth.uid in resource.data.participants);
 
       // A match may only be created once a mutual, accepted interest
       // exists between the same two participants — this is what actually

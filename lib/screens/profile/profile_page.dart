@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../models/user_profile.dart';
 import '../../services/auth_service.dart';
@@ -94,6 +95,42 @@ class ProfilePage extends StatelessWidget {
       // AuthGate reacts to the auth-state change on its own - no explicit
       // navigation needed here.
       await authService.signOut();
+    }
+
+    Future<void> deleteAccount() async {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(context.t('profile.deleteAccountTitle')),
+          content: Text(context.t('profile.deleteAccountConfirm')),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.t('common.cancel'))),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(context.t('profile.deleteAccountConfirmBtn')),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+      try {
+        await profileService.deleteAllUserData(user.uid);
+        await authService.deleteAccount();
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'requires-recent-login') {
+          await authService.signOut();
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('profile.deleteAccountReauth'))));
+          }
+          return;
+        }
+        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('common.error'))));
+      } catch (_) {
+        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('common.error'))));
+      }
+      // AuthGate reacts to the auth-state change on its own once the Auth
+      // account is actually gone - no explicit navigation needed here.
     }
 
     return Scaffold(
@@ -288,6 +325,16 @@ class ProfilePage extends StatelessWidget {
                       icon: const Icon(Icons.logout, color: Colors.white),
                       label: Text(context.t('common.logout'), style: const TextStyle(color: Colors.white)),
                       onPressed: logout,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity, height: 48,
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(foregroundColor: AppColors.error, side: const BorderSide(color: AppColors.error)),
+                      icon: const Icon(Icons.delete_forever_outlined, color: AppColors.error),
+                      label: Text(context.t('profile.deleteAccount')),
+                      onPressed: deleteAccount,
                     ),
                   ),
                 ]),
