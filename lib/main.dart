@@ -91,6 +91,17 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'RishtaBook',
       theme: AppTheme.light,
+      // Several screens' text styles (see AppText) sit as low as 9-13px,
+      // which reads as too small on real devices - especially since this
+      // app skews toward an older user base. Floor everyone at 1.15x
+      // regardless of the OS setting, while still letting a user's own
+      // "larger text" accessibility setting scale further (capped so
+      // layouts don't break at extreme system scales).
+      builder: (context, child) {
+        final mq = MediaQuery.of(context);
+        final scaler = mq.textScaler.clamp(minScaleFactor: 1.15, maxScaleFactor: 1.4);
+        return MediaQuery(data: mq.copyWith(textScaler: scaler), child: child!);
+      },
       home: const AuthGate(),
       onGenerateRoute: (settings) {
         switch (settings.name) {
