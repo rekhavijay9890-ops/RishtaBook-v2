@@ -188,7 +188,7 @@ class _WalletPageState extends State<WalletPage> {
                 final bought = txns.where((d) => d.data()['type'] == 'purchase').fold<int>(0, (a, d) => a + ((d.data()['delta'] as num?)?.toInt() ?? 0));
 
                 return ListView(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 32),
                   children: [
                     Row(children: [
                       _statTile('$chatsOpened', context.t('wallet.chatsOpened')),

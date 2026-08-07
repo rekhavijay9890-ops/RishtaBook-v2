@@ -335,7 +335,7 @@ class _SearchPageState extends State<SearchPage> {
                               MatchmakingService.score(b, myPrefs).compareTo(MatchmakingService.score(a, myPrefs)));
                         }
                         return ListView(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.fromLTRB(12, 12, 12, 32),
                           children: [
                             if (_hasFilters)
                               Padding(

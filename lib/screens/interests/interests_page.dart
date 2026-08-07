@@ -102,7 +102,7 @@ class _ReceivedList extends StatelessWidget {
           return Center(child: Text(context.t('interests.noneReceived'), style: const TextStyle(color: AppColors.muted)));
         }
         return ListView.separated(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 32),
           itemCount: interests.length,
           separatorBuilder: (_, __) => const SizedBox(height: 10),
           itemBuilder: (context, i) {
@@ -169,7 +169,7 @@ class _SentList extends StatelessWidget {
           return Center(child: Text(context.t('interests.noneSent'), style: const TextStyle(color: AppColors.muted)));
         }
         return ListView.separated(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 32),
           itemCount: interests.length,
           separatorBuilder: (_, __) => const SizedBox(height: 10),
           itemBuilder: (context, i) {

@@ -49,7 +49,7 @@ class KundaliPage extends StatelessWidget {
           return Column(children: [
             _header(context, me, other, result),
             Expanded(
-              child: ListView(padding: const EdgeInsets.all(12), children: [
+              child: ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 32), children: [
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.borderColor)),

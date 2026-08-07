@@ -376,7 +376,7 @@ const Map<String, Map<String, String>> _dict = {
   'partnerPref.entryButton':  {'hi': 'जीवनसाथी की पसंद सेट करें', 'en': 'Set Partner Preferences'},
 
   // ── Match score badge ──
-  'match.scoreLabel':  {'hi': '%s%% मेल', 'en': '%s%% Match'},
+  'match.scoreLabel':  {'hi': '%s% मेल', 'en': '%s% Match'},
   'match.sortByScore': {'hi': 'सर्वश्रेष्ठ मेल पहले', 'en': 'Best match first'},
   'match.title':       {'hi': 'मेल', 'en': 'Match'},
 
