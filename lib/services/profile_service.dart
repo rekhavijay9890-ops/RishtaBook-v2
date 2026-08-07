@@ -115,6 +115,28 @@ class ProfileService {
     await _users.doc(uid).update({'photoUrls': FieldValue.arrayRemove([url])});
   }
 
+  /// Best-effort cleanup of everything this app itself owns for [uid]
+  /// before the caller deletes the Firebase Auth account: Supabase Storage
+  /// photos, then the Firestore `users/{uid}` doc (subcollections like
+  /// transactions/notifications are left behind as orphaned data - Firestore
+  /// doesn't cascade-delete, and there's no Cloud Functions job in this
+  /// project to sweep them; harmless since nothing reads them once the
+  /// parent doc and the Auth account are both gone).
+  Future<void> deleteAllUserData(String uid) async {
+    final urls = await currentPhotoUrls(uid);
+    for (final url in urls) {
+      try {
+        const marker = '/object/public/${AppConfig.supabasePhotosBucket}/';
+        final idx = url.indexOf(marker);
+        if (idx != -1) {
+          final path = url.substring(idx + marker.length);
+          await Supabase.instance.client.storage.from(AppConfig.supabasePhotosBucket).remove([path]);
+        }
+      } catch (_) {}
+    }
+    await _users.doc(uid).delete();
+  }
+
   /// Reorders so [url] becomes the first (primary/display) photo.
   Future<void> setPrimaryPhoto(String uid, String url) async {
     final urls = await currentPhotoUrls(uid);

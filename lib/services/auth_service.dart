@@ -79,4 +79,19 @@ class AuthService {
     await _googleSignIn.signOut();
     await _auth.signOut();
   }
+
+  /// Deletes the signed-in Firebase Auth account itself - caller is
+  /// responsible for wiping the user's Firestore/Storage data FIRST (see
+  /// ProfileService.deleteAllUserData), since once this succeeds the user
+  /// is signed out and no longer has permission to touch their old data.
+  ///
+  /// Firebase requires a "recent" sign-in for account deletion. If the
+  /// session is stale, this throws FirebaseAuthException with code
+  /// 'requires-recent-login' - the caller should tell the user to log out,
+  /// log back in, and immediately retry rather than this method silently
+  /// re-prompting a provider-specific reauth flow.
+  Future<void> deleteAccount() async {
+    await _auth.currentUser?.delete();
+    await _googleSignIn.signOut();
+  }
 }

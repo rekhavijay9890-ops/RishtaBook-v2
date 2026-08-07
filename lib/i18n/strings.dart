@@ -155,6 +155,11 @@ const Map<String, Map<String, String>> _dict = {
   'profile.verifyDone':     {'hi': 'प्रोफ़ाइल सत्यापित', 'en': 'Profile verified'},
   'profile.requestVerify':  {'hi': 'सत्यापन अनुरोध करें', 'en': 'Request verification'},
   'profile.notFound':    {'hi': 'प्रोफ़ाइल डेटा नहीं मिला।', 'en': 'Profile data not found.'},
+  'profile.deleteAccount':        {'hi': 'खाता हटाएं', 'en': 'Delete Account'},
+  'profile.deleteAccountTitle':   {'hi': 'खाता हटाएं?', 'en': 'Delete account?'},
+  'profile.deleteAccountConfirm': {'hi': 'यह आपकी प्रोफ़ाइल, फ़ोटो और सभी डेटा स्थायी रूप से हटा देगा। इसे पूर्ववत नहीं किया जा सकता।', 'en': 'This permanently deletes your profile, photos, and all data. This cannot be undone.'},
+  'profile.deleteAccountConfirmBtn': {'hi': 'हाँ, हटाएं', 'en': 'Yes, delete'},
+  'profile.deleteAccountReauth':  {'hi': 'सुरक्षा कारणों से, कृपया दोबारा लॉग इन करें और तुरंत फिर से कोशिश करें।', 'en': 'For your security, please log back in and try again immediately after.'},
 
   // ── Referral / Invite & Earn ──
   'referral.ctaTitle':    {'hi': 'दोस्तों को आमंत्रित करें', 'en': 'Invite friends & earn'},

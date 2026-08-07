@@ -59,27 +59,44 @@ class _HomePageState extends State<HomePage> {
         }
       }
     } catch (_) {
+      if (context.mounted) setState(() => _liked.remove(p.uid));
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('common.error'))));
     }
   }
 
+  /// Un-like: withdraws the pending interest sent via _sendInterest above.
+  /// Silently ignored if the other side already responded (nothing left to
+  /// withdraw) - the heart just reflects whatever the real state ends up
+  /// being on the next rebuild.
+  Future<void> _withdrawInterest(BuildContext context, String myUid, UserProfile p) async {
+    setState(() => _liked.remove(p.uid));
+    try {
+      await InterestService().withdrawInterest(myUid, p.uid);
+    } catch (_) {}
+  }
+
   Future<void> _openChatOrPrompt(BuildContext context, UserProfile profile, String myUid) async {
-    final matchId = InterestService.matchIdFor(myUid, profile.uid);
-    final matchDoc = await FirebaseFirestore.instance.collection('matches').doc(matchId).get();
-    if (!context.mounted) return;
-    if (!matchDoc.exists) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(context.isHindi
-              ? 'रुचि स्वीकृत होने के बाद ही बातचीत खुलेगी।'
-              : 'Chat opens once your interest is mutually accepted.')));
-      return;
+    try {
+      final matchId = InterestService.matchIdFor(myUid, profile.uid);
+      final matchDoc = await FirebaseFirestore.instance.collection('matches').doc(matchId).get();
+      if (!context.mounted) return;
+      if (!matchDoc.exists) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(context.isHindi
+                ? 'रुचि स्वीकृत होने के बाद ही बातचीत खुलेगी।'
+                : 'Chat opens once your interest is mutually accepted.')));
+        return;
+      }
+      final otherName = profile.fullName;
+      Navigator.pushNamed(context, '/chat', arguments: {
+        'matchId': matchId,
+        'otherUserName': otherName,
+        'otherUserId': profile.uid,
+        'currentUserId': myUid,
+      });
+    } catch (_) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('common.error'))));
     }
-    final otherName = profile.fullName;
-    Navigator.pushNamed(context, '/chat', arguments: {
-      'matchId': matchId,
-      'otherUserName': otherName,
-      'currentUserId': myUid,
-    });
   }
 
   @override
@@ -301,7 +318,9 @@ class _HomePageState extends State<HomePage> {
                                 Navigator.pushNamed(context, '/kundali', arguments: {'otherUid': p.uid, 'otherName': p.fullName});
                               },
                               onChat: () => _openChatOrPrompt(context, p, uid),
-                              onLike: () => _sendInterest(context, uid, p),
+                              onLike: () => _liked.contains(p.uid)
+                                  ? _withdrawInterest(context, uid, p)
+                                  : _sendInterest(context, uid, p),
                             ),
                           );
                         }),

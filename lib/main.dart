@@ -124,6 +124,7 @@ class MyApp extends StatelessWidget {
               builder: (_) => ChatPage(
                 matchId: args['matchId'] as String,
                 otherUserName: args['otherUserName'] as String,
+                otherUserId: args['otherUserId'] as String,
                 currentUserId: args['currentUserId'] as String,
               ),
             );
