@@ -29,6 +29,7 @@ dependencies:
   google_mobile_ads: ^7.0.0
   video_player: ^2.9.2
   supabase_flutter: ^2.17.1
+  firebase_messaging: ^16.5.0
 
 dev_dependencies:
   flutter_test:

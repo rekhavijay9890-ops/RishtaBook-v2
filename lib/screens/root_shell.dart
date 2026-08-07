@@ -6,6 +6,7 @@ import '../services/auth_service.dart';
 import '../services/interest_service.dart';
 import '../services/chat_service.dart';
 import '../services/notification_service.dart';
+import '../services/push_service.dart';
 import 'home/home_page.dart';
 import 'search/search_page.dart';
 import 'interests/interests_page.dart';
@@ -28,6 +29,13 @@ class _RootShellState extends State<RootShell> {
   int _index = 0;
   final InterestService _interestService = InterestService();
   final ChatService _chatService = ChatService();
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = AuthService().currentUser?.uid;
+    if (uid != null) PushService().registerToken(uid);
+  }
 
   @override
   Widget build(BuildContext context) {

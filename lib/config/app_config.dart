@@ -39,4 +39,12 @@ class AppConfig {
   static const String supabaseAnonKey =
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvenFmZXJ2bmpzZHptZnl6dnlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxMDQxNjgsImV4cCI6MjEwMTY4MDE2OH0.3frmPMnXQYsc-9zRKIYEd6k-jqSw7iQLwzaKtObPAE4";
   static const String supabasePhotosBucket = "profile-photos";
+
+  /// Push notifications, same workaround as Storage: sending an FCM push
+  /// needs a server holding a Google service-account credential (never in
+  /// the client), which normally means a Firebase Cloud Function - blocked
+  /// by the same Blaze billing wall. This Supabase Edge Function does that
+  /// job instead, on Supabase's free tier. See supabase/functions/send-push.
+  static const String supabasePushFunctionUrl =
+      "$supabaseUrl/functions/v1/send-push";
 }
