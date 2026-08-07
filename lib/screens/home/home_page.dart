@@ -38,6 +38,23 @@ class _HomePageState extends State<HomePage> {
 
   static const _filterOptions = ['Religion', 'Caste', 'City', 'Age', 'Education', 'Manglik'];
 
+  Future<void> _sendInterest(BuildContext context, String myUid, UserProfile p) async {
+    setState(() => _liked.add(p.uid));
+    try {
+      final exists = await InterestService().hasExistingInterest(myUid, p.uid);
+      if (!exists) {
+        final myDoc = await _profileService.getUserProfile(myUid);
+        final myName = myDoc.data()?['fullName'] ?? 'Someone';
+        await InterestService().sendInterest(fromUid: myUid, fromName: myName, toUid: p.uid, toName: p.fullName);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${p.fullName} 💌'), backgroundColor: AppColors.success));
+        }
+      }
+    } catch (_) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('common.error'))));
+    }
+  }
+
   Future<void> _openChatOrPrompt(BuildContext context, UserProfile profile, String myUid) async {
     final matchId = InterestService.matchIdFor(myUid, profile.uid);
     final matchDoc = await FirebaseFirestore.instance.collection('matches').doc(matchId).get();
@@ -67,7 +84,7 @@ class _HomePageState extends State<HomePage> {
       body: Column(
         children: [
           Container(
-            color: AppColors.headerBg,
+            decoration: const BoxDecoration(gradient: AppColors.headerGradient),
             child: SafeArea(
               bottom: false,
               child: Column(
@@ -229,6 +246,7 @@ class _HomePageState extends State<HomePage> {
                                 matchScorePct: matchPct,
                                 blurred: p.photosPrivate && !matchedUids.contains(p.uid),
                                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ViewProfileScreen(profile: p, matchScorePct: matchPct, kundaliScore: score))),
+                                onSend: _liked.contains(p.uid) ? null : () => _sendInterest(context, uid, p),
                               );
                             }).toList(),
                           ),
@@ -265,22 +283,7 @@ class _HomePageState extends State<HomePage> {
                                 Navigator.pushNamed(context, '/kundali', arguments: {'otherUid': p.uid, 'otherName': p.fullName});
                               },
                               onChat: () => _openChatOrPrompt(context, p, uid),
-                              onLike: () async {
-                                setState(() => _liked.add(p.uid));
-                                try {
-                                  final exists = await InterestService().hasExistingInterest(uid, p.uid);
-                                  if (!exists) {
-                                    final myDoc = await _profileService.getUserProfile(uid);
-                                    final myName = myDoc.data()?['fullName'] ?? 'Someone';
-                                    await InterestService().sendInterest(fromUid: uid, fromName: myName, toUid: p.uid, toName: p.fullName);
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${p.fullName} 💌'), backgroundColor: AppColors.success));
-                                    }
-                                  }
-                                } catch (_) {
-                                  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('common.error'))));
-                                }
-                              },
+                              onLike: () => _sendInterest(context, uid, p),
                             ),
                           );
                         }),

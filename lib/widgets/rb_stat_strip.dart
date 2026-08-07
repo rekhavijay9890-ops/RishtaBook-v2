@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_text.dart';
 
 /// A row of small stat tiles (value + label) used to open Home and Wallet
 /// in a "dashboard" style - your own numbers before the browsing feed.
@@ -13,13 +12,14 @@ class RbStatStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        for (var i = 0; i < stats.length; i++) ...[
-          if (i > 0) const SizedBox(width: 8),
-          Expanded(child: _StatTile(stat: stats[i])),
-        ],
-      ],
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisSpacing: 10,
+      mainAxisSpacing: 10,
+      childAspectRatio: 2.4,
+      children: [for (final s in stats) _StatTile(stat: s)],
     );
   }
 }
@@ -46,10 +46,10 @@ class _StatTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.borderColor),
         ),
-        child: Column(children: [
-          Text(stat.value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.saffron)),
-          const SizedBox(height: 2),
-          Text(stat.label, textAlign: TextAlign.center, style: AppText.label),
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Text(stat.value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.saffron)),
+          const SizedBox(height: 4),
+          Text(stat.label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, color: AppColors.ghost)),
         ]),
       ),
     );
