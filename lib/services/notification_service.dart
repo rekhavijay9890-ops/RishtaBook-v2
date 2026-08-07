@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'push_service.dart';
+
 /// In-app notifications: `users/{uid}/notifications/{id}`. Client-driven
 /// like the rest of this app - whichever screen/service triggers an event
 /// (a message send, a profile view, a credit grant, an interest accept)
@@ -8,6 +10,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 /// owner-only.
 class NotificationService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final PushService _push = PushService();
 
   CollectionReference<Map<String, dynamic>> _notifs(String uid) =>
       _db.collection('users').doc(uid).collection('notifications');
@@ -19,6 +22,9 @@ class NotificationService {
     required String body,
     Map<String, dynamic> meta = const {},
   }) {
+    // Not awaited - a slow/unreachable push endpoint should never delay or
+    // fail the in-app notification write, which is the source of truth.
+    _push.sendPush(uid, title: title, body: body);
     return _notifs(uid).add({
       'type': type,
       'title': title,
