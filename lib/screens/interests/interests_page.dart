@@ -32,7 +32,7 @@ class _InterestsPageState extends State<InterestsPage> {
       body: Column(
         children: [
           Container(
-            color: AppColors.headerBg,
+            decoration: const BoxDecoration(gradient: AppColors.headerGradient),
             child: SafeArea(
               bottom: false,
               child: Column(

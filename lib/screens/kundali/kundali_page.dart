@@ -133,7 +133,7 @@ class KundaliPage extends StatelessWidget {
   }
 
   Widget _simpleHeader(BuildContext context) => Container(
-        color: AppColors.headerBg,
+        decoration: const BoxDecoration(gradient: AppColors.headerGradient),
         child: SafeArea(
           bottom: false,
           child: Padding(
@@ -149,7 +149,7 @@ class KundaliPage extends StatelessWidget {
 
   Widget _header(BuildContext context, UserProfile me, UserProfile other, GunaMilanResult result) {
     return Container(
-      color: AppColors.headerBg,
+      decoration: const BoxDecoration(gradient: AppColors.headerGradient),
       child: SafeArea(
         bottom: false,
         child: Padding(

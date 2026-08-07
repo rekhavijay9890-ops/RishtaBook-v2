@@ -148,7 +148,7 @@ class _WalletPageState extends State<WalletPage> {
       body: Column(
         children: [
           Container(
-            color: AppColors.headerBg,
+            decoration: const BoxDecoration(gradient: AppColors.headerGradient),
             child: SafeArea(
               bottom: false,
               child: Padding(

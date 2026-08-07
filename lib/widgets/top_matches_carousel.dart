@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../models/user_profile.dart';
 import '../theme/app_colors.dart';
+import '../i18n/strings.dart';
 import 'rb_avatar.dart';
 
 /// Horizontal-scroll strip of the top-ranked matches, shown above the full
 /// list on a "dashboard-first" Home page - the same ranked [entries] the
-/// full list below uses, just the first few in compact card form.
+/// full list below uses, just the first few in richer photo-forward cards.
 class TopMatchesCarousel extends StatelessWidget {
   final List<TopMatchEntry> entries;
   const TopMatchesCarousel({super.key, required this.entries});
@@ -14,7 +15,7 @@ class TopMatchesCarousel extends StatelessWidget {
   Widget build(BuildContext context) {
     if (entries.isEmpty) return const SizedBox.shrink();
     return SizedBox(
-      height: 128,
+      height: 232,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: entries.length,
@@ -30,7 +31,14 @@ class TopMatchEntry {
   final int matchScorePct;
   final bool blurred;
   final VoidCallback onTap;
-  const TopMatchEntry({required this.profile, required this.matchScorePct, required this.blurred, required this.onTap});
+  final VoidCallback? onSend;
+  const TopMatchEntry({
+    required this.profile,
+    required this.matchScorePct,
+    required this.blurred,
+    required this.onTap,
+    this.onSend,
+  });
 }
 
 class _TopMatchTile extends StatelessWidget {
@@ -44,25 +52,74 @@ class _TopMatchTile extends StatelessWidget {
     return GestureDetector(
       onTap: entry.onTap,
       child: Container(
-        width: 96,
-        padding: const EdgeInsets.all(10),
+        width: 176,
         decoration: BoxDecoration(
           color: AppColors.cardBg,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: AppColors.borderColor),
         ),
-        child: Column(children: [
-          RbAvatar(
-            initials: p.fullName.isNotEmpty ? p.fullName[0].toUpperCase() : '?',
-            size: 40,
-            color: color,
-            photoUrl: p.primaryPhotoUrl,
-            blurred: entry.blurred,
+        clipBehavior: Clip.antiAlias,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Stack(children: [
+            Container(
+              height: 108,
+              decoration: BoxDecoration(gradient: LinearGradient(
+                begin: Alignment.topLeft, end: Alignment.bottomRight,
+                colors: [AppColors.saffron, color],
+              )),
+              child: Center(
+                child: RbAvatar(
+                  initials: p.fullName.isNotEmpty ? p.fullName[0].toUpperCase() : '?',
+                  size: 52,
+                  color: color,
+                  photoUrl: p.primaryPhotoUrl,
+                  blurred: entry.blurred,
+                ),
+              ),
+            ),
+            if (p.isVerified)
+              Positioned(
+                top: 6, right: 6,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(color: AppColors.saffron, borderRadius: BorderRadius.circular(100)),
+                  child: Text(context.t('common.verified'), style: const TextStyle(fontSize: 8.5, fontWeight: FontWeight.w700, color: Colors.white)),
+                ),
+              ),
+          ]),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(p.fullName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.ink)),
+              const SizedBox(height: 2),
+              Text('${entry.matchScorePct}% ${context.t('match.title')}', style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: AppColors.saffron)),
+              const SizedBox(height: 8),
+              Row(children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: entry.onTap,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      side: const BorderSide(color: AppColors.saffron, width: 1.2),
+                      minimumSize: const Size(0, 30),
+                    ),
+                    child: const Text('View', style: TextStyle(fontSize: 10.5)),
+                  ),
+                ),
+                if (entry.onSend != null) ...[
+                  const SizedBox(width: 6),
+                  SizedBox(
+                    width: 34, height: 30,
+                    child: ElevatedButton(
+                      onPressed: entry.onSend,
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.saffron, padding: EdgeInsets.zero),
+                      child: const Text('💌', style: TextStyle(fontSize: 12)),
+                    ),
+                  ),
+                ],
+              ]),
+            ]),
           ),
-          const SizedBox(height: 6),
-          Text(p.fullName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.ink)),
-          const SizedBox(height: 2),
-          Text('${entry.matchScorePct}%', style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: AppColors.saffron)),
         ]),
       ),
     );
