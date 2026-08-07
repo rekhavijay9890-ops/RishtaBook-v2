@@ -154,7 +154,7 @@ class ProfilePage extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 32),
                 child: Column(children: [
                   _verificationBanner(context, profileService, profile, user.uid),
                   const SizedBox(height: 12),

@@ -49,7 +49,7 @@ class ChatsListPage extends StatelessWidget {
                   );
                 }
                 return ListView.separated(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 32),
                   itemCount: matches.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 8),
                   itemBuilder: (context, i) {

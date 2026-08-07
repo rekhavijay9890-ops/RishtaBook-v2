@@ -173,7 +173,7 @@ class _HomePageState extends State<HomePage> {
                     final restProfiles = profiles.skip(5).toList();
 
                     return ListView(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                       children: [
                         StreamBuilder<int>(
                           stream: _creditService.creditsStream(uid),

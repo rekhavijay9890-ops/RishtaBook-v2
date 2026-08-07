@@ -42,6 +42,7 @@ void main() async {
       appId: "1:838898779560:android:14edeacd3f6af2b853099d",
       messagingSenderId: "838898779560",
       projectId: "rishtabook-60663",
+      storageBucket: "rishtabook-60663.firebasestorage.app",
     ),
   );
 
