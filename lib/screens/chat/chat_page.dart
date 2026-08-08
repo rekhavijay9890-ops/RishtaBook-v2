@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 
 import '../../models/chat_message.dart';
 import '../../services/chat_service.dart';
@@ -106,9 +105,7 @@ class _ChatPageState extends State<ChatPage> {
       final XFile? picked = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70, maxWidth: 1200);
       if (picked == null) return;
       setState(() => _isSending = true);
-      final ref = FirebaseStorage.instance.ref().child('chat_images/${widget.matchId}/${DateTime.now().millisecondsSinceEpoch}.jpg');
-      await ref.putFile(File(picked.path));
-      final url = await ref.getDownloadURL();
+      final url = await _chatService.uploadChatImage(widget.currentUserId, File(picked.path));
       await _send(imageUrl: url);
     } catch (_) {
       if (mounted) {
