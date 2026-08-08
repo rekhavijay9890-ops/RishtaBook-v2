@@ -97,8 +97,14 @@ service cloud.firestore {
     }
 
     match /interests/{interestId} {
+      // `resource == null` (nonexistent doc) has to be allowed through here
+      // too - InterestService.hasExistingInterest .get()s an interest that,
+      // the FIRST time you ever like someone, doesn't exist yet. Without
+      // this, that read throws permission-denied (not "not found"), which
+      // aborted _sendInterest before it could actually write anything -
+      // the heart flipped liked then immediately reverted on every tap.
       allow read: if request.auth != null &&
-        (request.auth.uid == resource.data.fromUid || request.auth.uid == resource.data.toUid);
+        (resource == null || request.auth.uid == resource.data.fromUid || request.auth.uid == resource.data.toUid);
 
       allow create: if request.auth != null
         && request.auth.uid == request.resource.data.fromUid

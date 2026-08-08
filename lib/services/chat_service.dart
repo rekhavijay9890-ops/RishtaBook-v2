@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 
+import '../config/app_config.dart';
 import 'notification_service.dart';
 
 /// Messages inside a single match's chat thread:
@@ -10,6 +13,20 @@ class ChatService {
 
   CollectionReference<Map<String, dynamic>> _messages(String matchId) =>
       _db.collection('matches').doc(matchId).collection('messages');
+
+  /// Uploads a chat photo to Supabase Storage (same bucket + `{uid}/...`
+  /// path convention as ProfileService.uploadProfilePhoto - this app never
+  /// enabled Firebase Storage, see AppConfig's doc). Uploading under the
+  /// SENDER's own uid folder (not e.g. a matchId-keyed path) matters here:
+  /// whatever bucket policy already allows profile-photo uploads is almost
+  /// certainly scoped to "my own uid folder", so reusing that exact shape
+  /// avoids needing a second, separate Storage policy just for chat images.
+  Future<String> uploadChatImage(String senderUid, File file) async {
+    final path = '$senderUid/chat_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final storage = Supabase.instance.client.storage.from(AppConfig.supabasePhotosBucket);
+    await storage.upload(path, file);
+    return storage.getPublicUrl(path);
+  }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> messagesStream(String matchId) {
     return _messages(matchId).orderBy('sentAt', descending: false).snapshots();
