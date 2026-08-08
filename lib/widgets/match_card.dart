@@ -65,34 +65,49 @@ class _MatchCardState extends State<MatchCard> {
       clipBehavior: Clip.hardEdge,
       child: Column(
         children: [
-          InkWell(
-            onTap: widget.onOpen,
-            child: Padding(
-              padding: const EdgeInsets.all(13),
-              child: Row(
-                children: [
-                  RbAvatar(initials: widget.initials, size: 52, color: widget.accentColor, photoUrl: widget.photoUrl, blurred: widget.blurred),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          Padding(
+            padding: const EdgeInsets.all(13),
+            child: Row(
+              children: [
+                // The heart/chat buttons used to sit INSIDE this same
+                // InkWell's subtree (wrapping the whole Row) - taps on them
+                // were getting captured by this InkWell's onOpen instead of
+                // their own GestureDetectors, since Flutter's tap arena can
+                // resolve to either recognizer when one is nested directly
+                // inside the other. Restructured so onOpen's InkWell only
+                // wraps the avatar/name area, and the icon buttons are a
+                // sibling entirely outside its hit-test subtree - no more
+                // ambiguity about which handler a tap on them reaches.
+                Expanded(
+                  child: InkWell(
+                    onTap: widget.onOpen,
+                    child: Row(
                       children: [
-                        Text('${widget.name}', style: AppText.headingMedium, overflow: TextOverflow.ellipsis),
-                        const SizedBox(height: 2),
-                        Text('${widget.job} · ${widget.city}', style: AppText.bodySmall, overflow: TextOverflow.ellipsis),
-                        Text(widget.caste, style: AppText.caption, overflow: TextOverflow.ellipsis),
+                        RbAvatar(initials: widget.initials, size: 52, color: widget.accentColor, photoUrl: widget.photoUrl, blurred: widget.blurred),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('${widget.name}', style: AppText.headingMedium, overflow: TextOverflow.ellipsis),
+                              const SizedBox(height: 2),
+                              Text('${widget.job} · ${widget.city}', style: AppText.bodySmall, overflow: TextOverflow.ellipsis),
+                              Text(widget.caste, style: AppText.caption, overflow: TextOverflow.ellipsis),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  Column(
-                    children: [
-                      _iconBtn(icon: widget.liked ? '❤️' : '🤍', bg: widget.liked ? AppColors.roseLight : const Color(0xFFF5F0F4), onTap: widget.onLike),
-                      const SizedBox(height: 7),
-                      _iconBtn(icon: '💬', bg: AppColors.tealLight, onTap: widget.onChat),
-                    ],
-                  ),
-                ],
-              ),
+                ),
+                Column(
+                  children: [
+                    _iconBtn(icon: widget.liked ? '❤️' : '🤍', bg: widget.liked ? AppColors.roseLight : const Color(0xFFF5F0F4), onTap: widget.onLike),
+                    const SizedBox(height: 7),
+                    _iconBtn(icon: '💬', bg: AppColors.tealLight, onTap: widget.onChat),
+                  ],
+                ),
+              ],
             ),
           ),
           Container(
@@ -123,6 +138,7 @@ class _MatchCardState extends State<MatchCard> {
 
   Widget _iconBtn({required String icon, required Color bg, required VoidCallback onTap}) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
         width: 34,
