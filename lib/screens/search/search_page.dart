@@ -34,6 +34,33 @@ class _SearchPageState extends State<SearchPage> {
   bool _verifiedOnly = false;
   bool _nearMe = false;
 
+  /// Same gating as Home's chat icon: a chat only exists once there's a
+  /// mutual accepted interest. Previously this button just dumped the user
+  /// on '/root' regardless of whether a real conversation existed.
+  Future<void> _openChatOrPrompt(UserProfile profile) async {
+    final myUid = _authService.currentUser?.uid ?? '';
+    try {
+      final matchId = InterestService.matchIdFor(myUid, profile.uid);
+      final matchDoc = await FirebaseFirestore.instance.collection('matches').doc(matchId).get();
+      if (!context.mounted) return;
+      if (!matchDoc.exists) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(context.isHindi
+                ? 'रुचि स्वीकृत होने के बाद ही बातचीत खुलेगी।'
+                : 'Chat opens once your interest is mutually accepted.')));
+        return;
+      }
+      Navigator.pushNamed(context, '/chat', arguments: {
+        'matchId': matchId,
+        'otherUserName': profile.fullName,
+        'otherUserId': profile.uid,
+        'currentUserId': myUid,
+      });
+    } catch (_) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('common.error'))));
+    }
+  }
+
   bool get _hasFilters =>
       _religion != null || _category != null || _gender != null || _occupation != null ||
       _state != null || _motherTongue != null || _income != null;
@@ -371,7 +398,7 @@ class _SearchPageState extends State<SearchPage> {
                                     }
                                   },
                                   onOpen: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ViewProfileScreen(profile: results[i], matchScorePct: MatchmakingService.score(results[i], myPrefs)))),
-                                  onChat: () => Navigator.pushNamed(context, '/root'),
+                                  onChat: () => _openChatOrPrompt(results[i]),
                                 ),
                               ),
                           ],
@@ -408,54 +435,66 @@ class _ResultTile extends StatelessWidget {
     final color = profile.isFemale ? AppColors.rose : (profile.isMale ? AppColors.teal : AppColors.saffron);
     return Opacity(
       opacity: locked ? 0.7 : 1,
-      child: GestureDetector(
-        onTap: locked ? null : onOpen,
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.borderColor)),
-          child: Row(children: [
-            locked
-                ? Container(width: 46, height: 46, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.borderColor), child: const Center(child: Text('🔒', style: TextStyle(fontSize: 20))))
-                : RbAvatar(initials: profile.fullName.isNotEmpty ? profile.fullName[0].toUpperCase() : '?', size: 46, color: color, photoUrl: profile.primaryPhotoUrl, blurred: blurred),
-            const SizedBox(width: 10),
-            Expanded(
-              child: locked
-                  ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(context.t('search.hidden'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.muted)),
-                      const SizedBox(height: 2),
-                      Text(context.t('search.unlockHint'), style: AppText.caption),
-                    ])
-                  : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(profile.fullName, style: AppText.headingMedium, overflow: TextOverflow.ellipsis),
-                      const SizedBox(height: 1),
-                      Text('${profile.occupation} · ${profile.location}', style: AppText.bodySmall, overflow: TextOverflow.ellipsis),
-                      const SizedBox(height: 5),
-                      Wrap(spacing: 5, children: [
-                        RbBadge(text: context.t('match.scoreLabel', ['$matchScorePct']), color: AppColors.saffron),
-                        if (profile.isBoosted) RbBadge(text: '🚀 ${context.t('wallet.boostBadge')}', color: AppColors.rose),
-                        if (profile.isVerified) RbBadge(text: context.t('common.verified'), color: AppColors.teal),
-                      ]),
-                    ]),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.borderColor)),
+        child: Row(children: [
+          // The trailing Unlock/chat button used to be nested INSIDE this
+          // same tile's open-profile GestureDetector (which wrapped the
+          // whole Row) - same bug as MatchCard had: taps on it landed on
+          // onOpen instead of onUnlock/onChat. Scoped the open-profile
+          // GestureDetector to just the avatar/text area so the trailing
+          // button is a true sibling outside its hit-test subtree.
+          Expanded(
+            child: GestureDetector(
+              onTap: locked ? null : onOpen,
+              child: Row(children: [
+                locked
+                    ? Container(width: 46, height: 46, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.borderColor), child: const Center(child: Text('🔒', style: TextStyle(fontSize: 20))))
+                    : RbAvatar(initials: profile.fullName.isNotEmpty ? profile.fullName[0].toUpperCase() : '?', size: 46, color: color, photoUrl: profile.primaryPhotoUrl, blurred: blurred),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: locked
+                      ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(context.t('search.hidden'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.muted)),
+                          const SizedBox(height: 2),
+                          Text(context.t('search.unlockHint'), style: AppText.caption),
+                        ])
+                      : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(profile.fullName, style: AppText.headingMedium, overflow: TextOverflow.ellipsis),
+                          const SizedBox(height: 1),
+                          Text('${profile.occupation} · ${profile.location}', style: AppText.bodySmall, overflow: TextOverflow.ellipsis),
+                          const SizedBox(height: 5),
+                          Wrap(spacing: 5, children: [
+                            RbBadge(text: context.t('match.scoreLabel', ['$matchScorePct']), color: AppColors.saffron),
+                            if (profile.isBoosted) RbBadge(text: '🚀 ${context.t('wallet.boostBadge')}', color: AppColors.rose),
+                            if (profile.isVerified) RbBadge(text: context.t('common.verified'), color: AppColors.teal),
+                          ]),
+                        ]),
+                ),
+              ]),
             ),
-            locked
-                ? GestureDetector(
-                    onTap: onUnlock,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(color: AppColors.saffron, borderRadius: BorderRadius.circular(100)),
-                      child: Text(context.t('search.unlock'), style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w700)),
-                    ),
-                  )
-                : GestureDetector(
-                    onTap: onChat,
-                    child: Container(
-                      width: 32, height: 32,
-                      decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.tealLight),
-                      child: const Center(child: Text('💬', style: TextStyle(fontSize: 14))),
-                    ),
+          ),
+          locked
+              ? GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onUnlock,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(color: AppColors.saffron, borderRadius: BorderRadius.circular(100)),
+                    child: Text(context.t('search.unlock'), style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w700)),
                   ),
-          ]),
-        ),
+                )
+              : GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onChat,
+                  child: Container(
+                    width: 32, height: 32,
+                    decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.tealLight),
+                    child: const Center(child: Text('💬', style: TextStyle(fontSize: 14))),
+                  ),
+                ),
+        ]),
       ),
     );
   }
