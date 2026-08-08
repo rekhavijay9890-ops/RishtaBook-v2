@@ -9,12 +9,14 @@ import 'notification_service.dart';
 /// ledger so the balance is always reconstructable and auditable.
 ///
 /// SECURITY NOTE: every credit/debit here is a plain client-side Firestore
-/// write, matching the rest of this app's 100%-client-driven architecture.
-/// For a production launch, purchase grants (see [completePurchase]) must
-/// move behind a Cloud Function that verifies the Razorpay payment
-/// signature server-side before crediting — a client can otherwise call
-/// this method directly without ever paying. Spend paths (chat/profile
-/// unlock) are reasonably safe since they only ever decrement.
+/// write, matching the rest of this app's 100%-client-driven architecture -
+/// EXCEPT purchases, which is exactly the one path real money changes hands
+/// on. That grant now happens server-side only, in
+/// supabase/functions/razorpay-webhook, triggered by Razorpay's own
+/// `payment.captured` webhook (signature-verified) rather than trusted from
+/// the client - see that function's doc comment for the full flow. Spend
+/// paths (chat/profile unlock) stay client-side since they only ever
+/// decrement, so there's nothing to gain by tampering with them.
 class CreditService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
@@ -211,11 +213,6 @@ class CreditService {
     });
   }
 
-  /// Called after the Razorpay checkout success callback. See the class-level
-  /// SECURITY NOTE — this trusts the client, which is fine for development
-  /// but must be replaced by a verified server-side grant before launch.
-  Future<void> completePurchase(String uid, {required int credits, required String label}) =>
-      grant(uid, amount: credits, type: 'purchase', label: label);
 
   String _todayKey() {
     final n = DateTime.now().toUtc();

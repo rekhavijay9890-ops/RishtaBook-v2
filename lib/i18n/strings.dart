@@ -112,7 +112,7 @@ const Map<String, Map<String, String>> _dict = {
   'wallet.txn.purchase':   {'hi': 'पैक खरीदा गया', 'en': 'Pack purchased'},
   'wallet.txn.signupBonus':{'hi': 'स्वागत बोनस', 'en': 'Welcome bonus'},
   'wallet.txn.adReward':   {'hi': 'विज्ञापन देखा गया', 'en': 'Watched ad'},
-  'wallet.paymentSuccess': {'hi': 'भुगतान सफल! क्रेडिट जुड़ गए।', 'en': 'Payment successful! Credits added.'},
+  'wallet.paymentSuccess': {'hi': 'भुगतान सफल! क्रेडिट कुछ ही पलों में जुड़ जाएंगे।', 'en': 'Payment successful! Credits will appear in a few moments.'},
   'wallet.paymentFailed':  {'hi': 'भुगतान असफल रहा।', 'en': 'Payment failed.'},
   'wallet.watchAd':        {'hi': 'विज्ञापन देखें और क्रेडिट कमाएँ', 'en': 'Watch an ad, earn credits'},
   'wallet.watchAdDesc':    {'hi': 'हर विज्ञापन पर %d क्रेडिट · आज %d/%d बचे', 'en': '%d credits per ad · %d/%d left today'},

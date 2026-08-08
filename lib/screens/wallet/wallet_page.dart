@@ -106,14 +106,14 @@ class _WalletPageState extends State<WalletPage> {
     );
   }
 
-  void _onPaymentSuccess(PaymentSuccessResponse response) async {
-    if (_selected == null) return;
-    final pack = CreditPack.all[_selected!];
-    final uid = _authService.currentUser?.uid ?? '';
-    // See CreditService.completePurchase's doc — this trusts the client
-    // success callback; production needs a Cloud Function verifying the
-    // Razorpay payment signature before granting credits.
-    await _creditService.completePurchase(uid, credits: pack.credits, label: '${pack.priceLabel} pack');
+  void _onPaymentSuccess(PaymentSuccessResponse response) {
+    // Credits are NOT granted here - see supabase/functions/razorpay-webhook
+    // and CreditService's class doc. This callback just confirms the
+    // checkout UI closed successfully; the actual grant comes from
+    // Razorpay's own server-to-server webhook once it independently
+    // verifies the payment, which the creditsStream/transactionsStream
+    // StreamBuilders below will reflect the moment it lands (typically a
+    // few seconds).
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('wallet.paymentSuccess')), backgroundColor: AppColors.success));
       setState(() => _selected = null);
@@ -125,6 +125,7 @@ class _WalletPageState extends State<WalletPage> {
   }
 
   void _pay(CreditPack pack) {
+    final uid = _authService.currentUser?.uid ?? '';
     final email = _authService.currentUser?.email ?? '';
     final options = {
       'key': AppConfig.razorpayKeyId,
@@ -132,6 +133,12 @@ class _WalletPageState extends State<WalletPage> {
       'name': 'RishtaBook',
       'description': '${pack.credits} credits',
       'prefill': {'email': email},
+      // Read by supabase/functions/razorpay-webhook once Razorpay confirms
+      // this payment - it's the only way that server-side function knows
+      // who to credit and by how much, since it never talks to this app
+      // directly. Razorpay echoes `notes` back verbatim on every payment
+      // object, including in the webhook payload.
+      'notes': {'uid': uid, 'credits': '${pack.credits}', 'label': '${pack.priceLabel} pack'},
     };
     try {
       _razorpay.open(options);
