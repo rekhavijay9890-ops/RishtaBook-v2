@@ -8,7 +8,13 @@ plugins {
 android {
     namespace = "com.example.rishtabook"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // Deliberately NOT setting ndkVersion = flutter.ndkVersion here. This app
+    // has no native/C++ code, but pinning an explicit ndkVersion makes AGP
+    // eagerly resolve (and auto-download, if missing) that exact NDK release
+    // during project configuration - regardless of whether anything actually
+    // needs it. Leaving it unset lets AGP skip NDK resolution entirely on
+    // build environments where the NDK isn't already present or can't be
+    // downloaded (e.g. disk-constrained machines).
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
