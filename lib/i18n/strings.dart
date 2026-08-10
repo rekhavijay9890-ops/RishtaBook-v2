@@ -441,6 +441,7 @@ const Map<String, Map<String, String>> _dict = {
   'wallet.boostCta':       {'hi': 'बूस्ट करें', 'en': 'Boost'},
   'wallet.boostBadge':     {'hi': 'बूस्टेड', 'en': 'Boosted'},
   'wallet.boostActive':    {'hi': 'आपकी प्रोफ़ाइल बूस्टेड है', 'en': 'Your profile is boosted'},
+  'wallet.boostActiveUntil': {'hi': 'बूस्टेड · %s', 'en': 'Boosted · %s'},
   'wallet.boostSuccess':   {'hi': 'प्रोफ़ाइल बूस्ट हो गई!', 'en': 'Profile boosted!'},
 
   // ── Astrologer consultation ──
