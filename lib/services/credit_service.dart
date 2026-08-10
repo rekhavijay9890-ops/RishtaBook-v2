@@ -61,6 +61,16 @@ class CreditService {
     return _txns(uid).orderBy('createdAt', descending: true).limit(limit).snapshots();
   }
 
+  /// Unlimited (well, generously capped) transaction stream for computing
+  /// LIFETIME aggregates (Wallet's Chats Opened/Earned/Bought stat tiles).
+  /// Deliberately separate from [transactionsStream] - that one is limited
+  /// to a small page for the on-screen History list, and deriving lifetime
+  /// totals from it silently under-counts for anyone with more than
+  /// [transactionsStream]'s limit worth of history.
+  Stream<QuerySnapshot<Map<String, dynamic>>> allTransactionsStream(String uid) {
+    return _txns(uid).orderBy('createdAt', descending: true).limit(5000).snapshots();
+  }
+
   Future<void> _logTxn(String uid, {required String type, required int delta, required String label}) {
     return _txns(uid).add({
       'type': type,

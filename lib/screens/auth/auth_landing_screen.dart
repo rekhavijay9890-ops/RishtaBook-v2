@@ -44,7 +44,12 @@ class _AuthLandingScreenState extends State<AuthLandingScreen> {
           'email': userCredential.user!.email ?? '',
           'verificationStatus': 'none',
           'isVerified': false,
-          'credits': CreditService.signupBonus,
+          // NOT 'credits: signupBonus' here - grantSignupBonus below both
+          // credits the balance AND logs the matching transaction ledger
+          // entry; setting it here too silently doubled every new user's
+          // welcome bonus and left the balance out of sync with their
+          // visible transaction history.
+          'credits': 0,
           'createdAt': DateTime.now(),
           'referralCode': CreditService.generateReferralCode(),
         });

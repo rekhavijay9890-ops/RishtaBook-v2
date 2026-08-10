@@ -50,7 +50,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         'email': '',
         'verificationStatus': 'none',
         'isVerified': false,
-        'credits': CreditService.signupBonus,
+        // See AuthLandingScreen's identical comment - grantSignupBonus
+        // below is what actually credits + logs the welcome bonus.
+        'credits': 0,
         'createdAt': DateTime.now(),
         'referralCode': CreditService.generateReferralCode(),
       });

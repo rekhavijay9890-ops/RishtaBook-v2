@@ -191,18 +191,27 @@ class _WalletPageState extends State<WalletPage> {
               stream: _creditService.transactionsStream(uid),
               builder: (context, txnSnap) {
                 final txns = txnSnap.data?.docs ?? [];
-                final chatsOpened = txns.where((d) => d.data()['type'] == 'chat_opened').length;
-                final earned = txns.where((d) => d.data()['type'] == 'referral').fold<int>(0, (a, d) => a + ((d.data()['delta'] as num?)?.toInt() ?? 0));
-                final bought = txns.where((d) => d.data()['type'] == 'purchase').fold<int>(0, (a, d) => a + ((d.data()['delta'] as num?)?.toInt() ?? 0));
 
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(12, 12, 12, 32),
                   children: [
-                    Row(children: [
-                      _statTile('$chatsOpened', context.t('wallet.chatsOpened')),
-                      _statTile('$earned', context.t('wallet.earned')),
-                      _statTile('$bought', context.t('wallet.totalBought')),
-                    ]),
+                    // Lifetime totals need the FULL transaction history, not
+                    // just the recent page fetched for the list below - see
+                    // CreditService.allTransactionsStream's doc comment.
+                    StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                      stream: _creditService.allTransactionsStream(uid),
+                      builder: (context, allTxnSnap) {
+                        final allTxns = allTxnSnap.data?.docs ?? [];
+                        final chatsOpened = allTxns.where((d) => d.data()['type'] == 'chat_opened').length;
+                        final earned = allTxns.where((d) => d.data()['type'] == 'referral').fold<int>(0, (a, d) => a + ((d.data()['delta'] as num?)?.toInt() ?? 0));
+                        final bought = allTxns.where((d) => d.data()['type'] == 'purchase').fold<int>(0, (a, d) => a + ((d.data()['delta'] as num?)?.toInt() ?? 0));
+                        return Row(children: [
+                          _statTile('$chatsOpened', context.t('wallet.chatsOpened')),
+                          _statTile('$earned', context.t('wallet.earned')),
+                          _statTile('$bought', context.t('wallet.totalBought')),
+                        ]);
+                      },
+                    ),
                     const SizedBox(height: 18),
                     RbSectionLabel(title: context.t('wallet.buyCredits')),
                     ...CreditPack.all.asMap().entries.map((e) {
@@ -298,6 +307,7 @@ class _WalletPageState extends State<WalletPage> {
                       builder: (context, meSnap) {
                         final me = meSnap.data?.data() != null ? UserProfile.fromMap(uid, meSnap.data!.data()!) : null;
                         final boosted = me?.isBoosted ?? false;
+                        final boostedUntil = me?.boostedUntil;
                         return Container(
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
@@ -312,7 +322,9 @@ class _WalletPageState extends State<WalletPage> {
                               Text(context.t('wallet.boostTitle'), style: AppText.headingSmall),
                               const SizedBox(height: 2),
                               Text(
-                                boosted ? context.t('wallet.boostActive') : context.t('wallet.boostDesc', [CreditService.boostCost]),
+                                boosted && boostedUntil != null
+                                    ? context.t('wallet.boostActiveUntil', [_formatBoostRemaining(context, boostedUntil)])
+                                    : (boosted ? context.t('wallet.boostActive') : context.t('wallet.boostDesc', [CreditService.boostCost])),
                                 style: AppText.caption,
                               ),
                             ])),
@@ -403,6 +415,15 @@ class _WalletPageState extends State<WalletPage> {
         ],
       ),
     );
+  }
+
+  String _formatBoostRemaining(BuildContext context, DateTime until) {
+    final remaining = until.difference(DateTime.now());
+    if (remaining.inHours >= 1) {
+      return context.isHindi ? '${remaining.inHours} घंटे बाकी' : '${remaining.inHours}h left';
+    }
+    final minutes = remaining.inMinutes.clamp(1, 59);
+    return context.isHindi ? '$minutes मिनट बाकी' : '${minutes}m left';
   }
 
   Widget _statTile(String n, String l) => Expanded(
