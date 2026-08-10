@@ -54,6 +54,19 @@ android {
             signingConfig = signingConfigs.debug
         }
     }
+
+    packagingOptions {
+        jniLibs {
+            // This app has no native/C++ code of its own - the only reason
+            // AGP wants the NDK at all is to strip debug symbols from the
+            // prebuilt .so libraries that dependencies (Firebase etc.) ship.
+            // Skipping that stripping step removes the NDK requirement
+            // entirely, which matters on disk/bandwidth-constrained build
+            // machines where downloading the multi-hundred-MB NDK package
+            // isn't practical for a debug build.
+            keepDebugSymbols += ["**/*.so"]
+        }
+    }
 }
 
 flutter {
