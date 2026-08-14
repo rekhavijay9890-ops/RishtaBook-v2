@@ -139,13 +139,20 @@ Deno.serve(async (req: Request) => {
 
     const payment = body.payload?.payment?.entity;
     const uid = payment?.notes?.uid as string | undefined;
-    const credits = parseInt(payment?.notes?.credits ?? '', 10);
     const label = (payment?.notes?.label as string | undefined) ?? 'Credit purchase';
     const paymentId = payment?.id as string | undefined;
+    // `amount` is in paise and, unlike `notes`, is set by Razorpay itself
+    // from what was actually captured - the client can't forge it. Credits
+    // are computed from THIS, not from notes.credits, so a tampered app
+    // build can no longer claim more credits than it actually paid for.
+    // CREDITS_PER_RUPEE must match CreditService.creditsPerRupee in the app.
+    const CREDITS_PER_RUPEE = 1;
+    const amountPaise = payment?.amount as number | undefined;
+    const credits = typeof amountPaise === 'number' ? Math.floor((amountPaise / 100) * CREDITS_PER_RUPEE) : NaN;
 
     if (!uid || !paymentId || !Number.isFinite(credits) || credits <= 0) {
-      // Malformed notes - nothing sane to credit. Don't retry forever.
-      return new Response(JSON.stringify({ error: 'missing uid/credits/paymentId in payment notes' }), {
+      // Malformed notes/amount - nothing sane to credit. Don't retry forever.
+      return new Response(JSON.stringify({ error: 'missing uid/amount/paymentId on payment' }), {
         status: 200,
         headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
       });
