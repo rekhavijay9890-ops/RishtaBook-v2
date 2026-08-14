@@ -19,7 +19,22 @@ class AppConfig {
   /// needs server-side signature verification before this goes anywhere
   /// near real money. Switch to a live key only once ready to charge real
   /// cards, and only after that server-side verification exists.
+  ///
+  /// NOT currently wired into the live Wallet flow - the Razorpay business
+  /// account isn't approved yet (matrimonial/dating is a broadly-restricted
+  /// merchant category for Indian payment gateways). Kept here, unused, so
+  /// re-enabling it later is just re-wiring WalletPage._pay, not rebuilding
+  /// this from scratch. See ManualTopupService for the active payment path.
   static const String razorpayKeyId = "rzp_test_TKnAAwgRET7i6X";
+
+  /// UPI ID credits get manually verified against while no automated
+  /// payment gateway is active. See ManualTopupService's class doc for the
+  /// full flow: user pays this VPA directly via their own UPI app, submits
+  /// the transaction reference, and an admin approves it from the Admin
+  /// screen - the approval is what actually grants credits, never the
+  /// submission itself.
+  static const String upiId = "9721971508@ibl";
+  static const String upiPayeeName = "Rishtabook";
 
   /// TODO: replace with your own AdMob rewarded ad unit id once you have an
   /// AdMob account — this is Google's public TEST rewarded ad unit id, safe
