@@ -134,7 +134,23 @@ class ProfileService {
         }
       } catch (_) {}
     }
+    // Firestore never cascade-deletes subcollections when the parent doc
+    // is deleted - without this, every "deleted" account's transaction
+    // ledger and referral-invite log were silently orphaned forever
+    // instead of actually being removed.
+    await _deleteSubcollection(_users.doc(uid).collection('transactions'));
+    await _deleteSubcollection(_users.doc(uid).collection('referralInvites'));
     await _users.doc(uid).delete();
+  }
+
+  Future<void> _deleteSubcollection(CollectionReference<Map<String, dynamic>> collection) async {
+    final snap = await collection.get();
+    if (snap.docs.isEmpty) return;
+    final batch = _db.batch();
+    for (final doc in snap.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
   }
 
   /// Reorders so [url] becomes the first (primary/display) photo.

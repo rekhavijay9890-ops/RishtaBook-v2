@@ -53,6 +53,12 @@ service cloud.firestore {
           request.auth.token.email == "rekhavijay9890@gmail.com" ||
           (request.resource.data.type == 'referral' && request.resource.data.delta == _referralBonusAmount())
         );
+        // Needed for ProfileService.deleteAllUserData - Firestore never
+        // cascade-deletes subcollections when the parent users/{userId}
+        // doc is deleted, so without this, every deleted account's
+        // transaction ledger was silently orphaned forever instead of
+        // actually being removed.
+        allow delete: if request.auth != null && request.auth.uid == userId;
       }
 
       // A user's own log of "friends I've invited by mobile number" - see
@@ -67,6 +73,8 @@ service cloud.firestore {
           resource.data.status == 'invited' &&
           request.resource.data.status == 'completed' &&
           request.resource.data.phone == resource.data.phone;
+        // See the matching comment on transactions/{txnId} above.
+        allow delete: if request.auth != null && request.auth.uid == userId;
       }
 
       // In-app notifications (credit added, profile viewed, new message,
