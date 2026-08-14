@@ -30,6 +30,15 @@ class CreditService {
   static const int boostCost = 50;
   static const Duration boostDuration = Duration(hours: 24);
 
+  /// Flat top-up rate for the Wallet's free-form "Add Money" flow (any
+  /// amount, no fixed packs) - kept as a single named constant because
+  /// supabase/functions/razorpay-webhook/index.ts computes credits
+  /// independently from the SAME rate applied to Razorpay's own verified
+  /// payment amount, rather than trusting a client-supplied credit count.
+  /// Keep these two in sync if this ever changes.
+  static const int creditsPerRupee = 1;
+  static const int minTopUpRupees = 10;
+
   DocumentReference<Map<String, dynamic>> _userDoc(String uid) => _db.collection('users').doc(uid);
 
   CollectionReference<Map<String, dynamic>> _txns(String uid) => _userDoc(uid).collection('transactions');
