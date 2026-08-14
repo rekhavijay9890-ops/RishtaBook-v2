@@ -7,7 +7,7 @@ class AppConfig {
   AppConfig._();
 
   static const List<String> adminEmails = [
-    "admin@rishtabook.online", // TODO: replace with your real admin email(s)
+    "rekhavijay9890@gmail.com",
   ];
 
   static bool isAdmin(String? email) =>
