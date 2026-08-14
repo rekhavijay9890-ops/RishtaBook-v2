@@ -101,6 +101,7 @@ const Map<String, Map<String, String>> _dict = {
   'wallet.earned':         {'hi': 'रेफ़रल से कमाया', 'en': 'Earned (referral)'},
   'wallet.totalBought':    {'hi': 'कुल खरीदे', 'en': 'Total bought'},
   'wallet.buyCredits':     {'hi': 'क्रेडिट खरीदें · UPI / Razorpay', 'en': 'Buy credits · UPI / Razorpay'},
+  'wallet.addMoney':       {'hi': '+ पैसे जोड़ें', 'en': '+ Add Money'},
   'wallet.mostPopular':    {'hi': '★ सबसे लोकप्रिय', 'en': '★ Most popular'},
   'wallet.payVia':         {'hi': '%s का भुगतान करें (UPI / Razorpay) →', 'en': 'Pay %s via UPI / Razorpay →'},
   'wallet.referTitle':     {'hi': 'रेफ़र करें और मुफ़्त क्रेडिट पाएँ', 'en': 'Refer and earn free credits'},
