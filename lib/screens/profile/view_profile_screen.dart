@@ -185,6 +185,22 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
               ],
             ],
           ),
+          if (profile.isFamilyManaged) ...[
+            const SizedBox(height: 6),
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: kBrandColor.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(100),
+                ),
+                child: Text(
+                  context.t('viewProfile.managedBy', [context.t('completeProfile.managedBy.${profile.managedBy}')]),
+                  style: const TextStyle(fontSize: 11.5, color: kBrandColor, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ],
           if (widget.matchScorePct != null || widget.kundaliScore != null || profile.isVerified) ...[
             const SizedBox(height: 16),
             Row(children: [

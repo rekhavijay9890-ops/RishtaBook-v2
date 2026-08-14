@@ -43,6 +43,16 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   String _education = '';
   final _motherTongueController = TextEditingController();
   String _incomeBand = '';
+  String _managedBy = 'self';
+
+  static const _managedByOptions = [
+    ('self', 'completeProfile.managedBy.self'),
+    ('father', 'completeProfile.managedBy.father'),
+    ('mother', 'completeProfile.managedBy.mother'),
+    ('sibling', 'completeProfile.managedBy.sibling'),
+    ('relative', 'completeProfile.managedBy.relative'),
+    ('friend', 'completeProfile.managedBy.friend'),
+  ];
 
   static const _incomeOptions = [
     ('below_3', 'income.below3'),
@@ -126,6 +136,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     _education = data['education'] ?? '';
     _motherTongueController.text = data['motherTongue'] ?? '';
     _incomeBand = data['incomeBand'] ?? '';
+    _managedBy = data['managedBy'] ?? 'self';
     if (mounted) setState(() => _loading = false);
   }
 
@@ -166,6 +177,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         'education': _education,
         'motherTongue': _motherTongueController.text.trim(),
         'incomeBand': _incomeBand,
+        'managedBy': _managedBy,
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -318,6 +330,13 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   ]),
                   const SizedBox(height: 12),
                   _field(context.t('completeProfile.familyDetailsHint'), _familyDetailsController, maxLines: 2),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: _managedBy,
+                    decoration: InputDecoration(hintText: context.t('completeProfile.managedByHint')),
+                    items: _managedByOptions.map((o) => DropdownMenuItem(value: o.$1, child: Text(context.t(o.$2)))).toList(),
+                    onChanged: (v) => setState(() => _managedBy = v ?? 'self'),
+                  ),
                   _sectionHeader("💑 ${context.t('completeProfile.preferenceSection')}"),
                   _field(context.t('completeProfile.requirementsHint'), _requirementsController, maxLines: 2),
                   _sectionHeader("⭐ ${context.t('completeProfile.kundaliSection')}"),

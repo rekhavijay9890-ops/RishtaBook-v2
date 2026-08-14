@@ -194,6 +194,15 @@ service cloud.firestore {
       allow update: if request.auth != null && request.auth.token.email == "rekhavijay9890@gmail.com";
     }
 
+    // Admin-curated "Success Stories" shown on Home - see
+    // SuccessStoryService's class doc. Purely admin-authored; every signed-in
+    // user may read them (they're social proof, meant to be seen), only the
+    // admin may write.
+    match /successStories/{storyId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if request.auth != null && request.auth.token.email == "rekhavijay9890@gmail.com";
+    }
+
     function _acceptedInterest(fromUid, toUid) {
       return exists(/databases/$(database)/documents/interests/$(fromUid + '_' + toUid)) &&
         get(/databases/$(database)/documents/interests/$(fromUid + '_' + toUid)).data.status == 'accepted';

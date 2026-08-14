@@ -20,6 +20,7 @@ import '../../widgets/rb_stat_strip.dart';
 import '../../widgets/top_matches_carousel.dart';
 import '../../widgets/match_card.dart';
 import '../../widgets/referral_cta_card.dart';
+import '../../widgets/success_stories_carousel.dart';
 import '../profile/view_profile_screen.dart';
 import '../root_shell.dart';
 
@@ -268,6 +269,7 @@ class _HomePageState extends State<HomePage> {
                           },
                         ),
                         const Padding(padding: EdgeInsets.only(bottom: 18), child: ReferralCtaCard()),
+                        const SuccessStoriesSection(),
                         if (topEntries.isNotEmpty) ...[
                           RbSectionLabel(title: context.t('home.topMatches')),
                           const SizedBox(height: 4),
