@@ -17,6 +17,7 @@ import 'complete_profile_screen.dart';
 import 'manage_photos_screen.dart';
 import 'partner_preference_screen.dart';
 import '../astrologer/astrologer_request_screen.dart';
+import '../success_story/share_success_story_screen.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -313,6 +314,15 @@ class ProfilePage extends StatelessWidget {
                       icon: const Icon(Icons.auto_awesome_outlined, color: AppColors.saffron),
                       label: Text(context.t('astrologer.entryButton')),
                       onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AstrologerRequestScreen(uid: user.uid))),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity, height: 48,
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.favorite_outlined, color: AppColors.saffron),
+                      label: Text(context.t('successStory.entryButton')),
+                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ShareSuccessStoryScreen(uid: user.uid))),
                     ),
                   ),
                   const SizedBox(height: 10),
