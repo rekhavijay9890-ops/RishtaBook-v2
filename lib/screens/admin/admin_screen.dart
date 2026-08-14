@@ -251,6 +251,7 @@ class _SuccessStoriesTabState extends State<_SuccessStoriesTab> {
   final _weddingDateController = TextEditingController();
   final _photoUrlController = TextEditingController();
   bool _saving = false;
+  final Set<String> _reviewBusy = {};
 
   @override
   void dispose() {
@@ -259,6 +260,30 @@ class _SuccessStoriesTabState extends State<_SuccessStoriesTab> {
     _weddingDateController.dispose();
     _photoUrlController.dispose();
     super.dispose();
+  }
+
+  Future<void> _approveSubmission(String pendingId, Map<String, dynamic> data) async {
+    setState(() => _reviewBusy.add(pendingId));
+    try {
+      await _service.approve(
+        pendingId,
+        names: data['names'] as String? ?? '',
+        quote: data['quote'] as String? ?? '',
+        weddingDate: data['weddingDate'] as String? ?? '',
+        photoUrl: data['photoUrl'] as String? ?? '',
+      );
+    } finally {
+      if (mounted) setState(() => _reviewBusy.remove(pendingId));
+    }
+  }
+
+  Future<void> _rejectSubmission(String pendingId) async {
+    setState(() => _reviewBusy.add(pendingId));
+    try {
+      await _service.reject(pendingId);
+    } finally {
+      if (mounted) setState(() => _reviewBusy.remove(pendingId));
+    }
   }
 
   Future<void> _add() async {
@@ -295,6 +320,64 @@ class _SuccessStoriesTabState extends State<_SuccessStoriesTab> {
     return ListView(
       padding: const EdgeInsets.all(14),
       children: [
+        const Text("उपयोगकर्ता सबमिशन / User submissions", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+        const SizedBox(height: 10),
+        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: _service.pendingReviewStream(),
+          builder: (context, snap) {
+            final docs = snap.data?.docs ?? [];
+            if (docs.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.only(bottom: 16),
+                child: Text("कोई लंबित सबमिशन नहीं। / No pending submissions.", style: TextStyle(color: Colors.grey)),
+              );
+            }
+            return Column(children: [
+              ...docs.map((doc) {
+                final data = doc.data();
+                final busy = _reviewBusy.contains(doc.id);
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(data['names'] as String? ?? '', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 4),
+                        Text(data['quote'] as String? ?? '', style: const TextStyle(fontSize: 13)),
+                        if ((data['weddingDate'] as String? ?? '').isNotEmpty)
+                          Text(data['weddingDate'] as String, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                        const SizedBox(height: 12),
+                        Row(children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              icon: const Icon(Icons.close, color: Colors.red),
+                              label: const Text("अस्वीकार करें", style: TextStyle(color: Colors.red)),
+                              onPressed: busy ? null : () => _rejectSubmission(doc.id),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                              icon: busy
+                                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                  : const Icon(Icons.check, color: Colors.white),
+                              label: const Text("स्वीकार करें", style: TextStyle(color: Colors.white)),
+                              onPressed: busy ? null : () => _approveSubmission(doc.id, data),
+                            ),
+                          ),
+                        ]),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ]);
+          },
+        ),
+        const SizedBox(height: 8),
         Card(
           child: Padding(
             padding: const EdgeInsets.all(14),

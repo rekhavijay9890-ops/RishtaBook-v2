@@ -203,6 +203,16 @@ service cloud.firestore {
       allow create, update, delete: if request.auth != null && request.auth.token.email == "rekhavijay9890@gmail.com";
     }
 
+    // A user's own submitted success story, awaiting admin review before
+    // (maybe) being copied into the public successStories collection
+    // above - see SuccessStoryService's class doc.
+    match /pendingSuccessStories/{requestId} {
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.uid;
+      allow read: if request.auth != null &&
+        (request.auth.uid == resource.data.uid || request.auth.token.email == "rekhavijay9890@gmail.com");
+      allow update: if request.auth != null && request.auth.token.email == "rekhavijay9890@gmail.com";
+    }
+
     function _acceptedInterest(fromUid, toUid) {
       return exists(/databases/$(database)/documents/interests/$(fromUid + '_' + toUid)) &&
         get(/databases/$(database)/documents/interests/$(fromUid + '_' + toUid)).data.status == 'accepted';
