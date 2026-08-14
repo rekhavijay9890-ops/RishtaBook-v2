@@ -36,6 +36,11 @@ class AppConfig {
   static const String upiId = "9721971508@ibl";
   static const String upiPayeeName = "Rishtabook";
 
+  /// Wallet's "Get help" / "Chat with us" opens a mailto: here. A stopgap
+  /// until there's real support infra (live chat, an AI assistant, etc.) -
+  /// see the Wallet page's Get Help section.
+  static const String supportEmail = "rekhavijay9890@gmail.com";
+
   /// TODO: replace with your own AdMob rewarded ad unit id once you have an
   /// AdMob account — this is Google's public TEST rewarded ad unit id, safe
   /// to ship as-is (it always fills with a real, working Google test ad,

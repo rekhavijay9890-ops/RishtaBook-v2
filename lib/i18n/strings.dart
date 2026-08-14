@@ -120,6 +120,8 @@ const Map<String, Map<String, String>> _dict = {
   'wallet.noUpiApp':       {'hi': 'कोई UPI ऐप नहीं मिला। मैन्युअल रूप से भुगतान करें।', 'en': 'No UPI app found. Please pay manually.'},
   'wallet.referTitle':     {'hi': 'रेफ़र करें और मुफ़्त क्रेडिट पाएँ', 'en': 'Refer and earn free credits'},
   'wallet.referDesc':      {'hi': 'हर दोस्त के जुड़ने पर %d क्रेडिट', 'en': '%d credits per friend who joins'},
+  'wallet.getHelp':        {'hi': 'सहायता प्राप्त करें', 'en': 'Get help'},
+  'wallet.chatWithUs':     {'hi': 'हमसे संपर्क करें', 'en': 'Chat with us'},
   'wallet.history':        {'hi': 'लेन-देन इतिहास', 'en': 'Transaction history'},
   'wallet.noHistory':      {'hi': 'अभी तक कोई लेन-देन नहीं।', 'en': 'No transactions yet.'},
   'wallet.tab.bought':     {'hi': 'खरीदे गए', 'en': 'Bought'},
