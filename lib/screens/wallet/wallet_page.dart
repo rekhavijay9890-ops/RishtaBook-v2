@@ -28,6 +28,16 @@ class _WalletPageState extends State<WalletPage> {
   bool _adLoading = false;
   bool _boosting = false;
   int? _adsRemainingToday;
+  int _historyTab = 0; // 0 = bought, 1 = spent, 2 = earned
+
+  /// 'purchase' is the only category real money changes hands on; every
+  /// other positive-delta type (referral/signup/ad reward/admin grant) is
+  /// a free credit, and every negative delta is a spend - this is what the
+  /// Wallet history's Bought/Spent/Earned tabs filter on.
+  String _txnCategory(String type, int delta) {
+    if (type == 'purchase') return 'bought';
+    return delta > 0 ? 'earned' : 'spent';
+  }
 
   @override
   void initState() {
@@ -425,13 +435,33 @@ class _WalletPageState extends State<WalletPage> {
                     ),
                     const SizedBox(height: 18),
                     RbSectionLabel(title: context.t('wallet.history')),
-                    if (txns.isEmpty)
-                      Padding(padding: const EdgeInsets.all(20), child: Center(child: Text(context.t('wallet.noHistory'), style: AppText.caption)))
-                    else
-                      Container(
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _historyTabChip(0, context.t('wallet.tab.bought')),
+                        const SizedBox(width: 8),
+                        _historyTabChip(1, context.t('wallet.tab.spent')),
+                        const SizedBox(width: 8),
+                        _historyTabChip(2, context.t('wallet.tab.earned')),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Builder(builder: (context) {
+                      const categories = ['bought', 'spent', 'earned'];
+                      final filtered = txns.where((d) {
+                        final data = d.data();
+                        final type = data['type'] as String? ?? '';
+                        final delta = (data['delta'] as num?)?.toInt() ?? 0;
+                        return _txnCategory(type, delta) == categories[_historyTab];
+                      }).toList();
+
+                      if (filtered.isEmpty) {
+                        return Padding(padding: const EdgeInsets.all(20), child: Center(child: Text(context.t('wallet.noHistory'), style: AppText.caption)));
+                      }
+                      return Container(
                         decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.borderColor)),
                         clipBehavior: Clip.hardEdge,
-                        child: Column(children: txns.asMap().entries.map((e) {
+                        child: Column(children: filtered.asMap().entries.map((e) {
                           final data = e.value.data();
                           final delta = (data['delta'] as num?)?.toInt() ?? 0;
                           final pos = delta > 0;
@@ -442,6 +472,7 @@ class _WalletPageState extends State<WalletPage> {
                             'purchase' => context.t('wallet.txn.purchase'),
                             'signup_bonus' => context.t('wallet.txn.signupBonus'),
                             'ad_reward' => context.t('wallet.txn.adReward'),
+                            'admin_grant' => context.t('wallet.txn.adminGrant'),
                             'profile_unlocked' => context.t('search.unlock'),
                             _ => type,
                           };
@@ -463,7 +494,8 @@ class _WalletPageState extends State<WalletPage> {
                             ),
                           ]);
                         }).toList()),
-                      ),
+                      );
+                    }),
                   ],
                 );
               },
@@ -482,6 +514,24 @@ class _WalletPageState extends State<WalletPage> {
     }
     final minutes = remaining.inMinutes.clamp(1, 59);
     return context.isHindi ? '$minutes मिनट बाकी' : '${minutes}m left';
+  }
+
+  Widget _historyTabChip(int index, String label) {
+    final sel = _historyTab == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _historyTab = index),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 9),
+          decoration: BoxDecoration(
+            color: sel ? AppColors.saffron : AppColors.cardBg,
+            borderRadius: BorderRadius.circular(100),
+            border: Border.all(color: sel ? AppColors.saffron : AppColors.borderColor),
+          ),
+          child: Text(label, textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: sel ? Colors.white : AppColors.ink)),
+        ),
+      ),
+    );
   }
 
   Widget _statTile(String n, String l) => Expanded(
