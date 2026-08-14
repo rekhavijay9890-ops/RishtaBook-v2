@@ -531,6 +531,22 @@ class _WalletPageState extends State<WalletPage> {
                       ),
                     ),
                     const SizedBox(height: 18),
+                    RbSectionLabel(title: context.t('wallet.getHelp')),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () => launchUrl(Uri(scheme: 'mailto', path: AppConfig.supportEmail, queryParameters: {'subject': 'RishtaBook support'})),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                        decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.borderColor)),
+                        child: Row(children: [
+                          const Icon(Icons.support_agent, color: AppColors.saffron),
+                          const SizedBox(width: 12),
+                          Expanded(child: Text(context.t('wallet.chatWithUs'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink))),
+                          const Icon(Icons.chevron_right, color: AppColors.muted),
+                        ]),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
                     RbSectionLabel(title: context.t('wallet.history')),
                     const SizedBox(height: 8),
                     Row(
