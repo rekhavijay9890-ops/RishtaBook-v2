@@ -147,6 +147,88 @@ class _WalletPageState extends State<WalletPage> {
     }
   }
 
+  void _showAddMoneySheet() {
+    int? sheetSelected = _selected;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) => Container(
+          padding: EdgeInsets.fromLTRB(16, 20, 16, MediaQuery.of(sheetContext).viewInsets.bottom + 20),
+          decoration: const BoxDecoration(
+            color: AppColors.pageBg,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.borderColor, borderRadius: BorderRadius.circular(100))),
+            const SizedBox(height: 16),
+            Align(alignment: Alignment.centerLeft, child: RbSectionLabel(title: context.t('wallet.buyCredits'))),
+            const SizedBox(height: 8),
+            ...CreditPack.all.asMap().entries.map((e) {
+              final i = e.key; final pack = e.value; final sel = sheetSelected == i;
+              return GestureDetector(
+                onTap: () => setSheetState(() => sheetSelected = i),
+                child: Stack(clipBehavior: Clip.none, children: [
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: sel ? AppColors.safLight : (pack.popular && sheetSelected == null ? AppColors.goldLight : AppColors.cardBg),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: sel ? AppColors.saffron : (pack.popular ? AppColors.gold : AppColors.borderColor), width: sel || pack.popular ? 2 : 1),
+                    ),
+                    child: Row(children: [
+                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('${pack.credits} credits', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                        const SizedBox(height: 2),
+                        Text('${pack.credits ~/ CreditService.chatUnlockCost} chats', style: AppText.caption),
+                      ])),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(colors: sel ? [AppColors.saffron, AppColors.safDark] : (pack.popular ? [AppColors.gold, AppColors.saffron] : [AppColors.pageBg, AppColors.pageBg])),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: sel || pack.popular ? Colors.transparent : AppColors.borderColor),
+                        ),
+                        child: Text(pack.priceLabel, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: sel || pack.popular ? Colors.white : AppColors.ink)),
+                      ),
+                    ]),
+                  ),
+                  if (pack.popular)
+                    Positioned(
+                      top: -9, left: 14,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                        decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppColors.gold, AppColors.saffron]), borderRadius: BorderRadius.circular(100)),
+                        child: Text(context.t('wallet.mostPopular'), style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.w700)),
+                      ),
+                    ),
+                ]),
+              );
+            }),
+            if (sheetSelected != null) ...[
+              const SizedBox(height: 4),
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  setState(() => _selected = sheetSelected);
+                  _pay(CreditPack.all[sheetSelected!]);
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppColors.saffron, AppColors.safDark]), borderRadius: BorderRadius.circular(16)),
+                  child: Text(context.t('wallet.payVia', [CreditPack.all[sheetSelected!].priceLabel]), textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white)),
+                ),
+              ),
+            ],
+          ]),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final uid = _authService.currentUser?.uid ?? '';
@@ -179,6 +261,15 @@ class _WalletPageState extends State<WalletPage> {
                         Text(context.t('wallet.remaining', [credits ~/ CreditService.chatUnlockCost]), style: const TextStyle(fontSize: 11, color: Colors.white70)),
                       ]);
                     },
+                  ),
+                  const SizedBox(height: 16),
+                  GestureDetector(
+                    onTap: _showAddMoneySheet,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(100)),
+                      child: Text(context.t('wallet.addMoney'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.safDark)),
+                    ),
                   ),
                 ]),
               ),
@@ -213,61 +304,6 @@ class _WalletPageState extends State<WalletPage> {
                       },
                     ),
                     const SizedBox(height: 18),
-                    RbSectionLabel(title: context.t('wallet.buyCredits')),
-                    ...CreditPack.all.asMap().entries.map((e) {
-                      final i = e.key; final pack = e.value; final sel = _selected == i;
-                      return GestureDetector(
-                        onTap: () => setState(() => _selected = i),
-                        child: Stack(clipBehavior: Clip.none, children: [
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: sel ? AppColors.safLight : (pack.popular && _selected == null ? AppColors.goldLight : AppColors.cardBg),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: sel ? AppColors.saffron : (pack.popular ? AppColors.gold : AppColors.borderColor), width: sel || pack.popular ? 2 : 1),
-                            ),
-                            child: Row(children: [
-                              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                Text('${pack.credits} credits', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink)),
-                                const SizedBox(height: 2),
-                                Text('${pack.credits ~/ CreditService.chatUnlockCost} chats', style: AppText.caption),
-                              ])),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(colors: sel ? [AppColors.saffron, AppColors.safDark] : (pack.popular ? [AppColors.gold, AppColors.saffron] : [AppColors.pageBg, AppColors.pageBg])),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: sel || pack.popular ? Colors.transparent : AppColors.borderColor),
-                                ),
-                                child: Text(pack.priceLabel, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: sel || pack.popular ? Colors.white : AppColors.ink)),
-                              ),
-                            ]),
-                          ),
-                          if (pack.popular)
-                            Positioned(
-                              top: -9, left: 14,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-                                decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppColors.gold, AppColors.saffron]), borderRadius: BorderRadius.circular(100)),
-                                child: Text(context.t('wallet.mostPopular'), style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.w700)),
-                              ),
-                            ),
-                        ]),
-                      );
-                    }),
-                    if (_selected != null) ...[
-                      GestureDetector(
-                        onTap: () => _pay(CreditPack.all[_selected!]),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppColors.saffron, AppColors.safDark]), borderRadius: BorderRadius.circular(16)),
-                          child: Text(context.t('wallet.payVia', [CreditPack.all[_selected!].priceLabel]), textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white)),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                    ],
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
