@@ -111,6 +111,7 @@ const Map<String, Map<String, String>> _dict = {
   'wallet.upiPayTo':       {'hi': 'यहाँ भुगतान करें', 'en': 'Pay to'},
   'wallet.upiIdCopied':    {'hi': 'UPI ID कॉपी हो गई', 'en': 'UPI ID copied'},
   'wallet.openUpiApp':     {'hi': 'UPI ऐप खोलें →', 'en': 'Open UPI app →'},
+  'wallet.scanQrHint':     {'hi': 'भुगतान करने के लिए अपने UPI ऐप से यह QR स्कैन करें', 'en': 'Scan this QR with your UPI app to pay'},
   'wallet.utrLabel':       {'hi': 'भुगतान के बाद, लेन-देन संदर्भ संख्या (UTR) डालें', 'en': 'After paying, enter your transaction reference (UTR)'},
   'wallet.utrHint':        {'hi': 'जैसे 123456789012', 'en': 'e.g. 123456789012'},
   'wallet.topupReviewNote':{'hi': 'हम भुगतान की पुष्टि करेंगे और कुछ ही घंटों में क्रेडिट जोड़ देंगे।', 'en': "We'll verify your payment and add credits within a few hours."},

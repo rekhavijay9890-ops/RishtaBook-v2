@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../config/app_config.dart';
@@ -106,16 +107,25 @@ class _WalletPageState extends State<WalletPage> {
     );
   }
 
-  Future<void> _openUpiApp(int amountRupees) async {
-    final uri = Uri(scheme: 'upi', host: 'pay', queryParameters: {
+  /// Shared by the QR code and the "Open UPI app" button so both encode the
+  /// exact same payment request. `pn` is only ever a hint - UPI apps show
+  /// the bank-verified account-holder name for a personal VPA regardless of
+  /// what an app requests, as an anti-phishing protection. There's no way
+  /// to make that show "RishtaBook" short of AppConfig.upiId being a
+  /// registered business account instead of a personal one.
+  Uri _upiPaymentUri(int amountRupees) {
+    return Uri(scheme: 'upi', host: 'pay', queryParameters: {
       'pa': AppConfig.upiId,
       'pn': AppConfig.upiPayeeName,
       'am': '$amountRupees',
       'cu': 'INR',
       'tn': 'RishtaBook credits top-up',
     });
+  }
+
+  Future<void> _openUpiApp(int amountRupees) async {
     try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      await launchUrl(_upiPaymentUri(amountRupees), mode: LaunchMode.externalApplication);
     } catch (_) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('wallet.noUpiApp'))));
     }
@@ -150,7 +160,11 @@ class _WalletPageState extends State<WalletPage> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
+        // viewInsets.bottom covers the on-screen keyboard; padding.bottom
+        // covers the system nav bar (3-button nav / gesture-bar inset) -
+        // without the latter, the last button in the sheet sits partly
+        // behind the nav bar on 3-button-nav phones.
+        padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom + MediaQuery.of(sheetContext).padding.bottom),
         child: StatefulBuilder(
           builder: (sheetContext, setSheetState) {
             final amount = int.tryParse(controller.text) ?? 0;
@@ -163,7 +177,8 @@ class _WalletPageState extends State<WalletPage> {
                 color: AppColors.pageBg,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
-              child: Column(
+              child: SingleChildScrollView(
+                child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: step == 0
@@ -243,6 +258,22 @@ class _WalletPageState extends State<WalletPage> {
                           RbSectionLabel(title: context.t('wallet.payViaUpi')),
                         ]),
                         const SizedBox(height: 14),
+                        // QR code is the reliable path - some UPI apps
+                        // (notably Google Pay) block or flag deep-link
+                        // payment intents from third-party apps as a fraud
+                        // precaution, but scanning a QR through the UPI
+                        // app's own scanner is the sanctioned path and
+                        // doesn't hit that block.
+                        Center(
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.borderColor)),
+                            child: QrImageView(data: _upiPaymentUri(amount).toString(), size: 160, backgroundColor: Colors.white),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Center(child: Text(context.t('wallet.scanQrHint'), style: AppText.caption, textAlign: TextAlign.center)),
+                        const SizedBox(height: 14),
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(14),
@@ -270,8 +301,8 @@ class _WalletPageState extends State<WalletPage> {
                           child: Container(
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppColors.saffron, AppColors.safDark]), borderRadius: BorderRadius.circular(16)),
-                            child: Text(context.t('wallet.openUpiApp'), textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white)),
+                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.saffron)),
+                            child: Text(context.t('wallet.openUpiApp'), textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.safDark)),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -318,6 +349,7 @@ class _WalletPageState extends State<WalletPage> {
                           ),
                         ),
                       ],
+                ),
               ),
             );
           },
