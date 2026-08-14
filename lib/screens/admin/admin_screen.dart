@@ -8,6 +8,7 @@ import '../../models/user_profile.dart';
 import '../../services/profile_service.dart';
 import '../../services/moderation_service.dart';
 import '../../services/astrologer_service.dart';
+import '../../services/manual_topup_service.dart';
 import '../../theme/app_colors.dart';
 import '../../i18n/strings.dart';
 
@@ -23,7 +24,7 @@ class AdminScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 5,
+      length: 6,
       child: Scaffold(
         appBar: AppBar(
           title: const Text("व्यवस्थापक डैशबोर्ड"),
@@ -39,6 +40,7 @@ class AdminScreen extends StatelessWidget {
               const Tab(text: "सभी उपयोगकर्ता / All Users"),
               Tab(text: context.t('admin.reportsTab')),
               Tab(text: context.t('admin.astrologerTab')),
+              const Tab(text: "UPI टॉप-अप / UPI Top-ups"),
               const Tab(text: "सेटिंग्स / Settings"),
             ],
           ),
@@ -49,6 +51,7 @@ class AdminScreen extends StatelessWidget {
             _AllUsersTab(),
             _ReportsTab(),
             _AstrologerRequestsTab(),
+            _ManualTopupsTab(),
             _SettingsTab(),
           ],
         ),
@@ -126,6 +129,100 @@ class _AstrologerRequestsTab extends StatelessWidget {
                 trailing: TextButton(
                   onPressed: () => astrologerService.markContacted(doc.id),
                   child: Text(context.t('admin.markContacted')),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+/// Pending manual UPI top-up requests - see ManualTopupService's class doc.
+/// Approving is the ONLY thing that actually grants credits for these;
+/// rejecting just marks the request closed without touching the balance.
+class _ManualTopupsTab extends StatefulWidget {
+  const _ManualTopupsTab();
+  @override
+  State<_ManualTopupsTab> createState() => _ManualTopupsTabState();
+}
+
+class _ManualTopupsTabState extends State<_ManualTopupsTab> {
+  final _service = ManualTopupService();
+  final Set<String> _busy = {};
+
+  Future<void> _approve(String requestId, String uid, int credits, int amountRupees) async {
+    setState(() => _busy.add(requestId));
+    try {
+      await _service.approve(requestId, uid: uid, credits: credits, amountRupees: amountRupees);
+    } finally {
+      if (mounted) setState(() => _busy.remove(requestId));
+    }
+  }
+
+  Future<void> _reject(String requestId) async {
+    setState(() => _busy.add(requestId));
+    try {
+      await _service.reject(requestId);
+    } finally {
+      if (mounted) setState(() => _busy.remove(requestId));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: _service.pendingRequestsStream(),
+      builder: (context, snap) {
+        final docs = snap.data?.docs ?? [];
+        if (docs.isEmpty) {
+          return const Center(child: Text("कोई लंबित टॉप-अप नहीं। / No pending top-ups.", style: TextStyle(color: Colors.grey)));
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.all(12),
+          itemCount: docs.length,
+          itemBuilder: (context, i) {
+            final doc = docs[i];
+            final data = doc.data();
+            final uid = data['uid'] as String? ?? '';
+            final amountRupees = (data['amountRupees'] as num?)?.toInt() ?? 0;
+            final credits = (data['credits'] as num?)?.toInt() ?? 0;
+            final utr = data['utr'] as String? ?? '';
+            final busy = _busy.contains(doc.id);
+            return Card(
+              margin: const EdgeInsets.only(bottom: 10),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('₹$amountRupees → $credits credits', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    Text('UTR: $utr', style: const TextStyle(fontSize: 13)),
+                    Text('uid: $uid', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                    const SizedBox(height: 12),
+                    Row(children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.close, color: Colors.red),
+                          label: const Text("अस्वीकार करें", style: TextStyle(color: Colors.red)),
+                          onPressed: busy ? null : () => _reject(doc.id),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                          icon: busy
+                              ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                              : const Icon(Icons.check, color: Colors.white),
+                          label: const Text("स्वीकार करें", style: TextStyle(color: Colors.white)),
+                          onPressed: busy ? null : () => _approve(doc.id, uid, credits, amountRupees),
+                        ),
+                      ),
+                    ]),
+                  ],
                 ),
               ),
             );

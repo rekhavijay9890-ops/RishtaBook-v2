@@ -173,6 +173,19 @@ service cloud.firestore {
       allow update: if request.auth != null && request.auth.token.email == "rekhavijay9890@gmail.com";
     }
 
+    // Manual UPI top-up requests - see ManualTopupService's class doc. A
+    // user submits a claim ("I paid ₹X, here's my UTR"); only the admin can
+    // list/approve/reject them. Submitting a request never grants credits
+    // by itself - approval does that separately via the users/{userId} and
+    // transactions rules above, both of which already allow the admin
+    // email unrestricted access.
+    match /manualTopups/{requestId} {
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.uid;
+      allow read: if request.auth != null &&
+        (request.auth.uid == resource.data.uid || request.auth.token.email == "rekhavijay9890@gmail.com");
+      allow update: if request.auth != null && request.auth.token.email == "rekhavijay9890@gmail.com";
+    }
+
     function _acceptedInterest(fromUid, toUid) {
       return exists(/databases/$(database)/documents/interests/$(fromUid + '_' + toUid)) &&
         get(/databases/$(database)/documents/interests/$(fromUid + '_' + toUid)).data.status == 'accepted';

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../config/app_config.dart';
 import '../../models/user_profile.dart';
 import '../../services/auth_service.dart';
 import '../../services/credit_service.dart';
+import '../../services/manual_topup_service.dart';
 import '../../services/profile_service.dart';
 import '../../i18n/strings.dart';
 import '../../theme/app_colors.dart';
@@ -20,8 +22,8 @@ class WalletPage extends StatefulWidget {
 }
 
 class _WalletPageState extends State<WalletPage> {
-  late final Razorpay _razorpay;
   final CreditService _creditService = CreditService();
+  final ManualTopupService _manualTopupService = ManualTopupService();
   final AuthService _authService = AuthService();
 
   final ProfileService _profileService = ProfileService();
@@ -42,17 +44,7 @@ class _WalletPageState extends State<WalletPage> {
   @override
   void initState() {
     super.initState();
-    _razorpay = Razorpay();
-    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _onPaymentSuccess);
-    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _onPaymentError);
-    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, (_) {});
     _refreshAdsRemaining();
-  }
-
-  @override
-  void dispose() {
-    _razorpay.clear();
-    super.dispose();
   }
 
   Future<void> _boost() async {
@@ -114,55 +106,45 @@ class _WalletPageState extends State<WalletPage> {
     );
   }
 
-  void _onPaymentSuccess(PaymentSuccessResponse response) {
-    // Credits are NOT granted here - see supabase/functions/razorpay-webhook
-    // and CreditService's class doc. This callback just confirms the
-    // checkout UI closed successfully; the actual grant comes from
-    // Razorpay's own server-to-server webhook once it independently
-    // verifies the payment, which the creditsStream/transactionsStream
-    // StreamBuilders below will reflect the moment it lands (typically a
-    // few seconds).
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('wallet.paymentSuccess')), backgroundColor: AppColors.success));
+  Future<void> _openUpiApp(int amountRupees) async {
+    final uri = Uri(scheme: 'upi', host: 'pay', queryParameters: {
+      'pa': AppConfig.upiId,
+      'pn': AppConfig.upiPayeeName,
+      'am': '$amountRupees',
+      'cu': 'INR',
+      'tn': 'RishtaBook credits top-up',
+    });
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('wallet.noUpiApp'))));
     }
   }
 
-  void _onPaymentError(PaymentFailureResponse response) {
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('wallet.paymentFailed')), backgroundColor: AppColors.error));
-  }
-
-  void _pay(int amountRupees) {
+  /// Files a claim ("I paid ₹X, here's my UTR") for admin review - this
+  /// does NOT grant credits. See ManualTopupService's class doc: only an
+  /// admin approving the request from the Admin screen does that, since
+  /// nothing here can independently verify the payment actually happened.
+  Future<void> _submitManualTopup(int amountRupees, String utr) async {
     final uid = _authService.currentUser?.uid ?? '';
-    final email = _authService.currentUser?.email ?? '';
     final credits = amountRupees * CreditService.creditsPerRupee;
-    final options = {
-      'key': AppConfig.razorpayKeyId,
-      'amount': amountRupees * 100,
-      'name': 'RishtaBook',
-      'description': '$credits credits',
-      'prefill': {'email': email},
-      // Read by supabase/functions/razorpay-webhook once Razorpay confirms
-      // this payment - it's the only way that server-side function knows
-      // who to credit, since it never talks to this app directly. Razorpay
-      // echoes `notes` back verbatim on every payment object, including in
-      // the webhook payload. The webhook does NOT trust `notes.credits` for
-      // the actual amount to grant, though (a tampered client build could
-      // lie about it) - it independently recomputes credits from Razorpay's
-      // own verified `payment.amount` using the same CreditService.
-      // creditsPerRupee rate. `notes.credits` here is only for the
-      // transaction ledger's display label.
-      'notes': {'uid': uid, 'credits': '$credits', 'label': '₹$amountRupees top-up'},
-    };
     try {
-      _razorpay.open(options);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('wallet.paymentFailed'))));
+      await _manualTopupService.submitRequest(uid, amountRupees: amountRupees, credits: credits, utr: utr);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('wallet.topupSubmitted')), backgroundColor: AppColors.success));
+      }
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('wallet.paymentFailed')), backgroundColor: AppColors.error));
     }
   }
 
   void _showAddMoneySheet() {
     final controller = TextEditingController();
+    final utrController = TextEditingController();
     const quickAmounts = [50, 100, 200, 500];
+    int step = 0; // 0 = enter amount, 1 = pay via UPI + submit reference
+    bool submitting = false;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -174,86 +156,169 @@ class _WalletPageState extends State<WalletPage> {
             final amount = int.tryParse(controller.text) ?? 0;
             final credits = amount * CreditService.creditsPerRupee;
             final valid = amount >= CreditService.minTopUpRupees;
+
             return Container(
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
               decoration: const BoxDecoration(
                 color: AppColors.pageBg,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
-              child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.borderColor, borderRadius: BorderRadius.circular(100)))),
-                const SizedBox(height: 16),
-                RbSectionLabel(title: context.t('wallet.addMoney')),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: controller,
-                  autofocus: true,
-                  keyboardType: TextInputType.number,
-                  onChanged: (_) => setSheetState(() {}),
-                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.ink),
-                  decoration: InputDecoration(
-                    prefixText: '₹ ',
-                    prefixStyle: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.ink),
-                    hintText: '0',
-                    filled: true,
-                    fillColor: AppColors.cardBg,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: AppColors.borderColor)),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: AppColors.borderColor)),
-                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.saffron, width: 2)),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  children: quickAmounts.map((amt) {
-                    final sel = amount == amt;
-                    return GestureDetector(
-                      onTap: () {
-                        controller.text = '$amt';
-                        setSheetState(() {});
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: sel ? AppColors.safLight : AppColors.cardBg,
-                          borderRadius: BorderRadius.circular(100),
-                          border: Border.all(color: sel ? AppColors.saffron : AppColors.borderColor, width: sel ? 2 : 1),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: step == 0
+                    ? [
+                        Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.borderColor, borderRadius: BorderRadius.circular(100)))),
+                        const SizedBox(height: 16),
+                        RbSectionLabel(title: context.t('wallet.addMoney')),
+                        const SizedBox(height: 10),
+                        TextField(
+                          controller: controller,
+                          autofocus: true,
+                          keyboardType: TextInputType.number,
+                          onChanged: (_) => setSheetState(() {}),
+                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.ink),
+                          decoration: InputDecoration(
+                            prefixText: '₹ ',
+                            prefixStyle: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.ink),
+                            hintText: '0',
+                            filled: true,
+                            fillColor: AppColors.cardBg,
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: AppColors.borderColor)),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: AppColors.borderColor)),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.saffron, width: 2)),
+                          ),
                         ),
-                        child: Text('₹$amt', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: sel ? AppColors.safDark : AppColors.ink)),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 16),
-                if (amount > 0) ...[
-                  Text(context.t('wallet.creditsPreview', [credits, credits ~/ CreditService.chatUnlockCost]), style: AppText.headingSmall),
-                  const SizedBox(height: 4),
-                ],
-                Text(context.t('wallet.creditRate', [CreditService.chatUnlockCost]), style: AppText.caption),
-                const SizedBox(height: 16),
-                GestureDetector(
-                  onTap: valid
-                      ? () {
-                          Navigator.pop(sheetContext);
-                          _pay(amount);
-                        }
-                      : null,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      gradient: valid ? const LinearGradient(colors: [AppColors.saffron, AppColors.safDark]) : null,
-                      color: valid ? null : AppColors.borderColor,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(
-                      valid ? context.t('wallet.payVia', ['₹$amount']) : context.t('wallet.minTopUp', [CreditService.minTopUpRupees]),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: valid ? Colors.white : AppColors.muted),
-                    ),
-                  ),
-                ),
-              ]),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          children: quickAmounts.map((amt) {
+                            final sel = amount == amt;
+                            return GestureDetector(
+                              onTap: () {
+                                controller.text = '$amt';
+                                setSheetState(() {});
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: sel ? AppColors.safLight : AppColors.cardBg,
+                                  borderRadius: BorderRadius.circular(100),
+                                  border: Border.all(color: sel ? AppColors.saffron : AppColors.borderColor, width: sel ? 2 : 1),
+                                ),
+                                child: Text('₹$amt', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: sel ? AppColors.safDark : AppColors.ink)),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 16),
+                        if (amount > 0) ...[
+                          Text(context.t('wallet.creditsPreview', [credits, credits ~/ CreditService.chatUnlockCost]), style: AppText.headingSmall),
+                          const SizedBox(height: 4),
+                        ],
+                        Text(context.t('wallet.creditRate', [CreditService.chatUnlockCost]), style: AppText.caption),
+                        const SizedBox(height: 16),
+                        GestureDetector(
+                          onTap: valid ? () => setSheetState(() => step = 1) : null,
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            decoration: BoxDecoration(
+                              gradient: valid ? const LinearGradient(colors: [AppColors.saffron, AppColors.safDark]) : null,
+                              color: valid ? null : AppColors.borderColor,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Text(
+                              valid ? context.t('wallet.payVia', ['₹$amount']) : context.t('wallet.minTopUp', [CreditService.minTopUpRupees]),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: valid ? Colors.white : AppColors.muted),
+                            ),
+                          ),
+                        ),
+                      ]
+                    : [
+                        Row(children: [
+                          GestureDetector(onTap: () => setSheetState(() => step = 0), child: const Icon(Icons.arrow_back, color: AppColors.ink, size: 20)),
+                          const SizedBox(width: 10),
+                          RbSectionLabel(title: context.t('wallet.payViaUpi')),
+                        ]),
+                        const SizedBox(height: 14),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(color: AppColors.cardBg, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.borderColor)),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text(context.t('wallet.upiPayTo'), style: AppText.caption),
+                            const SizedBox(height: 4),
+                            Row(children: [
+                              Expanded(child: Text(AppConfig.upiId, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink))),
+                              GestureDetector(
+                                onTap: () {
+                                  Clipboard.setData(ClipboardData(text: AppConfig.upiId));
+                                  ScaffoldMessenger.of(sheetContext).showSnackBar(SnackBar(content: Text(context.t('wallet.upiIdCopied'))));
+                                },
+                                child: const Icon(Icons.copy, size: 18, color: AppColors.muted),
+                              ),
+                            ]),
+                            const SizedBox(height: 8),
+                            Text('₹$amount', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.ink)),
+                          ]),
+                        ),
+                        const SizedBox(height: 12),
+                        GestureDetector(
+                          onTap: () => _openUpiApp(amount),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppColors.saffron, AppColors.safDark]), borderRadius: BorderRadius.circular(16)),
+                            child: Text(context.t('wallet.openUpiApp'), textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white)),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(context.t('wallet.utrLabel'), style: AppText.caption),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: utrController,
+                          onChanged: (_) => setSheetState(() {}),
+                          decoration: InputDecoration(
+                            hintText: context.t('wallet.utrHint'),
+                            filled: true,
+                            fillColor: AppColors.cardBg,
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: AppColors.borderColor)),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: AppColors.borderColor)),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.saffron, width: 2)),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(context.t('wallet.topupReviewNote'), style: AppText.caption),
+                        const SizedBox(height: 16),
+                        GestureDetector(
+                          onTap: (submitting || utrController.text.trim().isEmpty)
+                              ? null
+                              : () async {
+                                  setSheetState(() => submitting = true);
+                                  await _submitManualTopup(amount, utrController.text.trim());
+                                  if (sheetContext.mounted) Navigator.pop(sheetContext);
+                                },
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            decoration: BoxDecoration(
+                              gradient: (submitting || utrController.text.trim().isEmpty) ? null : const LinearGradient(colors: [AppColors.saffron, AppColors.safDark]),
+                              color: (submitting || utrController.text.trim().isEmpty) ? AppColors.borderColor : null,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: submitting
+                                ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                : Text(
+                                    context.t('wallet.submitTopup'),
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: utrController.text.trim().isEmpty ? AppColors.muted : Colors.white),
+                                  ),
+                          ),
+                        ),
+                      ],
+              ),
             );
           },
         ),
