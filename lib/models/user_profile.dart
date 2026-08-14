@@ -35,6 +35,7 @@ class UserProfile {
   final bool photosPrivate;
   final List<String> blockedUids;
   final DateTime? boostedUntil;
+  final String managedBy;
 
   const UserProfile({
     required this.uid,
@@ -70,6 +71,7 @@ class UserProfile {
     this.photosPrivate = false,
     this.blockedUids = const [],
     this.boostedUntil,
+    this.managedBy = 'self',
   });
 
   factory UserProfile.fromMap(String uid, Map<String, dynamic> data) {
@@ -107,6 +109,7 @@ class UserProfile {
       photosPrivate: data['photosPrivate'] == true,
       blockedUids: List<String>.from(data['blockedUids'] ?? const []),
       boostedUntil: (data['boostedUntil'] as Timestamp?)?.toDate(),
+      managedBy: data['managedBy'] ?? 'self',
     );
   }
 
@@ -121,6 +124,11 @@ class UserProfile {
 
   bool get isFemale => gender.toLowerCase().contains('female') || gender.toLowerCase().contains('stri');
   bool get isMale   => gender.toLowerCase().contains('male') || gender.toLowerCase().contains('purush');
+
+  /// Whether to show the "Profile managed by ..." trust chip at all - not
+  /// for the common case of a self-managed profile, only when a family
+  /// member is doing the browsing/messaging on this person's behalf.
+  bool get isFamilyManaged => managedBy.isNotEmpty && managedBy != 'self';
 
   /// Parses `dob` (stored as dd/mm/yyyy, see BasicDetailsScreen's date
   /// picker) into a whole number of years. Null if unparseable/unset -

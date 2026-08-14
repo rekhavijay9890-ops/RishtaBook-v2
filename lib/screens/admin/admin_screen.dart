@@ -9,6 +9,7 @@ import '../../services/profile_service.dart';
 import '../../services/moderation_service.dart';
 import '../../services/astrologer_service.dart';
 import '../../services/manual_topup_service.dart';
+import '../../services/success_story_service.dart';
 import '../../theme/app_colors.dart';
 import '../../i18n/strings.dart';
 
@@ -24,7 +25,7 @@ class AdminScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 6,
+      length: 7,
       child: Scaffold(
         appBar: AppBar(
           title: const Text("व्यवस्थापक डैशबोर्ड"),
@@ -41,6 +42,7 @@ class AdminScreen extends StatelessWidget {
               Tab(text: context.t('admin.reportsTab')),
               Tab(text: context.t('admin.astrologerTab')),
               const Tab(text: "UPI टॉप-अप / UPI Top-ups"),
+              const Tab(text: "सफलता की कहानियाँ / Success Stories"),
               const Tab(text: "सेटिंग्स / Settings"),
             ],
           ),
@@ -52,6 +54,7 @@ class AdminScreen extends StatelessWidget {
             _ReportsTab(),
             _AstrologerRequestsTab(),
             _ManualTopupsTab(),
+            _SuccessStoriesTab(),
             _SettingsTab(),
           ],
         ),
@@ -229,6 +232,117 @@ class _ManualTopupsTabState extends State<_ManualTopupsTab> {
           },
         );
       },
+    );
+  }
+}
+
+/// Add/remove the admin-curated "Success Stories" shown on Home - see
+/// SuccessStoryService's class doc.
+class _SuccessStoriesTab extends StatefulWidget {
+  const _SuccessStoriesTab();
+  @override
+  State<_SuccessStoriesTab> createState() => _SuccessStoriesTabState();
+}
+
+class _SuccessStoriesTabState extends State<_SuccessStoriesTab> {
+  final _service = SuccessStoryService();
+  final _namesController = TextEditingController();
+  final _quoteController = TextEditingController();
+  final _weddingDateController = TextEditingController();
+  final _photoUrlController = TextEditingController();
+  bool _saving = false;
+
+  @override
+  void dispose() {
+    _namesController.dispose();
+    _quoteController.dispose();
+    _weddingDateController.dispose();
+    _photoUrlController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _add() async {
+    final names = _namesController.text.trim();
+    final quote = _quoteController.text.trim();
+    if (names.isEmpty || quote.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("नाम और उद्धरण आवश्यक हैं / Names and quote are required"), backgroundColor: Colors.red));
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      await _service.addStory(
+        names: names,
+        quote: quote,
+        weddingDate: _weddingDateController.text.trim(),
+        photoUrl: _photoUrlController.text.trim(),
+      );
+      _namesController.clear();
+      _quoteController.clear();
+      _weddingDateController.clear();
+      _photoUrlController.clear();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("जोड़ा गया / Added"), backgroundColor: Colors.green));
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(14),
+      children: [
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              const Text("नई कहानी जोड़ें / Add a new story", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              const SizedBox(height: 10),
+              TextField(controller: _namesController, decoration: const InputDecoration(labelText: "नाम / Couple's names", hintText: "e.g. Rekha & Vijay")),
+              const SizedBox(height: 10),
+              TextField(controller: _quoteController, maxLines: 3, decoration: const InputDecoration(labelText: "उद्धरण / Quote")),
+              const SizedBox(height: 10),
+              TextField(controller: _weddingDateController, decoration: const InputDecoration(labelText: "विवाह तिथि / Wedding date (optional)", hintText: "e.g. Jan 2026")),
+              const SizedBox(height: 10),
+              TextField(controller: _photoUrlController, decoration: const InputDecoration(labelText: "फ़ोटो URL / Photo URL (optional)")),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _saving ? null : _add,
+                child: _saving
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Text("जोड़ें / Add"),
+              ),
+            ]),
+          ),
+        ),
+        const SizedBox(height: 16),
+        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: _service.storiesStream(),
+          builder: (context, snap) {
+            final docs = snap.data?.docs ?? [];
+            if (docs.isEmpty) return const Center(child: Text("अभी कोई कहानी नहीं। / No stories yet.", style: TextStyle(color: Colors.grey)));
+            return Column(
+              children: docs.map((doc) {
+                final data = doc.data();
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  child: ListTile(
+                    title: Text(data['names'] as String? ?? ''),
+                    subtitle: Text(data['quote'] as String? ?? '', maxLines: 2, overflow: TextOverflow.ellipsis),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => _service.deleteStory(doc.id),
+                    ),
+                  ),
+                );
+              }).toList(),
+            );
+          },
+        ),
+      ],
     );
   }
 }

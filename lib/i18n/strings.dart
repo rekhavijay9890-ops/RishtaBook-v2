@@ -53,6 +53,7 @@ const Map<String, Map<String, String>> _dict = {
   'home.greetingSub':    {'hi': 'आज देखें आपके लिए नए रिश्ते', 'en': "Here's who's new for you today"},
   'home.topMatches':     {'hi': 'शीर्ष रिश्ते', 'en': 'Top matches'},
   'home.moreMatches':    {'hi': 'और रिश्ते', 'en': 'More matches'},
+  'home.successStories': {'hi': 'सफलता की कहानियाँ', 'en': 'Success Stories'},
   'search.quick.bestMatch': {'hi': '⭐ सर्वश्रेष्ठ मेल', 'en': '⭐ Best match'},
   'search.quick.verified':  {'hi': '✓ केवल सत्यापित', 'en': '✓ Verified only'},
   'search.quick.nearMe':    {'hi': '📍 मेरे पास', 'en': '📍 Near me'},
@@ -325,6 +326,13 @@ const Map<String, Map<String, String>> _dict = {
   'completeProfile.occupation.selfEmployed': {'hi': 'स्वरोजगार', 'en': 'Self Employed'},
   'completeProfile.occupation.student':  {'hi': 'विद्यार्थी', 'en': 'Student'},
   'completeProfile.occupation.other':    {'hi': 'अन्य', 'en': 'Other'},
+  'completeProfile.managedByHint':   {'hi': 'प्रोफ़ाइल कौन संभाल रहा है', 'en': 'Profile managed by'},
+  'completeProfile.managedBy.self':     {'hi': 'स्वयं', 'en': 'Self'},
+  'completeProfile.managedBy.father':   {'hi': 'पिता', 'en': 'Father'},
+  'completeProfile.managedBy.mother':   {'hi': 'माता', 'en': 'Mother'},
+  'completeProfile.managedBy.sibling':  {'hi': 'भाई/बहन', 'en': 'Sibling'},
+  'completeProfile.managedBy.relative': {'hi': 'रिश्तेदार', 'en': 'Relative'},
+  'completeProfile.managedBy.friend':   {'hi': 'मित्र', 'en': 'Friend'},
 
   // ── Manage photos ──
   'managePhotos.title':      {'hi': 'फ़ोटो प्रबंधित करें', 'en': 'Manage Photos'},
@@ -374,6 +382,7 @@ const Map<String, Map<String, String>> _dict = {
   'viewProfile.requirements':   {'hi': 'जीवनसाथी में चाहिए', 'en': 'Looking for'},
   'viewProfile.viewKundali':    {'hi': 'कुंडली मिलान देखें', 'en': 'View Kundali Match'},
   'viewProfile.notAvailable':   {'hi': 'उपलब्ध नहीं', 'en': 'Not Available'},
+  'viewProfile.managedBy':      {'hi': 'प्रोफ़ाइल %s द्वारा संभाली जा रही है', 'en': 'Profile managed by %s'},
 
   // ── New profile fields (height / marital status / education) ──
   'completeProfile.heightHint':        {'hi': 'ऊँचाई', 'en': 'Height'},
