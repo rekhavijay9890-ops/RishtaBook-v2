@@ -30,7 +30,13 @@ jobs:
         run: flutter pub get
 
       - name: Build APK
-        run: flutter build apk --release
+        # --target-platform android-arm64 builds ONE architecture instead
+        # of a "fat" universal APK bundling arm/arm64/x86/x86_64 native
+        # libs together - arm64 alone covers virtually every real Android
+        # phone made since ~2017. This is a direct-download sideload APK,
+        # not a Play Store App Bundle (which would split per-ABI on its
+        # own), so restricting here is what actually shrinks the file.
+        run: flutter build apk --release --target-platform android-arm64
 
       - name: Create Release
         uses: softprops/action-gh-release@v2

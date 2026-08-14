@@ -61,18 +61,15 @@ android {
         }
     }
 
-    packagingOptions {
-        jniLibs {
-            // This app has no native/C++ code of its own - the only reason
-            // AGP wants the NDK at all is to strip debug symbols from the
-            // prebuilt .so libraries that dependencies (Firebase etc.) ship.
-            // Skipping that stripping step removes the NDK requirement
-            // entirely, which matters on disk/bandwidth-constrained build
-            // machines where downloading the multi-hundred-MB NDK package
-            // isn't practical for a debug build.
-            keepDebugSymbols += ["**/*.so"]
-        }
-    }
+    // NOT setting packagingOptions.jniLibs.keepDebugSymbols here (it was
+    // briefly added, then removed again) - that told AGP to skip stripping
+    // debug symbols from every bundled native .so, which was only ever a
+    // workaround for the NDK download failing on disk-constrained local
+    // build machines (see the ndkVersion comment above). Real APK builds
+    // run in GitHub Actions, which has plenty of disk for AGP to download
+    // the NDK and strip symbols normally - keeping them unstripped there
+    // was pure waste, and was the single biggest contributor to release
+    // APKs ballooning past 500MB.
 }
 
 flutter {
