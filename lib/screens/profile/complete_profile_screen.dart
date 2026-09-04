@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
+import '../../theme/app_text.dart';
+import '../../widgets/rb_gradient_app_bar.dart';
 import '../../config/constants.dart';
 import '../../services/profile_service.dart';
 import '../../services/kundali_service.dart';
@@ -231,18 +233,14 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
   Widget _sectionHeader(String title) => Padding(
         padding: const EdgeInsets.only(top: 10, bottom: 6),
-        child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.saffron, fontSize: 14.5)),
+        child: Text(title, style: AppText.sectionTitle),
       );
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.pageBg,
-      appBar: AppBar(
-        title: Text(context.t('completeProfile.title')),
-        backgroundColor: AppColors.headerBg,
-        foregroundColor: Colors.white,
-      ),
+      appBar: RbGradientAppBar(title: Text(context.t('completeProfile.title'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.saffron))
           : SafeArea(

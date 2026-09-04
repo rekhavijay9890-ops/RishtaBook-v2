@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../theme/app_colors.dart';
+import '../../widgets/rb_gradient_app_bar.dart';
 import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/credit_service.dart';
@@ -122,10 +123,8 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: RbGradientAppBar(
         title: Text(_otpSent ? context.t('phoneAuth.titleOtp') : context.t('phoneAuth.titleNumber')),
-        backgroundColor: AppColors.headerBg,
-        foregroundColor: Colors.white,
       ),
       backgroundColor: AppColors.pageBg,
       body: SafeArea(

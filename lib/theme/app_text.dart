@@ -17,5 +17,15 @@ class AppText {
 
   // On dark header
   static const headerTitle = TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3);
-  static const headerBody  = TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Color(0xFFA89FA7));
+  static const headerBody  = TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Color(0xD9FFFFFF));
+  static const headerSubtitle = TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Color(0xB3FFFFFF));
+
+  // Brand wordmark on gradient headers
+  static const brandLogoRishta = TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: -0.5, fontFamily: 'serif');
+  static const brandLogoBook = TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.brandGold, letterSpacing: -0.5, fontFamily: 'serif');
+  static const brandLogoRishtaLarge = TextStyle(fontSize: 38, fontWeight: FontWeight.w800, color: Colors.white, fontFamily: 'serif', letterSpacing: 0.3);
+  static const brandLogoBookLarge = TextStyle(fontSize: 38, fontWeight: FontWeight.w800, color: AppColors.brandGold, fontFamily: 'serif', letterSpacing: 0.3);
+
+  // Form section titles (Complete Profile, etc.)
+  static const sectionTitle = TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.saffron, letterSpacing: -0.2);
 }

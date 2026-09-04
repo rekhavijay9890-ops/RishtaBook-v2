@@ -36,15 +36,23 @@ class AppColors {
   static const borderColor = Color(0xFFEBE1F7);
   static const headerBg    = Color(0xFF7C4DBF);
   static const headerBgStart = Color(0xFF6B5E88);
+  static const brandGold = Color(0xFFFFD877);
 
   static const error   = Color(0xFFB3261E);
   static const success = Color(0xFF1E7A4C);
 
-  /// Diagonal header treatment (muted plum into orchid) used on every
-  /// screen's top bar in place of a flat headerBg fill.
+  /// Brand header gradient — plum → orchid → rose. Used on every screen
+  /// header (home, search, profile, app bars) so the shell feels consistent.
   static const headerGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [headerBgStart, headerBg],
+    colors: [headerBgStart, headerBg, rose],
+  );
+
+  /// Shorter two-stop gradient for small badges and icon tiles.
+  static const accentGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [headerBg, rose],
   );
 }

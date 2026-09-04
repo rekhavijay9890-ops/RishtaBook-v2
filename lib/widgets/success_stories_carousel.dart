@@ -21,7 +21,7 @@ class SuccessStoriesSection extends StatelessWidget {
         final docs = snap.data?.docs ?? const [];
         if (docs.isEmpty) return const SizedBox.shrink();
         return Padding(
-          padding: const EdgeInsets.only(bottom: 18),
+          padding: const EdgeInsets.only(bottom: 10),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             RbSectionLabel(title: context.t('home.successStories')),
             const SizedBox(height: 4),

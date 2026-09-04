@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../theme/app_colors.dart';
+import '../../widgets/rb_gradient_app_bar.dart';
 import '../../services/profile_service.dart';
 import '../../i18n/strings.dart';
 
@@ -75,11 +76,7 @@ class _ManagePhotosScreenState extends State<ManagePhotosScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.pageBg,
-      appBar: AppBar(
-        title: Text(context.t('managePhotos.title')),
-        backgroundColor: AppColors.headerBg,
-        foregroundColor: Colors.white,
-      ),
+      appBar: RbGradientAppBar(title: Text(context.t('managePhotos.title'))),
       body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance.collection('users').doc(widget.uid).snapshots(),
         builder: (context, snapshot) {

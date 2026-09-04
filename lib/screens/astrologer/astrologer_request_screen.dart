@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../theme/app_colors.dart';
+import '../../widgets/rb_gradient_app_bar.dart';
 import '../../services/astrologer_service.dart';
 import '../../i18n/strings.dart';
 
@@ -65,11 +66,7 @@ class _AstrologerRequestScreenState extends State<AstrologerRequestScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.pageBg,
-      appBar: AppBar(
-        title: Text(context.t('astrologer.title')),
-        backgroundColor: AppColors.headerBg,
-        foregroundColor: Colors.white,
-      ),
+      appBar: RbGradientAppBar(title: Text(context.t('astrologer.title'))),
       body: SafeArea(
         top: false,
         child: SingleChildScrollView(

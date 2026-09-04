@@ -22,11 +22,14 @@ class AppTheme {
           surface: AppColors.cardBg,
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.headerBg,
+          backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
           elevation: 0,
+          scrolledUnderElevation: 0,
+          centerTitle: false,
+          titleTextStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3),
           systemOverlayStyle: SystemUiOverlayStyle(
-            statusBarColor: AppColors.headerBg,
+            statusBarColor: AppColors.headerBgStart,
             statusBarIconBrightness: Brightness.light,
             // Without this, the OS's own on-screen nav bar keeps its
             // platform-default colour (often black/transparent), which can

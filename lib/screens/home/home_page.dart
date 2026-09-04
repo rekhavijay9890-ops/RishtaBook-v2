@@ -112,11 +112,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           Container(
             width: double.infinity,
-            decoration: const BoxDecoration(gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF6B5E88), Color(0xFF7C4DBF), Color(0xFFC1447F)],
-            )),
+            decoration: const BoxDecoration(gradient: AppColors.headerGradient),
             child: SafeArea(
               bottom: false,
               child: Column(
@@ -131,11 +127,11 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               RichText(
                                 text: const TextSpan(children: [
-                                  TextSpan(text: 'Rishta', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: -0.5, fontFamily: 'serif')),
-                                  TextSpan(text: 'Book', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Color(0xFFFFD877), letterSpacing: -0.5, fontFamily: 'serif')),
+                                  TextSpan(text: 'Rishta', style: AppText.brandLogoRishta),
+                                  TextSpan(text: 'Book', style: AppText.brandLogoBook),
                                 ]),
                               ),
-                              Text(context.t('app.tagline'), style: const TextStyle(fontSize: 10, color: Colors.white70)),
+                              Text(context.t('app.tagline'), style: AppText.headerSubtitle),
                             ],
                           ),
                         ),
@@ -231,7 +227,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                           const SizedBox(height: 3),
                           Text(context.t('home.greetingSub'), style: AppText.bodyMedium),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 10),
                         ],
                         StreamBuilder<int>(
                           stream: _creditService.creditsStream(uid),
@@ -243,7 +239,7 @@ class _HomePageState extends State<HomePage> {
                                   stream: _chatService.totalUnreadStream(uid),
                                   builder: (context, unreadSnap) {
                                     return Padding(
-                                      padding: const EdgeInsets.only(bottom: 16),
+                                      padding: const EdgeInsets.only(bottom: 8),
                                       child: RbStatStrip(stats: [
                                         RbStat(
                                           value: '${interestSnap.data?.docs.length ?? 0}',
@@ -273,7 +269,8 @@ class _HomePageState extends State<HomePage> {
                             );
                           },
                         ),
-                        const Padding(padding: EdgeInsets.only(bottom: 18), child: ReferralCtaCard()),
+                        const ReferralCtaCard(),
+                        const SizedBox(height: 10),
                         const SuccessStoriesSection(),
                         if (topEntries.isNotEmpty) ...[
                           RbSectionLabel(title: context.t('home.topMatches')),

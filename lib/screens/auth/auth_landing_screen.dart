@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../theme/app_colors.dart';
+import '../../theme/app_text.dart';
 import '../../widgets/video_background.dart';
 import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
@@ -110,19 +111,15 @@ class _AuthLandingScreenState extends State<AuthLandingScreen> {
                 height: 88,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(28),
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF7C4DBF), Color(0xFFC1447F)],
-                  ),
+                  gradient: AppColors.accentGradient,
                   boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 24, offset: const Offset(0, 10))],
                 ),
                 child: const Center(child: Text('RB', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w800, fontFamily: 'serif'))),
               ),
               const SizedBox(height: 14),
               const Text.rich(TextSpan(children: [
-                TextSpan(text: 'Rishta', style: TextStyle(fontSize: 38, fontWeight: FontWeight.w800, color: Colors.white, fontFamily: 'serif', letterSpacing: 0.3)),
-                TextSpan(text: 'Book', style: TextStyle(fontSize: 38, fontWeight: FontWeight.w800, color: Color(0xFFFFD877), fontFamily: 'serif', letterSpacing: 0.3)),
+                TextSpan(text: 'Rishta', style: AppText.brandLogoRishtaLarge),
+                TextSpan(text: 'Book', style: AppText.brandLogoBookLarge),
               ])),
               const SizedBox(height: 4),
               Text(context.t('authLanding.welcome'), style: const TextStyle(fontSize: 14, color: Colors.white70)),

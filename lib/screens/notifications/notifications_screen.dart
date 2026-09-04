@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../theme/app_colors.dart';
+import '../../widgets/rb_gradient_app_bar.dart';
 import '../../services/auth_service.dart';
 import '../../services/notification_service.dart';
 import '../../i18n/strings.dart';
@@ -85,10 +86,8 @@ class NotificationsScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.pageBg,
-      appBar: AppBar(
+      appBar: RbGradientAppBar(
         title: Text(context.t('notifications.title')),
-        backgroundColor: AppColors.headerBg,
-        foregroundColor: Colors.white,
         actions: [
           TextButton(
             onPressed: () => notificationService.markAllRead(uid),

@@ -4,6 +4,7 @@ import '../../config/constants.dart';
 import '../../models/partner_preferences.dart';
 import '../../services/profile_service.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/rb_gradient_app_bar.dart';
 import '../../i18n/strings.dart';
 
 /// What the signed-in user is looking for in a match. Feeds
@@ -117,11 +118,7 @@ class _PartnerPreferenceScreenState extends State<PartnerPreferenceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.pageBg,
-      appBar: AppBar(
-        title: Text(context.t('partnerPref.title')),
-        backgroundColor: AppColors.headerBg,
-        foregroundColor: Colors.white,
-      ),
+      appBar: RbGradientAppBar(title: Text(context.t('partnerPref.title'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.saffron))
           : SafeArea(

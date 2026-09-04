@@ -48,13 +48,7 @@ class ScallopHeader extends StatelessWidget {
       child: Container(
         width: double.infinity,
         height: height,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.safDark, AppColors.saffron],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
+        decoration: const BoxDecoration(gradient: AppColors.headerGradient),
         padding: const EdgeInsets.only(bottom: 22),
         child: child,
       ),

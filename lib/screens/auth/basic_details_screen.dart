@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../theme/app_colors.dart';
+import '../../widgets/rb_gradient_app_bar.dart';
 import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/credit_service.dart';
@@ -115,15 +116,9 @@ class _BasicDetailsScreenState extends State<BasicDetailsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.pageBg,
-      appBar: AppBar(
+      appBar: RbGradientAppBar(
         title: Text(context.t('basicDetails.title')),
-        backgroundColor: AppColors.headerBg,
-        foregroundColor: Colors.white,
-        // This screen isn't pushed via Navigator - AuthGate swaps it in
-        // directly after sign-in - so there's no previous route to pop
-        // back to. The only meaningful "back" here is leaving this
-        // account entirely, so the back arrow signs out instead of
-        // popping, landing the user back on AuthLandingScreen.
+        automaticallyImplyLeading: false,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           tooltip: context.t('basicDetails.wrongAccount'),

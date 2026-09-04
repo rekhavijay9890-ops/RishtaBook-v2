@@ -16,7 +16,7 @@ class ReferralCtaCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => Navigator.pushNamed(context, '/referral'),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           gradient: LinearGradient(colors: [AppColors.roseLight, AppColors.safLight], begin: Alignment.centerLeft, end: Alignment.centerRight),
           borderRadius: BorderRadius.circular(16),

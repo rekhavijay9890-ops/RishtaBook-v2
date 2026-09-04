@@ -62,7 +62,7 @@ class _InterestsPageState extends State<InterestsPage> {
                                   onTap: () => setState(() => _tab = t),
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(vertical: 10),
-                                    decoration: BoxDecoration(border: Border(bottom: BorderSide(color: on ? AppColors.saffron : Colors.transparent, width: 3))),
+                                    decoration: BoxDecoration(border: Border(bottom: BorderSide(color: on ? Colors.white : Colors.transparent, width: 3))),
                                     child: Text(label, textAlign: TextAlign.center,
                                         style: TextStyle(fontSize: 12, fontWeight: on ? FontWeight.w700 : FontWeight.w500, color: on ? Colors.white : Colors.white60)),
                                   ),

@@ -182,9 +182,9 @@ class ProfilePage extends StatelessWidget {
                       ),
                       const SizedBox(width: 14),
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(profile.fullName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white)),
+                        Text(profile.fullName, style: AppText.displayMedium.copyWith(color: Colors.white)),
                         const SizedBox(height: 2),
-                        Text('${profile.occupation} · ${profile.location}', style: const TextStyle(fontSize: 11, color: Colors.white70)),
+                        Text('${profile.occupation} · ${profile.location}', style: AppText.headerBody),
                         const SizedBox(height: 8),
                         Wrap(spacing: 6, children: [
                           if (profile.isVerified)

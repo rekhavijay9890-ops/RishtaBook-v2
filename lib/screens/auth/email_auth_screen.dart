@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../theme/app_colors.dart';
+import '../../widgets/rb_gradient_app_bar.dart';
 import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/credit_service.dart';
@@ -148,10 +149,8 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: RbGradientAppBar(
         title: Text(_signUpMode ? context.t('emailAuth.createAccount') : context.t('emailAuth.title')),
-        backgroundColor: AppColors.headerBg,
-        foregroundColor: Colors.white,
       ),
       backgroundColor: AppColors.pageBg,
       body: SafeArea(

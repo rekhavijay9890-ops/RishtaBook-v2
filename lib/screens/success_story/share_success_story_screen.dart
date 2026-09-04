@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../theme/app_colors.dart';
+import '../../widgets/rb_gradient_app_bar.dart';
 import '../../services/success_story_service.dart';
 import '../../i18n/strings.dart';
 
@@ -81,11 +82,7 @@ class _ShareSuccessStoryScreenState extends State<ShareSuccessStoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.pageBg,
-      appBar: AppBar(
-        title: Text(context.t('successStory.title')),
-        backgroundColor: AppColors.headerBg,
-        foregroundColor: Colors.white,
-      ),
+      appBar: RbGradientAppBar(title: Text(context.t('successStory.title'))),
       body: SafeArea(
         top: false,
         child: SingleChildScrollView(
