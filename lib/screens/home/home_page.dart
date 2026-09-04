@@ -23,6 +23,7 @@ import '../../widgets/referral_cta_card.dart';
 import '../../widgets/success_stories_carousel.dart';
 import '../profile/view_profile_screen.dart';
 import '../root_shell.dart';
+import '../../utils/portrait.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -111,7 +112,11 @@ class _HomePageState extends State<HomePage> {
         children: [
           Container(
             width: double.infinity,
-            decoration: const BoxDecoration(gradient: AppColors.headerGradient),
+            decoration: const BoxDecoration(gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF6B5E88), Color(0xFF7C4DBF), Color(0xFFC1447F)],
+            )),
             child: SafeArea(
               bottom: false,
               child: Column(
@@ -126,8 +131,8 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               RichText(
                                 text: const TextSpan(children: [
-                                  TextSpan(text: 'Rishta', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.5)),
-                                  TextSpan(text: 'Book', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFFFFD877), letterSpacing: -0.5)),
+                                  TextSpan(text: 'Rishta', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: -0.5, fontFamily: 'serif')),
+                                  TextSpan(text: 'Book', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Color(0xFFFFD877), letterSpacing: -0.5, fontFamily: 'serif')),
                                 ]),
                               ),
                               Text(context.t('app.tagline'), style: const TextStyle(fontSize: 10, color: Colors.white70)),
@@ -148,7 +153,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {},
+                    onTap: () => Navigator.pushNamed(context, '/search'),
                     child: Container(
                       margin: const EdgeInsets.fromLTRB(16, 12, 16, 14),
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
@@ -217,7 +222,7 @@ class _HomePageState extends State<HomePage> {
                     final restProfiles = profiles.skip(5).toList();
 
                     return ListView(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
                       children: [
                         if (me != null && me.fullName.isNotEmpty) ...[
                           Text(
@@ -308,7 +313,7 @@ class _HomePageState extends State<HomePage> {
                               boosted: p.isBoosted,
                               verified: p.isVerified,
                               initials: p.fullName.isNotEmpty ? p.fullName[0].toUpperCase() : '?',
-                              photoUrl: p.primaryPhotoUrl,
+                              photoUrl: Portrait.urlFor(p),
                               accentColor: p.isFemale ? AppColors.rose : (p.isMale ? AppColors.teal : AppColors.saffron),
                               liked: _liked.contains(p.uid),
                               onOpen: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ViewProfileScreen(profile: p, matchScorePct: matchPct, kundaliScore: score))),

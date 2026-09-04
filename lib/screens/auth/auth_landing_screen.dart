@@ -106,12 +106,24 @@ class _AuthLandingScreenState extends State<AuthLandingScreen> {
               ),
               const Spacer(flex: 3),
               Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), shape: BoxShape.circle),
-                child: const Icon(Icons.favorite, color: Colors.white, size: 42),
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(28),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF7C4DBF), Color(0xFFC1447F)],
+                  ),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 24, offset: const Offset(0, 10))],
+                ),
+                child: const Center(child: Text('RB', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w800, fontFamily: 'serif'))),
               ),
               const SizedBox(height: 14),
-              const Text("RishtaBook", style: TextStyle(fontSize: 38, fontWeight: FontWeight.w800, color: Colors.white, fontFamily: 'serif', letterSpacing: 0.3)),
+              const Text.rich(TextSpan(children: [
+                TextSpan(text: 'Rishta', style: TextStyle(fontSize: 38, fontWeight: FontWeight.w800, color: Colors.white, fontFamily: 'serif', letterSpacing: 0.3)),
+                TextSpan(text: 'Book', style: TextStyle(fontSize: 38, fontWeight: FontWeight.w800, color: Color(0xFFFFD877), fontFamily: 'serif', letterSpacing: 0.3)),
+              ])),
               const SizedBox(height: 4),
               Text(context.t('authLanding.welcome'), style: const TextStyle(fontSize: 14, color: Colors.white70)),
               const Spacer(flex: 4),

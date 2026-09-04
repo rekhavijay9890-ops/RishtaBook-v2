@@ -16,6 +16,7 @@ import 'screens/auth/auth_landing_screen.dart';
 import 'screens/auth/basic_details_screen.dart';
 import 'screens/auth/profile_choice_screen.dart';
 import 'screens/root_shell.dart';
+import 'screens/search/search_page.dart';
 import 'screens/admin/admin_screen.dart';
 import 'screens/wallet/wallet_page.dart';
 import 'screens/kundali/kundali_page.dart';
@@ -107,6 +108,8 @@ class MyApp extends StatelessWidget {
         switch (settings.name) {
           case '/root':
             return MaterialPageRoute(builder: (_) => const RootShell());
+          case '/search':
+            return MaterialPageRoute(builder: (_) => const SearchPage());
           case '/admin':
             return MaterialPageRoute(builder: (_) => const AdminScreen());
           case '/wallet':

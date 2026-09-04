@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/user_profile.dart';
 import '../theme/app_colors.dart';
 import '../i18n/strings.dart';
-import 'rb_avatar.dart';
+import '../utils/portrait.dart';
 
 /// Horizontal-scroll strip of the top-ranked matches, shown above the full
 /// list on a "dashboard-first" Home page - the same ranked [entries] the
@@ -15,7 +15,7 @@ class TopMatchesCarousel extends StatelessWidget {
   Widget build(BuildContext context) {
     if (entries.isEmpty) return const SizedBox.shrink();
     return SizedBox(
-      height: 232,
+      height: 248,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: entries.length,
@@ -61,20 +61,21 @@ class _TopMatchTile extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Stack(children: [
-            Container(
-              height: 108,
-              decoration: BoxDecoration(gradient: LinearGradient(
-                begin: Alignment.topLeft, end: Alignment.bottomRight,
-                colors: [AppColors.saffron, color],
-              )),
-              child: Center(
-                child: RbAvatar(
-                  initials: p.fullName.isNotEmpty ? p.fullName[0].toUpperCase() : '?',
-                  size: 52,
-                  color: color,
-                  photoUrl: p.primaryPhotoUrl,
-                  blurred: entry.blurred,
-                ),
+            SizedBox(
+              height: 124,
+              width: double.infinity,
+              child: Image.network(
+                Portrait.urlFor(p),
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(color: color.withOpacity(0.2)),
+              ),
+            ),
+            Positioned(
+              left: 8, bottom: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(100)),
+                child: Text('${entry.matchScorePct}%', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
               ),
             ),
             if (p.isVerified)

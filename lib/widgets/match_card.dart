@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
 import '../i18n/strings.dart';
-import 'rb_avatar.dart';
 import 'rb_badge.dart';
 
 class MatchCard extends StatefulWidget {
@@ -59,93 +58,125 @@ class _MatchCardState extends State<MatchCard> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.cardBg,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppColors.borderColor),
+        boxShadow: [
+          BoxShadow(color: AppColors.saffron.withOpacity(0.08), blurRadius: 22, offset: const Offset(0, 10)),
+        ],
       ),
       clipBehavior: Clip.hardEdge,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(13),
-            child: Row(
-              children: [
-                // The heart/chat buttons used to sit INSIDE this same
-                // InkWell's subtree (wrapping the whole Row) - taps on them
-                // were getting captured by this InkWell's onOpen instead of
-                // their own GestureDetectors, since Flutter's tap arena can
-                // resolve to either recognizer when one is nested directly
-                // inside the other. Restructured so onOpen's InkWell only
-                // wraps the avatar/name area, and the icon buttons are a
-                // sibling entirely outside its hit-test subtree - no more
-                // ambiguity about which handler a tap on them reaches.
-                Expanded(
-                  child: InkWell(
-                    onTap: widget.onOpen,
-                    child: Row(
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            InkWell(
+              onTap: widget.onOpen,
+              child: SizedBox(
+                width: 118,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    widget.photoUrl != null && widget.photoUrl!.isNotEmpty
+                        ? Image.network(
+                            widget.photoUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => _fallbackPhoto(),
+                          )
+                        : _fallbackPhoto(),
+                    if (widget.blurred)
+                      Container(color: Colors.black26, child: const Icon(Icons.lock_outline, color: Colors.white)),
+                    if (widget.matchScorePct != null)
+                      Positioned(
+                        left: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(100)),
+                          child: Text('${widget.matchScorePct}%', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 10, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    InkWell(
+                      onTap: widget.onOpen,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(widget.name, style: AppText.headingLarge, overflow: TextOverflow.ellipsis),
+                          const SizedBox(height: 2),
+                          Text('${widget.job} · ${widget.city}', style: AppText.bodySmall, overflow: TextOverflow.ellipsis),
+                          Text(widget.caste, style: AppText.caption, overflow: TextOverflow.ellipsis),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 5,
+                      runSpacing: 4,
                       children: [
-                        RbAvatar(initials: widget.initials, size: 52, color: widget.accentColor, photoUrl: widget.photoUrl, blurred: widget.blurred),
-                        const SizedBox(width: 12),
+                        if (widget.boosted) RbBadge(text: '🚀 ${context.t('wallet.boostBadge')}', color: AppColors.rose),
+                        if (widget.kundaliScore != null)
+                          GestureDetector(
+                            onTap: widget.onKundali,
+                            child: RbBadge(text: '⭐ ${widget.kundaliScore}/36', color: AppColors.gold),
+                          ),
+                        if (widget.verified) RbBadge(text: context.t('common.verified'), color: AppColors.teal),
+                        if (widget.premium) RbBadge(text: context.t('common.premium'), color: AppColors.gold),
+                      ],
+                    ),
+                    const Spacer(),
+                    Row(
+                      children: [
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('${widget.name}', style: AppText.headingMedium, overflow: TextOverflow.ellipsis),
-                              const SizedBox(height: 2),
-                              Text('${widget.job} · ${widget.city}', style: AppText.bodySmall, overflow: TextOverflow.ellipsis),
-                              Text(widget.caste, style: AppText.caption, overflow: TextOverflow.ellipsis),
-                            ],
+                          child: GestureDetector(
+                            onTap: widget.onLike,
+                            child: Container(
+                              height: 32,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: widget.liked ? AppColors.roseLight : AppColors.safLight,
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              child: Text(widget.liked ? '❤️ ${context.t('common.sent')}' : '🤍 ${context.t('common.sendInterest')}',
+                                  style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        GestureDetector(
+                          onTap: widget.onChat,
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.tealLight),
+                            child: const Center(child: Text('💬', style: TextStyle(fontSize: 14))),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ),
-                Column(
-                  children: [
-                    _iconBtn(icon: widget.liked ? '❤️' : '🤍', bg: widget.liked ? AppColors.roseLight : const Color(0xFFF5F0F4), onTap: widget.onLike),
-                    const SizedBox(height: 7),
-                    _iconBtn(icon: '💬', bg: AppColors.tealLight, onTap: widget.onChat),
                   ],
                 ),
-              ],
+              ),
             ),
-          ),
-          Container(
-            color: const Color(0xFFFDFAFC),
-            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
-            child: Wrap(
-              spacing: 6,
-              runSpacing: 4,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                if (widget.boosted) RbBadge(text: '🚀 ${context.t('wallet.boostBadge')}', color: AppColors.rose),
-                if (widget.matchScorePct != null)
-                  RbBadge(text: context.t('match.scoreLabel', ['${widget.matchScorePct}']), color: AppColors.saffron),
-                if (widget.kundaliScore != null)
-                  GestureDetector(
-                    onTap: widget.onKundali,
-                    child: RbBadge(text: '⭐ ${widget.kundaliScore}/36', color: AppColors.gold),
-                  ),
-                if (widget.verified) RbBadge(text: context.t('common.verified'), color: AppColors.teal),
-                if (widget.premium) RbBadge(text: context.t('common.premium'), color: AppColors.gold),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _iconBtn({required String icon, required Color bg, required VoidCallback onTap}) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Container(
-        width: 34,
-        height: 34,
-        decoration: BoxDecoration(shape: BoxShape.circle, color: bg),
-        child: Center(child: Text(icon, style: const TextStyle(fontSize: 15))),
-      ),
+  Widget _fallbackPhoto() {
+    return Container(
+      color: AppColors.safLight,
+      alignment: Alignment.center,
+      child: Text(widget.initials, style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: widget.accentColor)),
     );
   }
 }

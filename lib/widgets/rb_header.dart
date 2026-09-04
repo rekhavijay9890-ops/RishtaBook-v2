@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
 
 /// Dark top header used on every screen — optional back button, title,
@@ -23,7 +22,13 @@ class RbHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.headerBg,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF6B5E88), Color(0xFF7C4DBF), Color(0xFFC1447F)],
+        ),
+      ),
       child: SafeArea(
         bottom: false,
         child: Column(

@@ -7,6 +7,7 @@ import '../../services/auth_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/moderation_service.dart';
 import '../../i18n/strings.dart';
+import '../../utils/portrait.dart';
 
 const Color kBrandColor = AppColors.saffron;
 
@@ -130,59 +131,47 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    IconData avatarIcon = Icons.person;
-    Color avatarColor = Colors.grey;
-    if (profile.isFemale) {
-      avatarIcon = Icons.face_3;
-      avatarColor = Colors.pink;
-    } else if (profile.isMale) {
-      avatarIcon = Icons.face;
-      avatarColor = Colors.blue;
-    }
-
     return Scaffold(
-      appBar: AppBar(
-        title: Text(context.t('viewProfile.title')),
-        backgroundColor: kBrandColor,
-        foregroundColor: Colors.white,
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (v) => v == 'block' ? _confirmBlock() : _openReportSheet(),
-            itemBuilder: (context) => [
-              PopupMenuItem(value: 'report', child: Text(context.t('safety.report'))),
-              PopupMenuItem(value: 'block', child: Text(context.t('safety.block'))),
-            ],
-          ),
-        ],
-      ),
       backgroundColor: AppColors.pageBg,
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Center(
-            child: profile.primaryPhotoUrl != null
-                ? CircleAvatar(
-                    radius: 46,
-                    backgroundColor: avatarColor.withOpacity(0.12),
-                    backgroundImage: NetworkImage(profile.primaryPhotoUrl!),
-                  )
-                : CircleAvatar(
-                    radius: 46,
-                    backgroundColor: avatarColor.withOpacity(0.12),
-                    child: Icon(avatarIcon, size: 50, color: avatarColor),
-                  ),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 280,
+            pinned: true,
+            backgroundColor: kBrandColor,
+            foregroundColor: Colors.white,
+            actions: [
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert),
+                onSelected: (v) => v == 'block' ? _confirmBlock() : _openReportSheet(),
+                itemBuilder: (context) => [
+                  PopupMenuItem(value: 'report', child: Text(context.t('safety.report'))),
+                  PopupMenuItem(value: 'block', child: Text(context.t('safety.block'))),
+                ],
+              ),
+            ],
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(profile.fullName, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.network(Portrait.urlFor(profile), fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: kBrandColor)),
+                  const DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black54]))),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 14),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(profile.fullName,
-                  style: const TextStyle(fontSize: 21, fontWeight: FontWeight.bold)),
-              if (profile.isVerified) ...[
-                const SizedBox(width: 6),
-                const Icon(Icons.verified, color: kBrandColor, size: 20),
-              ],
+              Expanded(
+                child: Text(profile.fullName,
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
+              ),
+              if (profile.isVerified) const Icon(Icons.verified, color: kBrandColor, size: 22),
             ],
           ),
           if (profile.isFamilyManaged) ...[
@@ -249,6 +238,9 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                 }),
               ),
             ),
+              ]),
+            ),
+          ),
         ],
       ),
     );

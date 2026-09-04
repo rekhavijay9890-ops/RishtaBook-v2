@@ -14,6 +14,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text.dart';
 import '../../widgets/rb_avatar.dart';
 import '../../widgets/rb_badge.dart';
+import '../../utils/portrait.dart';
 import '../profile/view_profile_screen.dart';
 
 class SearchPage extends StatefulWidget {
@@ -450,8 +451,19 @@ class _ResultTile extends StatelessWidget {
               onTap: locked ? null : onOpen,
               child: Row(children: [
                 locked
-                    ? Container(width: 46, height: 46, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.borderColor), child: const Center(child: Text('🔒', style: TextStyle(fontSize: 20))))
-                    : RbAvatar(initials: profile.fullName.isNotEmpty ? profile.fullName[0].toUpperCase() : '?', size: 46, color: color, photoUrl: profile.primaryPhotoUrl, blurred: blurred),
+                    ? Container(width: 64, height: 72, decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: AppColors.borderColor), child: const Center(child: Text('🔒', style: TextStyle(fontSize: 20))))
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: SizedBox(
+                          width: 64,
+                          height: 72,
+                          child: Image.network(
+                            Portrait.urlFor(profile),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => RbAvatar(initials: profile.fullName.isNotEmpty ? profile.fullName[0].toUpperCase() : '?', size: 64, color: color, photoUrl: Portrait.urlFor(profile), blurred: blurred),
+                          ),
+                        ),
+                      ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: locked

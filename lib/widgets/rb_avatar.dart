@@ -7,7 +7,7 @@ class RbAvatar extends StatelessWidget {
   final double size;
   final Color color;
   /// When set, shows this photo instead of the initials circle. Falls back
-  /// to initials automatically if the image fails to load.
+  /// to a generated portrait if the image fails to load.
   final String? photoUrl;
   /// Visual-only privacy nudge for a profile owner with photosPrivate set,
   /// viewed by someone they haven't matched with yet. NOT a real access
@@ -26,9 +26,14 @@ class RbAvatar extends StatelessWidget {
     return const Color(0xFFEEEEEE);
   }
 
+  String get _resolvedUrl {
+    if (photoUrl != null && photoUrl!.isNotEmpty) return photoUrl!;
+    return 'https://api.dicebear.com/9.x/lorelei/png?seed=${Uri.encodeComponent(initials)}&size=128&backgroundColor=b6a3e8,f1e9fb,c4b5e8';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final hasPhoto = photoUrl != null && photoUrl!.isNotEmpty;
+    final resolved = _resolvedUrl;
     return Container(
       width: size,
       height: size,
@@ -41,26 +46,24 @@ class RbAvatar extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            if (hasPhoto)
-              (blurred
-                  ? ImageFiltered(
-                      imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                      child: Image.network(
-                        photoUrl!,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, progress) => progress == null ? child : _initials(),
-                        errorBuilder: (context, error, stack) => _initials(),
-                      ),
-                    )
-                  : Image.network(
-                      photoUrl!,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, progress) => progress == null ? child : _initials(),
-                      errorBuilder: (context, error, stack) => _initials(),
-                    ))
+            if (blurred)
+              ImageFiltered(
+                imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                child: Image.network(
+                  resolved,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, progress) => progress == null ? child : _initials(),
+                  errorBuilder: (context, error, stack) => _initials(),
+                ),
+              )
             else
-              _initials(),
-            if (hasPhoto && blurred)
+              Image.network(
+                resolved,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, progress) => progress == null ? child : _initials(),
+                errorBuilder: (context, error, stack) => _initials(),
+              ),
+            if (blurred)
               Container(
                 color: Colors.black.withOpacity(0.15),
                 child: Icon(Icons.lock_outline, color: Colors.white, size: size * 0.35),

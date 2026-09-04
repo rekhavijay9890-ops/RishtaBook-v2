@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../config/app_config.dart';
+import '../theme/app_colors.dart';
 import '../services/auth_service.dart';
 import '../services/interest_service.dart';
 import '../services/chat_service.dart';
@@ -14,10 +15,6 @@ import 'chat/chats_list_page.dart';
 import 'profile/profile_page.dart';
 import 'notifications/notifications_screen.dart';
 
-/// Persistent app shell: dark header actions (admin, notifications) live
-/// per-tab now, but the bottom nav + tab switching stays a simple
-/// IndexedStack — only screen-to-screen pushes (chat, wallet, kundali,
-/// view-profile, admin) go through named routes.
 class RootShell extends StatefulWidget {
   const RootShell({super.key});
 
@@ -50,6 +47,7 @@ class _RootShellState extends State<RootShell> {
           builder: (context, chatSnap) {
             final unread = chatSnap.data ?? 0;
             return Scaffold(
+              extendBody: true,
               body: IndexedStack(
                 index: _index,
                 children: const [
@@ -60,22 +58,43 @@ class _RootShellState extends State<RootShell> {
                   ProfilePage(),
                 ],
               ),
-              bottomNavigationBar: BottomNavigationBar(
-                currentIndex: _index,
-                onTap: (i) => setState(() => _index = i),
-                items: [
-                  const BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
-                  const BottomNavigationBarItem(icon: Icon(Icons.search_rounded), label: 'Search'),
-                  BottomNavigationBarItem(
-                    icon: Badge(label: Text('$pendingCount'), isLabelVisible: pendingCount > 0, child: const Icon(Icons.favorite_border_rounded)),
-                    label: 'Interests',
+              bottomNavigationBar: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBg.withOpacity(0.94),
+                    borderRadius: BorderRadius.circular(40),
+                    border: Border.all(color: AppColors.borderColor),
+                    boxShadow: [
+                      BoxShadow(color: AppColors.saffron.withOpacity(0.18), blurRadius: 24, offset: const Offset(0, 10)),
+                    ],
                   ),
-                  BottomNavigationBarItem(
-                    icon: Badge(label: Text('$unread'), isLabelVisible: unread > 0, child: const Icon(Icons.chat_bubble_outline_rounded)),
-                    label: 'Chat',
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(40),
+                    child: BottomNavigationBar(
+                      currentIndex: _index,
+                      onTap: (i) => setState(() => _index = i),
+                      backgroundColor: Colors.transparent,
+                      elevation: 0,
+                      type: BottomNavigationBarType.fixed,
+                      selectedItemColor: AppColors.saffron,
+                      unselectedItemColor: AppColors.ghost,
+                      items: [
+                        const BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
+                        const BottomNavigationBarItem(icon: Icon(Icons.search_rounded), label: 'Search'),
+                        BottomNavigationBarItem(
+                          icon: Badge(label: Text('$pendingCount'), isLabelVisible: pendingCount > 0, child: const Icon(Icons.favorite_border_rounded)),
+                          label: 'Interests',
+                        ),
+                        BottomNavigationBarItem(
+                          icon: Badge(label: Text('$unread'), isLabelVisible: unread > 0, child: const Icon(Icons.chat_bubble_outline_rounded)),
+                          label: 'Chat',
+                        ),
+                        const BottomNavigationBarItem(icon: Icon(Icons.person_outline_rounded), label: 'Profile'),
+                      ],
+                    ),
                   ),
-                  const BottomNavigationBarItem(icon: Icon(Icons.person_outline_rounded), label: 'Profile'),
-                ],
+                ),
               ),
             );
           },
@@ -85,9 +104,6 @@ class _RootShellState extends State<RootShell> {
   }
 }
 
-/// Small shared header action row (admin + notification bell) any tab's
-/// RbHeader can drop into its `actions`. Kept here so Home/Search/etc.
-/// don't each re-implement the unread-count badge logic.
 class RootHeaderActions extends StatelessWidget {
   const RootHeaderActions({super.key});
 
