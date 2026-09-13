@@ -38,11 +38,40 @@ jobs:
         # own), so restricting here is what actually shrinks the file.
         run: flutter build apk --release --target-platform android-arm64
 
+      - name: Prepare release APK
+        run: cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/RishtaBook.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RishtaBook-apk
+          path: build/app/outputs/flutter-apk/RishtaBook.apk
+          retention-days: 30
+          if-no-files-found: error
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
-          name: Build ${{ github.run_number }}
-          files: build/app/outputs/flutter-apk/app-release.apk
+          name: RishtaBook Build ${{ github.run_number }}
+          make_latest: true
+          body: |
+            ## Download APK
+
+            **Option 1 — Releases (recommended on phone):**
+            Scroll to **Assets** at the bottom of this page and tap **RishtaBook.apk**.
+
+            **Option 2 — Direct link:**
+            https://github.com/rekhavijay9890-ops/RishtaBook-v2/releases/download/build-${{ github.run_number }}/RishtaBook.apk
+
+            **Option 3 — Actions artifact:**
+            Open the workflow run → **Artifacts** → download `RishtaBook-apk`.
+
+            ## Install on Android
+            1. Download `RishtaBook.apk`
+            2. Open **Downloads** and tap the file
+            3. Allow **Install unknown apps** for your browser/Files app if prompted
+            4. Tap **Install**
+          files: build/app/outputs/flutter-apk/RishtaBook.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

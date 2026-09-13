@@ -28,7 +28,7 @@ class RbAvatar extends StatelessWidget {
 
   String get _resolvedUrl {
     if (photoUrl != null && photoUrl!.isNotEmpty) return photoUrl!;
-    return 'https://api.dicebear.com/9.x/lorelei/png?seed=${Uri.encodeComponent(initials)}&size=128&backgroundColor=b6a3e8,f1e9fb,c4b5e8';
+    return 'https://api.dicebear.com/9.x/lorelei/png?seed=${Uri.encodeComponent(initials)}&size=128&backgroundColor=e8d5c4,fdf6e3,c9a227';
   }
 
   @override

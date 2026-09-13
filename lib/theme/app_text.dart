@@ -1,31 +1,71 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 import 'app_colors.dart';
 
 class AppText {
   AppText._();
 
-  static const displayLarge  = TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.ink, letterSpacing: -0.5);
-  static const displayMedium = TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink, letterSpacing: -0.3);
-  static const headingLarge  = TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink, letterSpacing: -0.3);
-  static const headingMedium = TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink);
-  static const headingSmall  = TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink, letterSpacing: -0.2);
-  static const bodyMedium    = TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.muted);
-  static const bodySmall     = TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.muted);
-  static const caption       = TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: AppColors.ghost);
-  static const captionBold   = TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.ghost, letterSpacing: 0.4);
-  static const label         = TextStyle(fontSize: 9,  fontWeight: FontWeight.w700, color: AppColors.ghost, letterSpacing: 0.5);
+  static TextStyle get displayLarge =>
+      GoogleFonts.playfairDisplay(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.ink, letterSpacing: -0.5);
+  static TextStyle get displayMedium =>
+      GoogleFonts.playfairDisplay(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink, letterSpacing: -0.3);
+  static TextStyle get headingLarge =>
+      GoogleFonts.playfairDisplay(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink, letterSpacing: -0.3);
+  static TextStyle get headingMedium =>
+      GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink);
+  static TextStyle get headingSmall =>
+      GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink, letterSpacing: -0.2);
+  static TextStyle get bodyMedium =>
+      GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.muted);
+  static TextStyle get bodySmall =>
+      GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.muted);
+  static TextStyle get caption =>
+      GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w500, color: AppColors.ghost);
+  static TextStyle get captionBold =>
+      GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.ghost, letterSpacing: 0.4);
+  static TextStyle get label =>
+      GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.ghost, letterSpacing: 0.5);
 
   // On dark header
-  static const headerTitle = TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3);
-  static const headerBody  = TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Color(0xD9FFFFFF));
-  static const headerSubtitle = TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Color(0xB3FFFFFF));
+  static TextStyle get headerTitle =>
+      GoogleFonts.playfairDisplay(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3);
+  static TextStyle get headerBody =>
+      GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500, color: const Color(0xD9FFFFFF));
+  static TextStyle get headerSubtitle =>
+      GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w500, color: const Color(0xB3FFFFFF));
 
   // Brand wordmark on gradient headers
-  static const brandLogoRishta = TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: -0.5, fontFamily: 'serif');
-  static const brandLogoBook = TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.brandGold, letterSpacing: -0.5, fontFamily: 'serif');
-  static const brandLogoRishtaLarge = TextStyle(fontSize: 38, fontWeight: FontWeight.w800, color: Colors.white, fontFamily: 'serif', letterSpacing: 0.3);
-  static const brandLogoBookLarge = TextStyle(fontSize: 38, fontWeight: FontWeight.w800, color: AppColors.brandGold, fontFamily: 'serif', letterSpacing: 0.3);
+  static TextStyle get brandLogoRishta => GoogleFonts.playfairDisplay(
+        fontSize: 26,
+        fontWeight: FontWeight.w700,
+        color: Colors.white,
+        letterSpacing: -0.5,
+      );
+  static TextStyle get brandLogoBook => GoogleFonts.playfairDisplay(
+        fontSize: 26,
+        fontWeight: FontWeight.w700,
+        color: AppColors.brandGold,
+        letterSpacing: -0.5,
+      );
+  static TextStyle get brandLogoRishtaLarge => GoogleFonts.playfairDisplay(
+        fontSize: 38,
+        fontWeight: FontWeight.w800,
+        color: Colors.white,
+        letterSpacing: 0.3,
+      );
+  static TextStyle get brandLogoBookLarge => GoogleFonts.playfairDisplay(
+        fontSize: 38,
+        fontWeight: FontWeight.w800,
+        color: AppColors.brandGold,
+        letterSpacing: 0.3,
+      );
 
   // Form section titles (Complete Profile, etc.)
-  static const sectionTitle = TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.saffron, letterSpacing: -0.2);
+  static TextStyle get sectionTitle => GoogleFonts.inter(
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
+        color: AppColors.saffron,
+        letterSpacing: -0.2,
+      );
 }

@@ -31,6 +31,7 @@ dependencies:
   supabase_flutter: ^2.17.1
   firebase_messaging: ^16.5.0
   qr_flutter: ^4.1.0
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
@@ -41,7 +42,7 @@ flutter_icons:
   android: true
   ios: false
   image_path: "assets/icon.png"
-  adaptive_icon_background: "#D395FF"
+  adaptive_icon_background: "#800020"
   adaptive_icon_foreground: "assets/icon_foreground.png"
 
 flutter:

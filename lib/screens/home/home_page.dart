@@ -126,7 +126,7 @@ class _HomePageState extends State<HomePage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               RichText(
-                                text: const TextSpan(children: [
+                                text: TextSpan(children: [
                                   TextSpan(text: 'Rishta', style: AppText.brandLogoRishta),
                                   TextSpan(text: 'Book', style: AppText.brandLogoBook),
                                 ]),

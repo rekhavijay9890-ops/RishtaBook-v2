@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text.dart';
 import '../../widgets/video_background.dart';
+import '../../widgets/rishta_book_logo.dart';
 import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/credit_service.dart';
@@ -106,18 +107,9 @@ class _AuthLandingScreenState extends State<AuthLandingScreen> {
                 ),
               ),
               const Spacer(flex: 3),
-              Container(
-                width: 88,
-                height: 88,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
-                  gradient: AppColors.accentGradient,
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 24, offset: const Offset(0, 10))],
-                ),
-                child: const Center(child: Text('RB', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w800, fontFamily: 'serif'))),
-              ),
+              const RishtaBookLogo(size: 88),
               const SizedBox(height: 14),
-              const Text.rich(TextSpan(children: [
+              Text.rich(TextSpan(children: [
                 TextSpan(text: 'Rishta', style: AppText.brandLogoRishtaLarge),
                 TextSpan(text: 'Book', style: AppText.brandLogoBookLarge),
               ])),

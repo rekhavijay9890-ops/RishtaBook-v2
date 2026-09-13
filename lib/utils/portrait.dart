@@ -13,6 +13,6 @@ class Portrait {
 
   static String generated(String seed, {required bool female}) {
     final style = female ? 'lorelei' : 'adventurer';
-    return 'https://api.dicebear.com/9.x/$style/png?seed=${Uri.encodeComponent(seed)}&size=256&backgroundColor=b6a3e8,f1e9fb,c4b5e8';
+    return 'https://api.dicebear.com/9.x/$style/png?seed=${Uri.encodeComponent(seed)}&size=256&backgroundColor=e8d5c4,fdf6e3,c9a227';
   }
 }
